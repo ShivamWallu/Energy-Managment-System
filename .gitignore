@@ -1,0 +1,15 @@
+# Git ignore file for Mashal EMS Intelligence
+.env
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.pytest_cache/
+ems_data.db
+*.log
+.DS_Store
+Thumbs.db
+uploaded_reports_backup/*.xlsx
+uploaded_reports_backup/*.xls
+!uploaded_reports_backup/.gitkeep
+

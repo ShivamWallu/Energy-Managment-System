@@ -1,0 +1,29 @@
+# ==============================================================================
+# Mashal EMS Intelligence — Production Docker Compose
+# ==============================================================================
+version: '3.8'
+
+services:
+  ems-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: mashal_ems_intelligence
+    restart: unless-stopped
+    ports:
+      - "80:8000"
+    environment:
+      - PROJECT_NAME=Mashal EMS Intelligence — SCADA 415V Energy Management System
+      - DATABASE_URL=sqlite:///./ems_data.db
+    env_file:
+      - .env
+    volumes:
+      - ./ems_data.db:/app/ems_data.db
+      - ./uploaded_reports_backup:/app/uploaded_reports_backup
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+

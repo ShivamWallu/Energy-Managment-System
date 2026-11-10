@@ -1,0 +1,1121 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mashal EMS Intelligence — SCADA Plant Energy &amp; Motor Analytics</title>
+  <meta name="description" content="Mashal Mustard Oil Plant SCADA Telemetry, 15-Minute Motor Operating Health, and Energy Distribution.">
+  <link rel="icon" type="image/png" href="/Images/logos/03_Right_Top_Side_Panel_MASHAL.png?v=2026">
+
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome 6 Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Chart.js 4.4 -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Application CSS -->
+  <link rel="stylesheet" href="/css/style.css">
+
+  <!-- Preload Optimized Auth Collage Background in 100% Original Clarity (2X Fast Loading) -->
+  <link rel="preload" as="image" href="/img/auth-collage-bg.webp?v=2x_vibrant" type="image/webp" fetchpriority="high">
+
+  <!-- Instant Theme Restoration Script (Default Black / Dark Theme) -->
+  <script>
+    (function() {
+      function getCookie(name) {
+        var match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
+        return match ? decodeURIComponent(match[3]) : null;
+      }
+      var theme = getCookie('ems_theme') || localStorage.getItem('ems_theme') || 'dark';
+      // Enforce default black / dark theme across all visits unless user explicitly toggled
+      if (!localStorage.getItem('ems_theme_user_set')) {
+        theme = 'dark';
+        document.cookie = "ems_theme=dark; path=/; max-age=31536000; SameSite=Lax";
+        localStorage.setItem('ems_theme', 'dark');
+      }
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Top Application Header -->
+  <header class="header">
+    <div class="brand-wrapper">
+      <div class="brand-logo-img-wrap" title="KOGM — Khandelia Oil &amp; General Mills">
+        <img src="/Images/logos/02_Left_Top_Side_Panel_KOGM.png?v=2026" alt="KOGM" class="brand-logo-img" style="height:42px; width:42px; border-radius:6px; object-fit:cover; border:1px solid rgba(254,227,0,0.5); box-shadow:0 2px 6px rgba(0,0,0,0.25);">
+      </div>
+      <div class="brand-logo-img-wrap" title="Mashal — Kachi Ghani Mustard Oil (Trusted Since 1976)">
+        <img src="/Images/logos/03_Right_Top_Side_Panel_MASHAL.png?v=2026" alt="Mashal Mustard Oil" class="brand-logo-img" style="height:42px; border-radius:6px; object-fit:contain; border:1px solid rgba(254,227,0,0.5); box-shadow:0 2px 6px rgba(0,0,0,0.25);">
+      </div>
+      <div class="brand-divider"></div>
+      <div>
+        <h1 class="brand-title"><span class="brand-highlight">MASHAL</span> <span class="brand-subtitle">EMS Intelligence</span></h1>
+        <div class="brand-tag">
+          <span class="pulse-dot"></span> Mustard Oil Plant SCADA • 415V Bus
+        </div>
+      </div>
+
+      <!-- 1-Click Day / Night Shift Radio Switcher (Positioned on Left to create ample space for full report title) -->
+      <div id="shift-radio-container" class="shift-radio-group" title="Quick Shift Switcher" style="margin-left:0.75rem;">
+        <label class="shift-radio-label active-day" id="lbl-shift-day">
+          <input type="radio" name="header_shift_radio" value="DAY" checked>
+          <span><i class="fa-solid fa-sun" style="color:#f59e0b;"></i> Day Shift</span>
+        </label>
+        <label class="shift-radio-label" id="lbl-shift-night">
+          <input type="radio" name="header_shift_radio" value="NIGHT">
+          <span><i class="fa-solid fa-moon" style="color:#a78bfa;"></i> Night Shift</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Header Controls: Shift Selector, Upload, Theme, User -->
+    <div class="header-controls">
+      <div class="shift-selector">
+        <i class="fa-solid fa-file-invoice text-cyan" style="font-size:0.85rem;"></i>
+        <label for="shift-filter-select">Report:</label>
+        <select id="shift-filter-select">
+          <option value="">Loading shifts...</option>
+        </select>
+      </div>
+
+      <button id="btn-open-upload" class="btn btn-primary btn-sm">
+        <i class="fa-solid fa-cloud-arrow-up"></i> Upload EMS Report
+      </button>
+
+      <button id="theme-toggle-btn" class="btn-icon" title="Toggle Dark/Light Theme">
+        <i class="fa-solid fa-sun"></i>
+      </button>
+
+      <!-- User Profile Badge & Dropdown Card -->
+      <div class="user-profile-wrapper" id="user-profile-wrapper">
+        <div class="user-profile-badge" id="header-user-badge" title="Click to view Account &amp; Email details">
+          <div id="header-user-avatar" class="user-avatar">AD</div>
+          <div class="user-info">
+            <span id="header-user-name" class="user-name">Administrator</span>
+            <span id="header-user-role" class="user-role">ADMIN</span>
+          </div>
+          <i class="fa-solid fa-chevron-down" style="font-size:0.65rem; color:var(--text-muted); margin-left:0.15rem;"></i>
+        </div>
+
+        <!-- User Profile Details Popover (Opens on clicking account button) -->
+        <div id="user-profile-popover" class="user-profile-popover" style="display:none;">
+          <div class="popover-header">
+            <div class="popover-avatar-wrap">
+              <div id="popover-user-avatar" class="popover-avatar">AD</div>
+              <span class="online-indicator-dot" title="Active"></span>
+            </div>
+            <div class="popover-user-meta">
+              <div id="popover-user-name" class="popover-name">Administrator</div>
+              <div id="popover-user-role" class="popover-badge">ADMIN</div>
+            </div>
+          </div>
+
+          <div class="popover-body">
+            <div class="popover-detail-row">
+              <div class="popover-detail-label"><i class="fa-solid fa-envelope text-cyan"></i> Logged In Email</div>
+              <div id="popover-user-email" class="popover-detail-value">admin@mashaloil.com</div>
+            </div>
+            <div class="popover-detail-row">
+              <div class="popover-detail-label"><i class="fa-solid fa-user-tag text-purple"></i> Username / ID</div>
+              <div id="popover-user-username" class="popover-detail-value">admin</div>
+            </div>
+            <div class="popover-detail-row">
+              <div class="popover-detail-label"><i class="fa-solid fa-shield-halved text-emerald"></i> Account Status</div>
+              <div class="popover-detail-value" style="color:var(--accent-green);"><i class="fa-solid fa-circle-check"></i> Active &amp; Verified</div>
+            </div>
+            <div class="popover-detail-row">
+              <div class="popover-detail-label"><i class="fa-solid fa-industry text-amber"></i> Plant SCADA</div>
+              <div class="popover-detail-value">Mashal Mustard Oil Plant (415V Bus)</div>
+            </div>
+          </div>
+
+          <div class="popover-footer">
+            <button type="button" id="btn-logout" class="btn btn-secondary btn-sm" style="width:100%; justify-content:center; color:#ef4444; border-color:rgba(239,68,68,0.3); font-weight:700;">
+              <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Navigation Tabs (Admin-Protected Workspaces) -->
+  <nav class="nav-tabs-wrapper">
+    <div class="nav-tabs">
+      <button class="tab-btn active" data-tab="tab-overview">
+        <i class="fa-solid fa-chart-line"></i> Dashboard
+      </button>
+      <button class="tab-btn" data-tab="tab-machines">
+        <i class="fa-solid fa-table-cells"></i> Table View
+      </button>
+      <!-- Admin-Only Protected Tabs: Visible and fully functional for Admin users -->
+      <button class="tab-btn admin-only-tab" id="nav-tab-accounts" data-tab="tab-accounts">
+        <i class="fa-solid fa-users-gear text-cyan"></i> Accounts
+      </button>
+      <button class="tab-btn admin-only-tab" id="nav-tab-logs" data-tab="tab-validation">
+        <i class="fa-solid fa-shield-halved text-cyan"></i> Logs
+      </button>
+    </div>
+  </nav>
+
+  <!-- Main Application Body -->
+  <main class="main-content">
+    
+    <!-- TAB 1: OVERVIEW & 15-MIN HEALTH GRAPHS (CENTER STAGE) -->
+    <section id="tab-overview" class="tab-pane active">
+
+      <!-- ONBOARDING EMPTY STATE: Displayed for first-time registered users who haven't uploaded reports yet -->
+      <div id="onboarding-empty-state-banner" class="empty-state-banner" style="display:none;">
+        <div class="empty-state-banner-left">
+          <div class="empty-state-banner-icon">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+          </div>
+          <div>
+            <h3>Welcome to Mashal EMS Intelligence!</h3>
+            <p>Your workspace is ready. To view 15-minute SCADA intervals, motor load benchmarks, and anomaly audits, please upload your plant shift report.</p>
+          </div>
+        </div>
+        <button type="button" class="btn btn-primary btn-pulse-attention" style="white-space:nowrap; padding:0.65rem 1.25rem; font-weight:700;" onclick="document.getElementById('btn-open-upload').click()">
+          <i class="fa-solid fa-file-excel"></i> Upload First Shift Excel
+        </button>
+      </div>
+
+      <!-- MACHINE DEEP-DIVE: 5 Expeller Units & Individual 15-Minute Motor Load Graphs (P1 to P5) -->
+      <div class="chart-card" style="margin-bottom:1rem; border-color: rgba(0, 210, 255, 0.25);">
+        <div class="chart-header" style="flex-wrap: wrap; gap: 1rem; align-items: center;">
+          <div>
+            <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.25rem;">
+              <span class="badge badge-info" id="section-main-badge" style="font-weight:700;"><i class="fa-solid fa-bolt"></i> SCADA Motors Telemetry</span>
+              <h2 class="chart-title" id="section-main-title" style="margin:0;"><i class="fa-solid fa-industry text-cyan"></i> Production Machine Motors (5 Expellers &amp; 2 Kohlu Panels)</h2>
+            </div>
+            <p class="chart-subtitle" id="section-main-subtitle">Select an Expeller or Kohlu panel below, or filter by motor rating (75 HP, 60 HP, 50 HP, Kohlu 30 HP). Status: <strong>Green = Good (50%–80%)</strong>, <strong>Yellow = Empty/Low (10%–40%)</strong>, <strong>Red = Overload (&gt;80%)</strong>.</p>
+          </div>
+
+          <!-- Machine Panel Switcher (Separated into Expellers vs Kohlus) -->
+          <div style="display:flex; gap:0.65rem; align-items:center; flex-wrap:wrap;">
+            <!-- 5 Expeller Panels Group -->
+            <div class="panel-switch-cluster cluster-expellers">
+              <span class="cluster-label"><i class="fa-solid fa-industry text-cyan"></i> Expeller Panels:</span>
+              <button class="expeller-tab-btn active" data-expeller="1">Expeller 1</button>
+              <button class="expeller-tab-btn" data-expeller="2">Expeller 2</button>
+              <button class="expeller-tab-btn" data-expeller="3">Expeller 3</button>
+              <button class="expeller-tab-btn" data-expeller="4">Expeller 4</button>
+              <button class="expeller-tab-btn" data-expeller="5">Expeller 5</button>
+              <button class="expeller-tab-btn cluster-all-btn" data-expeller="all"><i class="fa-solid fa-table-cells-large text-cyan"></i> All 5 (25 Motors)</button>
+            </div>
+
+            <!-- 2 Kohlu Panels Group -->
+            <div class="panel-switch-cluster cluster-kohlus">
+              <span class="cluster-label label-kohlu"><i class="fa-solid fa-seedling text-emerald"></i> Kohlu Panels:</span>
+              <button class="expeller-tab-btn tab-btn-kohlu" data-kohlu="1">Kohlu 1 (6 Units)</button>
+              <button class="expeller-tab-btn tab-btn-kohlu" data-kohlu="2">Kohlu 2 (6 Units)</button>
+              <button class="expeller-tab-btn tab-btn-kohlu cluster-all-btn" data-kohlu="all"><i class="fa-solid fa-table-cells-large text-emerald"></i> Both (12 Units)</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- FILTER BY MOTOR RATING (HP) BAR -->
+        <div id="motor-rating-filter-container" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.6rem; padding:0.65rem 1rem; background:rgba(0, 210, 255, 0.035); border:1px solid rgba(0, 210, 255, 0.15); border-radius:var(--radius-sm); margin-bottom:0.85rem;">
+          <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+            <span style="font-size:0.82rem; font-weight:700; color:var(--text-primary); display:flex; align-items:center; gap:0.35rem;">
+              <i class="fa-solid fa-filter text-cyan"></i> Filter by Motor Rating:
+            </span>
+            <div class="rating-filter-group" id="rating-filter-group">
+              <button class="rating-filter-btn active" data-rating-filter="all" onclick="dashboard.filterByRating('all')">
+                <i class="fa-solid fa-table-cells"></i> All Motors
+              </button>
+              <button class="rating-filter-btn" data-rating-filter="P1" onclick="dashboard.filterByRating('P1')">
+                <i class="fa-solid fa-bolt text-red"></i> P1 (75 HP) <span class="badge" style="background:rgba(239,68,68,0.2); color:#ef4444; font-size:0.7rem; padding:1px 5px; margin-left:3px;">5 Motors</span>
+              </button>
+              <button class="rating-filter-btn" data-rating-filter="P2" onclick="dashboard.filterByRating('P2')">
+                <i class="fa-solid fa-bolt text-amber"></i> P2 (60 HP) <span class="badge" style="background:rgba(245,158,11,0.2); color:#f59e0b; font-size:0.7rem; padding:1px 5px; margin-left:3px;">5 Motors</span>
+              </button>
+              <button class="rating-filter-btn" data-rating-filter="P3" onclick="dashboard.filterByRating('P3')">
+                <i class="fa-solid fa-bolt text-amber"></i> P3 (60 HP) <span class="badge" style="background:rgba(245,158,11,0.2); color:#f59e0b; font-size:0.7rem; padding:1px 5px; margin-left:3px;">5 Motors</span>
+              </button>
+              <button class="rating-filter-btn" data-rating-filter="P4" onclick="dashboard.filterByRating('P4')">
+                <i class="fa-solid fa-bolt text-cyan"></i> P4 (50 HP) <span class="badge" style="background:rgba(0,210,255,0.2); color:var(--accent-cyan); font-size:0.7rem; padding:1px 5px; margin-left:3px;">5 Motors</span>
+              </button>
+              <button class="rating-filter-btn" data-rating-filter="P5" onclick="dashboard.filterByRating('P5')">
+                <i class="fa-solid fa-bolt text-cyan"></i> P5 (50 HP) <span class="badge" style="background:rgba(0,210,255,0.2); color:var(--accent-cyan); font-size:0.7rem; padding:1px 5px; margin-left:3px;">5 Motors</span>
+              </button>
+              <button class="rating-filter-btn" data-rating-filter="KOHLU" onclick="dashboard.filterByRating('KOHLU')">
+                <i class="fa-solid fa-seedling text-emerald"></i> Kohlu (30 HP) <span class="badge" style="background:rgba(16,185,129,0.2); color:#10b981; font-size:0.7rem; padding:1px 5px; margin-left:3px;">12 Units</span>
+              </button>
+            </div>
+          </div>
+          <div id="rating-filter-status" style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono);">
+            Showing: <strong>All Motors in Current Section</strong>
+          </div>
+        </div>
+
+        <!-- Motor View Mode Selector: All Motors Grid vs Focus Single Motor -->
+        <div id="expeller-view-mode-bar" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap; gap:0.5rem;">
+          <div style="display:flex; align-items:center; gap:0.4rem; flex-wrap:wrap;" id="sub-motor-focus-buttons">
+            <span style="font-size:0.8rem; font-weight:600; color:var(--text-secondary); margin-right:0.25rem;">View Mode:</span>
+            <button class="btn btn-secondary btn-sm motor-view-btn active" id="btn-view-all-motors" onclick="dashboard.showAllMotorsGrid()">
+              <i class="fa-solid fa-table-cells-large"></i> All Motors Grid
+            </button>
+            <button class="btn btn-secondary btn-sm motor-view-btn" data-motor-focus="P1" onclick="dashboard.focusSingleMotor('P1')">P1 (75 HP)</button>
+            <button class="btn btn-secondary btn-sm motor-view-btn" data-motor-focus="P2" onclick="dashboard.focusSingleMotor('P2')">P2 (60 HP)</button>
+            <button class="btn btn-secondary btn-sm motor-view-btn" data-motor-focus="P3" onclick="dashboard.focusSingleMotor('P3')">P3 (60 HP)</button>
+            <button class="btn btn-secondary btn-sm motor-view-btn" data-motor-focus="P4" onclick="dashboard.focusSingleMotor('P4')">P4 (50 HP)</button>
+            <button class="btn btn-secondary btn-sm motor-view-btn" data-motor-focus="P5" onclick="dashboard.focusSingleMotor('P5')">P5 (50 HP)</button>
+          </div>
+          <span style="font-size:0.76rem; color:var(--text-muted);"><i class="fa-solid fa-circle-info text-cyan"></i> Click any motor card or 'View Details' to inspect 48 individual 15-min intervals</span>
+        </div>
+
+        <!-- VIEW 1: 5 Individual Motor Health Diagnostic Cards Grid -->
+        <div id="expeller-motors-grid" class="expeller-motors-grid">
+          <!-- Dynamically populated via dashboard.renderExpellerDetail() -->
+        </div>
+
+        <!-- VIEW 2: SINGLE MOTOR ENLARGED / FOCUS DEEP-DIVE VIEW -->
+        <div id="expeller-single-motor-focus" class="motor-focus-card" style="display:none; padding:0.5rem 0.85rem; gap:0.35rem;">
+          <!-- Ultra-Compact Single Row Header: Title, Badge, Subtitle & Back Button -->
+          <div class="motor-focus-header" style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:0.4rem; padding:0.2rem 0; margin-bottom:0.25rem; border-bottom:1px solid var(--border-subtle);">
+            <div style="display:flex; align-items:center; gap:0.55rem; flex-wrap:wrap;">
+              <h3 id="focus-motor-title" style="font-size:0.96rem; font-weight:800; margin:0; color:var(--text-primary); display:inline-flex; align-items:center; gap:0.35rem;">P1 (75 HP)</h3>
+              <span id="focus-motor-badge" class="motor-status-pill" style="font-size:0.72rem; padding:0.15rem 0.5rem;">HEALTHY</span>
+              <span id="focus-motor-subtitle" style="font-size:0.72rem; color:var(--text-muted); margin-left:0.25rem;">Col #3 • Rated: 13.95 kWh/15m • Avg: 46%</span>
+            </div>
+            <div style="display:flex; gap:0.4rem; align-items:center;">
+              <button class="btn btn-secondary btn-sm" onclick="dashboard.showAllMotorsGrid()" style="padding:0.2rem 0.55rem; font-size:0.74rem;">
+                <i class="fa-solid fa-arrow-left"></i> Back to All 5 Motors Grid
+              </button>
+            </div>
+          </div>
+
+          <!-- Ultra-Compact Unified Guide & Telemetry Stats Bar (Saves >120px Vertical Height) -->
+          <div style="display:flex; flex-wrap:wrap; gap:0.6rem; align-items:center; justify-content:space-between; background:rgba(0, 210, 255, 0.05); border:1px solid rgba(0, 210, 255, 0.16); border-radius:var(--radius-sm); padding:0.28rem 0.75rem; margin-bottom:0.25rem; font-size:0.73rem;">
+            <!-- Left: Colored Benchmark Guide -->
+            <div style="display:flex; flex-wrap:wrap; align-items:center; gap:0.65rem;">
+              <span style="font-weight:700; color:var(--accent-cyan);"><i class="fa-solid fa-chart-simple"></i> Benchmark Zones:</span>
+              <span style="color:#ff2a55; font-weight:700;"><i class="fa-solid fa-minus"></i> 80% Overload</span>
+              <span style="color:#00f59b; font-weight:700;"><i class="fa-solid fa-minus"></i> 50% Healthy Target</span>
+              <span style="color:#ffb703; font-weight:700;"><i class="fa-solid fa-minus"></i> 40% Low-Load</span>
+              <span style="color:#94a3b8; font-weight:600;"><i class="fa-solid fa-square" style="font-size:0.65rem;"></i> OFF (0%)</span>
+            </div>
+
+            <!-- Right: Compact Inline Stats (Min, Max, Avg, Sum) -->
+            <div style="display:flex; flex-wrap:wrap; align-items:center; gap:0.75rem; font-family:var(--font-mono); font-size:0.74rem;">
+              <span style="color:var(--text-secondary);">Min: <strong id="focus-stat-min" style="color:var(--text-primary);">0.0 kWh</strong></span>
+              <span style="color:var(--text-secondary);">Max: <strong id="focus-stat-max" style="color:#ff2a55;">0.0 kWh</strong></span>
+              <span style="color:var(--text-secondary);">Avg: <strong id="focus-stat-avg" style="color:#00f59b;">0.0 kWh (0%)</strong></span>
+              <span style="color:var(--text-secondary); background:rgba(0,210,255,0.12); padding:0.12rem 0.4rem; border-radius:3px; border:1px solid rgba(0,210,255,0.3);">Total: <strong id="focus-stat-sum" style="color:var(--accent-cyan);">0.0 kWh</strong></span>
+            </div>
+          </div>
+
+          <!-- Enlarged Chart Canvas with 15-minute intervals clearly plotted -->
+          <div class="motor-focus-canvas-wrap">
+            <canvas id="chart-single-motor-focus"></canvas>
+          </div>
+
+          <!-- Focus Motor Supervisory Audit Banner -->
+          <div id="focus-motor-audit-box" class="motor-audit-box audit-box-healthy" style="font-size:0.85rem; padding:0.75rem 1rem;">
+            <strong>Manager Note:</strong> <span id="focus-motor-alert-text">Normal operations.</span>
+          </div>
+
+          <!-- Optional 48-Interval Detailed Table (Collapsed by Default to eliminate clutter) -->
+          <details style="margin-top:0.75rem; border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:0.5rem 0.85rem; background:rgba(255,255,255,0.01);">
+            <summary style="cursor:pointer; font-weight:700; font-size:0.82rem; color:var(--accent-cyan); display:flex; align-items:center; gap:0.5rem; user-select:none;">
+              <i class="fa-solid fa-list-ol"></i> <span>View 48-Interval Detailed Table (Click to Expand)</span>
+            </summary>
+            <div style="margin-top:0.6rem;">
+              <div class="table-responsive" style="max-height:240px; overflow-y:auto;">
+                <table class="data-table" style="font-size:0.8rem;">
+                  <thead>
+                    <tr>
+                      <th>Slot #</th>
+                      <th>Time Slot</th>
+                      <th>Actual Energy (kWh)</th>
+                      <th>Rated Limit</th>
+                      <th>Operating Load %</th>
+                      <th>Condition</th>
+                    </tr>
+                  </thead>
+                  <tbody id="focus-motor-intervals-tbody">
+                    <!-- Populated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: UPLOADED TELEMETRY MATRIX & SHIFT LOGS -->
+    <section id="tab-machines" class="tab-pane">
+      
+      <!-- TOP SECTION: Ultra-Compact Shift Report Upload Logs & Ingestion History -->
+      <div class="table-card compact-upload-card" style="margin-bottom:1rem; padding:0.85rem 1rem;">
+        <div class="chart-header" style="margin-bottom:0.6rem; flex-wrap:wrap; gap:0.6rem; align-items:center;">
+          <div>
+            <div style="display:flex; align-items:center; gap:0.6rem;">
+              <h3 class="chart-title" style="font-size:1.05rem; margin:0;"><i class="fa-solid fa-clock-rotate-left text-cyan"></i> Shift Ingestion Logs &amp; Upload History</h3>
+              <span id="upload-logs-user-filter-badge" class="badge badge-info" style="font-size:0.75rem;"><i class="fa-solid fa-user-check"></i> Showing Logged-in User</span>
+            </div>
+            <p class="chart-subtitle" style="margin:0.15rem 0 0 0; font-size:0.78rem;">Click any shift row or "View in Matrix" to immediately inspect its 15-Minute Telemetry Matrix below. Date format: <strong>DD/MM/YYYY</strong>.</p>
+          </div>
+          
+          <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
+            <!-- Professional Segmented Shift Filter Pill -->
+            <div class="upload-scope-selector" style="display:inline-flex; background:rgba(0,0,0,0.3); border:1px solid rgba(0,210,255,0.25); border-radius:var(--radius-sm); padding:2px;">
+              <button type="button" class="scope-btn active" id="btn-filter-my-uploads" onclick="dashboard.toggleUploadLogsFilter(true)" style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.32rem 0.85rem; border-radius:4px; font-size:0.78rem; font-weight:700; border:none; cursor:pointer; background:var(--accent-cyan); color:#060b18; transition:all 0.2s ease;">
+                <i class="fa-solid fa-user-check"></i> My Uploads
+              </button>
+              <button type="button" class="scope-btn" id="btn-filter-all-uploads" onclick="dashboard.toggleUploadLogsFilter(false)" style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.32rem 0.85rem; border-radius:4px; font-size:0.78rem; font-weight:600; border:none; cursor:pointer; background:transparent; color:var(--text-secondary); transition:all 0.2s ease;">
+                <i class="fa-solid fa-layer-group"></i> All Plant Shifts
+              </button>
+            </div>
+            <a href="/api/reports/template/csv" download="EMS_Standard_Column_Template.csv" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.75rem; font-size:0.78rem;" title="Download standard CSV layout with correct column order">
+              <i class="fa-solid fa-file-csv text-emerald"></i> Template CSV
+            </a>
+            <button class="btn btn-secondary btn-sm" onclick="dashboard.loadTelemetryMatrixAndLogs()" style="padding:0.32rem 0.75rem; font-size:0.78rem;" title="Refresh upload logs">
+              <i class="fa-solid fa-arrows-rotate"></i> Refresh
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive compact-scroll-wrap" style="max-height:220px; overflow-y:auto; border:1px solid var(--border-subtle); border-radius:var(--radius-sm);">
+          <table class="data-table compact-logs-table" style="font-size:0.78rem;">
+            <thead>
+              <tr style="position:sticky; top:0; background:var(--bg-card); z-index:2;">
+                <th style="padding:0.5rem 0.65rem; width:100px;">Active Shift</th>
+                <th style="padding:0.5rem 0.65rem; width:125px;">Shift Date</th>
+                <th style="padding:0.5rem 0.65rem; width:125px;">Shift Type</th>
+                <th style="padding:0.5rem 0.65rem; min-width:260px;">Original Excel Filename</th>
+                <th style="padding:0.5rem 0.65rem; width:180px;">Upload Date &amp; Time (DD/MM/YYYY)</th>
+                <th style="padding:0.5rem 0.65rem; width:150px;">Uploaded By</th>
+                <th style="padding:0.5rem 0.65rem; text-align:center; width:95px;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="upload-logs-table-body">
+              <tr><td colspan="7" style="text-align:center; padding:1.25rem; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Loading upload history...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- BOTTOM SECTION: Full 15-Minute SCADA Telemetry Matrix Table -->
+      <div class="table-card" style="padding:0.75rem 0.85rem; margin-top:0.5rem;">
+        <div class="chart-header" style="flex-wrap:wrap; gap:0.6rem; align-items:center; margin-bottom:0.4rem;">
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <h3 class="chart-title" style="margin:0; font-size:1rem;"><i class="fa-solid fa-table-cells text-cyan"></i> 15-Minute SCADA Telemetry Matrix</h3>
+            <span class="badge badge-info" style="font-size:0.72rem; padding:0.18rem 0.45rem;"><i class="fa-solid fa-keyboard"></i> Left / Right Arrow Keys Scroll</span>
+          </div>
+
+          <!-- Essential Controls Only: Keyboard / Manual Scroll Buttons -->
+          <div style="display:flex; gap:0.35rem; align-items:center;">
+            <button class="btn btn-secondary btn-sm" id="btn-scroll-left" onclick="dashboard.scrollMatrix(-350)" title="Scroll Left (or press Left Arrow key)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">
+              <i class="fa-solid fa-chevron-left"></i>
+            </button>
+            <button class="btn btn-secondary btn-sm" id="btn-scroll-right" onclick="dashboard.scrollMatrix(350)" title="Scroll Right (or press Right Arrow key)" style="padding:0.25rem 0.6rem; font-size:0.75rem;">
+              <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Health Legend Bar (Compact) -->
+        <div style="display:flex; gap:0.5rem; align-items:center; padding:0.35rem 0; margin-bottom:0.5rem; border-bottom:1px solid var(--border-subtle); flex-wrap:wrap; font-size:0.74rem;">
+          <span style="font-weight:700; color:var(--text-secondary); margin-right:0.2rem;">Health:</span>
+          <span class="badge badge-success" style="font-size:0.7rem; padding:0.12rem 0.45rem;"><i class="fa-solid fa-square text-emerald"></i> 50%–80% Healthy</span>
+          <span class="badge badge-warning" style="font-size:0.7rem; padding:0.12rem 0.45rem;"><i class="fa-solid fa-square text-amber"></i> 10%–40% Low Load</span>
+          <span class="badge badge-critical" style="font-size:0.7rem; padding:0.12rem 0.45rem;"><i class="fa-solid fa-square text-red"></i> &gt;80% Overload</span>
+          <span class="badge" style="background:rgba(100,116,139,0.15); color:#94a3b8; font-size:0.7rem; padding:0.12rem 0.45rem;"><i class="fa-solid fa-square"></i> &lt;10% Stopped / 0</span>
+        </div>
+
+        <!-- Telemetry Matrix Scrollable Container -->
+        <div id="matrix-scroll-container" class="matrix-container" tabindex="0">
+          <table class="matrix-table" id="matrix-table">
+            <thead id="matrix-thead">
+              <!-- Rendered dynamically -->
+            </thead>
+            <tbody id="matrix-tbody">
+              <tr><td colspan="48" style="text-align:center; padding:2rem; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Loading SCADA telemetry matrix...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: SYSTEM AUDIT & LOGS (ACTIVITY LOGS, TELEMETRY ANOMALIES & BACKUPS) -->
+    <section id="tab-validation" class="tab-pane">
+      
+      <!-- Sub-Tab Switcher Bar inside Logs Workspace -->
+      <div class="activity-subnav-bar">
+        <div class="expeller-tabs-group" style="padding:0.25rem;">
+          <button class="expeller-tab-btn active" id="btn-subtab-activity" onclick="validation.switchLogsSubTab('activity')">
+            <i class="fa-solid fa-user-shield text-cyan"></i> User Activity Logs (Admin Audit)
+          </button>
+          <button class="expeller-tab-btn" id="btn-subtab-backups" onclick="validation.switchLogsSubTab('backups')">
+            <i class="fa-solid fa-box-archive text-emerald"></i> Reports Backup Vault
+          </button>
+        </div>
+
+        <div style="display:flex; align-items:center; gap:0.6rem;">
+          <span class="badge badge-info" style="font-size:0.78rem; padding:0.35rem 0.65rem;">
+            <i class="fa-solid fa-shield-halved text-cyan"></i> Immutable Admin Audit Trail
+          </span>
+        </div>
+      </div>
+
+      <!-- SECTION 1: User Activity Logs Table (Admin Controlled) -->
+      <div id="logs-section-activity" class="table-card" style="margin-bottom:1.5rem;">
+        <div class="chart-header" style="margin-bottom:1.25rem; flex-wrap:wrap; gap:0.75rem;">
+          <div>
+            <div style="display:flex; align-items:center; gap:0.6rem;">
+              <h2 class="chart-title" style="margin:0;"><i class="fa-solid fa-user-shield text-cyan"></i> System Activity Logs &amp; User Audit Trail</h2>
+              <span id="activity-admin-badge" class="badge badge-info"><i class="fa-solid fa-lock"></i> Admin Only</span>
+            </div>
+            <p class="chart-subtitle" style="margin-top:0.25rem;">Real-time tracking of user logins, logouts, new registrations, Excel uploads, and invalid file attempts with full user attribution and timestamps.</p>
+          </div>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <button id="btn-export-activity-csv" class="btn btn-secondary btn-sm" onclick="validation.exportActivityCsv()">
+              <i class="fa-solid fa-download"></i> Export Activity CSV
+            </button>
+            <button class="btn btn-secondary btn-sm" onclick="validation.loadActivityLogs()">
+              <i class="fa-solid fa-arrows-rotate"></i> Refresh Logs
+            </button>
+          </div>
+        </div>
+
+        <!-- Activity Toolbar: Search, Filters, Sorting, Rows per page -->
+        <div class="table-toolbar" style="flex-wrap:wrap; gap:0.75rem;">
+          <div class="search-input-wrap" style="flex:1; min-width:240px;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="activity-search-input" class="search-input" placeholder="Search by user name, email, description, filename..." oninput="validation.onActivitySearch(this.value)">
+          </div>
+
+          <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+            <!-- Activity Type Filter -->
+            <select id="activity-type-filter" class="search-input" style="width:auto; cursor:pointer;" onchange="validation.onActivityTypeFilter(this.value)">
+              <option value="ALL">All Activity Types</option>
+              <option value="USER_LOGIN">User Login</option>
+              <option value="USER_LOGOUT">User Logout</option>
+              <option value="NEW_REGISTRATION">New Registration</option>
+              <option value="EXCEL_UPLOAD">Excel Upload</option>
+              <option value="INVALID_EXCEL_UPLOAD">Invalid Excel Upload</option>
+            </select>
+
+            <!-- Status Filter -->
+            <select id="activity-status-filter" class="search-input" style="width:auto; cursor:pointer;" onchange="validation.onActivityStatusFilter(this.value)">
+              <option value="ALL">All Statuses</option>
+              <option value="SUCCESS">Success</option>
+              <option value="FAILED">Failed</option>
+              <option value="WARNING">Warning</option>
+            </select>
+
+            <!-- Sort By Filter -->
+            <select id="activity-sort-filter" class="search-input" style="width:auto; cursor:pointer;" onchange="validation.onActivitySort(this.value)">
+              <option value="desc">Date &amp; Time (Newest First)</option>
+              <option value="asc">Date &amp; Time (Oldest First)</option>
+            </select>
+
+            <!-- Rows per page Selector -->
+            <div style="display:flex; align-items:center; gap:0.35rem; font-size:0.8rem; color:var(--text-secondary);">
+              <span>Rows:</span>
+              <select id="activity-limit-select" class="search-input" style="width:auto; padding:0.35rem 0.5rem; cursor:pointer;" onchange="validation.onActivityLimitChange(this.value)">
+                <option value="10" selected>10</option>
+                <option value="25">25</option>
+                <option value="50">50</option>
+                <option value="100">100</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Activity Logs Table -->
+        <div class="table-responsive">
+          <table class="data-table" id="activity-logs-table">
+            <thead>
+              <tr>
+                <th style="min-width:160px;">User Name</th>
+                <th style="min-width:180px;">Email</th>
+                <th style="min-width:150px;">Activity Type</th>
+                <th style="min-width:280px;">Description</th>
+                <th style="min-width:170px;">Date &amp; Time</th>
+                <th style="min-width:100px; text-align:center;">Status</th>
+              </tr>
+            </thead>
+            <tbody id="activity-logs-tbody">
+              <tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Loading activity logs...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Pagination & Records Information Footer -->
+        <div class="pagination-footer">
+          <div>
+            Showing <strong id="activity-showing-start" style="color:var(--text-primary);">1</strong> to <strong id="activity-showing-end" style="color:var(--text-primary);">10</strong> of <strong id="activity-total-records" style="color:var(--accent-cyan);">0</strong> entries
+          </div>
+          <div class="pagination-controls">
+            <button id="btn-activity-prev" class="page-btn" onclick="validation.changeActivityPage(-1)" disabled>
+              <i class="fa-solid fa-chevron-left"></i> Previous
+            </button>
+            <div id="activity-page-numbers" class="pagination-controls"></div>
+            <button id="btn-activity-next" class="page-btn" onclick="validation.changeActivityPage(1)" disabled>
+              Next <i class="fa-solid fa-chevron-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Non-admin Access Restriction Notice -->
+        <div id="activity-restricted-notice" class="admin-restricted-box" style="display:none;">
+          <i class="fa-solid fa-shield-halved text-red" style="font-size:2.5rem; margin-bottom:0.75rem;"></i>
+          <h3 style="font-size:1.15rem; color:var(--accent-red); margin-bottom:0.35rem;">Admin Access Restricted</h3>
+          <p style="font-size:0.85rem; color:var(--text-secondary); max-width:480px; margin:0 auto;">Only users with the <strong>Administrator</strong> role are authorized to view system activity and security audit logs.</p>
+        </div>
+      </div>
+
+      <!-- SECTION 2: Uploaded Reports Backup & Archive Vault -->
+      <div id="logs-section-backups" class="table-card" style="display:none; margin-bottom:1.5rem;">
+        <div class="chart-header" style="margin-bottom:1.25rem; flex-wrap:wrap; gap:0.75rem; align-items:center;">
+          <div>
+            <div style="display:flex; align-items:center; gap:0.6rem;">
+              <h2 class="chart-title" style="margin:0;"><i class="fa-solid fa-box-archive text-emerald"></i> Reports Backup Vault &amp; Historical Archives</h2>
+              <span class="badge badge-success" style="font-size:0.75rem;"><i class="fa-solid fa-shield-check"></i> SHA-256 Verified</span>
+            </div>
+            <p class="chart-subtitle" style="margin-top:0.25rem;">Preserves latest and previous uploaded Excel shift files with one-click download, auto-pruning older files to ensure continuous storage safety.</p>
+          </div>
+          <div style="display:flex; gap:0.5rem; align-items:center;">
+            <button id="btn-refresh-backups" class="btn btn-secondary btn-sm" onclick="loadBackupsTable()">
+              <i class="fa-solid fa-arrows-rotate"></i> Refresh Vault
+            </button>
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="data-table" id="backups-table">
+            <thead>
+              <tr>
+                <th style="min-width:140px;">Status</th>
+                <th style="min-width:240px;">Original Report Name</th>
+                <th style="min-width:260px;">Archived Backup Name</th>
+                <th style="min-width:180px;">Upload Timestamp</th>
+                <th style="min-width:100px; text-align:right;">File Size</th>
+                <th style="min-width:140px; text-align:center;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="backups-table-body">
+              <tr><td colspan="6" style="text-align:center; padding:2rem; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Loading secure backups...</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: USER ACCOUNTS & SECURITY MANAGEMENT (ADMIN ONLY) -->
+    <section id="tab-accounts" class="tab-pane">
+      <div class="table-card">
+        <div class="chart-header" style="margin-bottom:1.25rem; flex-wrap:wrap; gap:0.75rem; align-items:center;">
+          <div>
+            <div style="display:flex; align-items:center; gap:0.6rem;">
+              <h2 class="chart-title" style="margin:0;"><i class="fa-solid fa-users-gear text-cyan"></i> User Accounts &amp; Access Control</h2>
+              <span class="badge badge-info"><i class="fa-solid fa-lock"></i> Admin Only</span>
+            </div>
+            <p class="chart-subtitle" style="margin-top:0.25rem;">
+              Manage registered and OTP-verified users. Administrator can block or unblock any account with 1 click to instantly enforce plant security.
+            </p>
+          </div>
+          <button class="btn btn-secondary btn-sm" onclick="accounts.loadAccounts()">
+            <i class="fa-solid fa-arrows-rotate"></i> Refresh Accounts
+          </button>
+        </div>
+
+        <!-- Toolbar: Search & Status Filter -->
+        <div class="table-toolbar" style="flex-wrap:wrap; gap:0.75rem;">
+          <div class="search-input-wrap" style="flex:1; min-width:240px;">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="accounts-search-input" class="search-input" placeholder="Search by name, email, or role..." oninput="accounts.onSearch(this.value)">
+          </div>
+
+          <div style="display:flex; align-items:center; gap:0.6rem; flex-wrap:wrap;">
+            <select id="accounts-status-filter" class="search-input" style="width:auto; cursor:pointer;" onchange="accounts.onStatusFilter(this.value)">
+              <option value="ALL">All Account Statuses</option>
+              <option value="ACTIVE">Active Accounts</option>
+              <option value="BLOCKED">Blocked Accounts</option>
+            </select>
+            <span id="accounts-count-badge" class="badge badge-info" style="font-size:0.78rem;">0 Accounts</span>
+          </div>
+        </div>
+
+        <!-- Accounts Table -->
+        <div class="table-responsive">
+          <table class="data-table" id="accounts-table">
+            <thead>
+              <tr>
+                <th style="min-width:180px;">Name</th>
+                <th style="min-width:200px;">Email</th>
+                <th style="min-width:180px;">Registration Date</th>
+                <th style="min-width:130px; text-align:center;">Account Status</th>
+                <th style="min-width:170px; text-align:center;">Action</th>
+              </tr>
+            </thead>
+            <tbody id="accounts-table-body">
+              <tr><td colspan="5" style="text-align:center; padding:2rem; color:var(--text-muted);"><i class="fa-solid fa-spinner fa-spin"></i> Loading accounts...</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Accounts Pagination Footer -->
+        <div class="pagination-footer" id="accounts-pagination-footer" style="display:none; margin-top:1rem;">
+          <div style="display:flex; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+            <span style="font-size:0.8rem; color:var(--text-secondary);">
+              Showing <strong id="accounts-showing-start" style="color:var(--text-primary);">0</strong> to <strong id="accounts-showing-end" style="color:var(--text-primary);">0</strong> of <strong id="accounts-total-records" style="color:var(--accent-cyan);">0</strong> accounts
+            </span>
+            <select id="accounts-per-page-select" class="search-input" style="padding:0.25rem 0.5rem; font-size:0.75rem; width:auto; margin-left:0.5rem; cursor:pointer;" onchange="accounts.onLimitChange(this.value)">
+              <option value="10" selected>10 per page</option>
+              <option value="25">25 per page</option>
+              <option value="50">50 per page</option>
+            </select>
+          </div>
+          <div style="display:flex; align-items:center; gap:0.35rem;" id="accounts-pagination-controls"></div>
+        </div>
+
+        <!-- Non-admin Restricted Notice -->
+        <div id="accounts-restricted-notice" class="admin-restricted-box" style="display:none;">
+          <i class="fa-solid fa-shield-halved text-red" style="font-size:2.5rem; margin-bottom:0.75rem;"></i>
+          <h3 style="font-size:1.15rem; color:var(--accent-red); margin-bottom:0.35rem;">Admin Access Restricted</h3>
+          <p style="font-size:0.85rem; color:var(--text-secondary); max-width:480px; margin:0 auto;">Only users with the <strong>Administrator</strong> role are authorized to view and manage user accounts.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- Delete User Account Permanent Confirmation Modal (Admin Only) -->
+<div id="delete-account-modal" class="modal-overlay">
+  <div class="modal-dialog" style="max-width:460px;">
+    <div class="modal-header" style="border-bottom:1px solid rgba(239,68,68,0.3); background:rgba(239,68,68,0.06);">
+      <div style="display:flex; align-items:center; gap:0.65rem;">
+        <div style="width:36px; height:36px; border-radius:50%; background:rgba(239,68,68,0.15); border:1px solid rgba(239,68,68,0.4); display:flex; align-items:center; justify-content:center; color:#ef4444; font-size:1.1rem;">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+        </div>
+        <div>
+          <h3 class="modal-title" style="color:#ef4444; font-size:1.05rem; margin:0;">Permanently Delete Account</h3>
+          <span style="font-size:0.72rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; letter-spacing:0.5px;">Irreversible Administrator Action</span>
+        </div>
+      </div>
+      <button class="btn-icon" style="border:none;" onclick="accounts.closeDeleteModal()"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body" style="padding:1.4rem 1.5rem;">
+      <p style="font-size:0.88rem; color:var(--text-primary); margin:0 0 1rem; line-height:1.5;">
+        Are you sure you want to permanently delete this user account from the plant database?
+      </p>
+
+      <div style="background:var(--bg-secondary); border:1px solid var(--border-subtle); border-radius:var(--radius-md); padding:0.85rem 1rem; margin-bottom:1.25rem;">
+        <div style="font-size:0.75rem; color:var(--text-muted); text-transform:uppercase; font-weight:700; margin-bottom:0.25rem;">Target Account Details</div>
+        <div style="font-weight:700; color:var(--text-primary); font-size:0.95rem;" id="delete-account-target-name">—</div>
+        <div style="font-size:0.8rem; color:var(--accent-cyan); font-family:monospace; margin-top:2px;" id="delete-account-target-email">—</div>
+      </div>
+
+      <div style="background:rgba(239,68,68,0.08); border-left:3px solid #ef4444; border-radius:4px; padding:0.6rem 0.85rem; font-size:0.78rem; color:#fca5a5; line-height:1.4;">
+        <i class="fa-solid fa-circle-exclamation text-red"></i> <strong>Warning:</strong> All login credentials, access permissions, and account associations will be completely erased. This action cannot be undone.
+      </div>
+    </div>
+    <div class="modal-footer" style="padding:0.85rem 1.5rem; justify-content:space-between; background:var(--bg-secondary); border-top:1px solid var(--border-subtle);">
+      <button type="button" class="btn btn-secondary" onclick="accounts.closeDeleteModal()">
+        Cancel
+      </button>
+      <button type="button" class="btn btn-danger" id="btn-confirm-delete-account" onclick="accounts.executeDelete()" style="background:#dc2626; border-color:#ef4444; color:#fff; font-weight:700; box-shadow:none !important;">
+        <i class="fa-solid fa-trash-can"></i> Permanently Delete Account
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Upload Report Modal -->
+<div id="upload-modal" class="modal-overlay">
+  <div class="modal-dialog" style="max-width: 680px;">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:0.65rem;">
+        <img src="/Images/logos/03_Right_Top_Side_Panel_MASHAL.png?v=2026" alt="Mashal" style="height:30px; border-radius:4px; box-shadow:0 1px 4px rgba(0,0,0,0.25); border:1px solid rgba(254,227,0,0.4);">
+        <h3 class="modal-title"><i class="fa-solid fa-file-excel text-emerald" style="font-size:0.95rem; margin-right:0.25rem;"></i> Ingest Shift Telemetry Report</h3>
+      </div>
+      <button id="btn-close-upload" class="btn-icon" style="border:none;"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+    <div class="modal-body">
+      <!-- Standard Layout Reference & Download Template Banner -->
+      <div style="display:flex; justify-content:space-between; align-items:center; background:rgba(0,210,255,0.06); border:1px solid rgba(0,210,255,0.2); border-radius:var(--radius-sm); padding:0.6rem 0.95rem; margin-bottom:0.85rem; font-size:0.82rem; flex-wrap:wrap; gap:0.5rem;">
+        <div style="display:flex; align-items:center; gap:0.55rem; color:var(--text-secondary);">
+          <i class="fa-solid fa-circle-info text-cyan" style="font-size:0.95rem;"></i>
+          <span><strong>Format Notice:</strong> Excel must follow standard SCADA layout (Col B: Incomer 1, C–G: P1–P5, H: Incomer 2).</span>
+        </div>
+        <a href="/api/reports/template/csv" download="EMS_Standard_Column_Template.csv" class="btn btn-secondary btn-sm" style="padding:0.3rem 0.65rem; font-size:0.76rem; font-weight:600; text-decoration:none;">
+          <i class="fa-solid fa-download text-emerald"></i> Download Standard CSV Template
+        </a>
+      </div>
+
+      <!-- Mode Selection: Single Shift vs Both Shifts -->
+      <div style="margin-bottom:0.85rem;">
+        <label style="display:block; font-size:0.85rem; font-weight:700; color:var(--text-primary); margin-bottom:0.45rem;">
+          <i class="fa-solid fa-layer-group text-cyan"></i> Select Shift Upload Mode:
+        </label>
+        <div class="upload-mode-selector">
+          <div class="upload-mode-option active" id="opt-mode-single" onclick="validation.setUploadMode('SINGLE')">
+            <span class="custom-radio-dot" id="dot-shift-single"></span>
+            <div>
+              <div style="font-weight:700; font-size:0.88rem; color:var(--text-primary);">Single Shift (1 File)</div>
+              <div style="font-size:0.74rem; color:var(--text-muted);">12-Hour Shift Report (Day or Night)</div>
+            </div>
+          </div>
+          <div class="upload-mode-option" id="opt-mode-dual" onclick="validation.setUploadMode('DUAL')">
+            <span class="custom-radio-dot" id="dot-shift-dual"></span>
+            <div>
+              <div style="font-weight:700; font-size:0.88rem; color:var(--text-primary);">Both Shifts (2 Files)</div>
+              <div style="font-size:0.74rem; color:var(--text-muted);">Upload Day &amp; Night Shifts Separately</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CONTAINER 1: Single Shift Dropzone -->
+      <div id="single-upload-section">
+        <div id="upload-dropzone" class="dropzone">
+          <i class="fa-solid fa-file-arrow-up"></i>
+          <div style="font-weight:600; font-size:1.05rem; color:var(--text-primary); margin-bottom:0.25rem;">Drag &amp; Drop Shift Excel Report (.xlsx, .xls)</div>
+          <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">Preserves original timestamps, readings, decimal precision, and motor health tags</div>
+          <input type="file" id="file-upload-input" accept=".xlsx, .xls" style="display:none;">
+          <button class="btn btn-secondary btn-sm" onclick="document.getElementById('file-upload-input').click()">Browse Local File</button>
+        </div>
+      </div>
+
+      <!-- CONTAINER 2: Dual Shift Dropzones (Day Shift + Night Shift) -->
+      <div id="dual-upload-section" style="display:none;">
+        <div class="dual-dropzone-grid">
+          <div id="dual-dropzone-1" class="dropzone" style="padding:1.25rem 0.5rem; position:relative;">
+            <i class="fa-solid fa-sun text-amber" style="font-size:1.85rem; margin-bottom:0.4rem;"></i>
+            <div style="font-weight:700; font-size:0.84rem; color:var(--text-primary); white-space:nowrap; letter-spacing:-0.2px;">Day Shift (07:00 AM – 07:00 PM)</div>
+            <div id="dual-file-1-name" style="font-size:0.76rem; color:var(--text-muted); margin:0.4rem 0;">No file selected</div>
+            <input type="file" id="file-dual-input-1" accept=".xlsx, .xls" style="display:none;">
+            <div id="dual-action-wrap-1">
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-choose-dual-1" onclick="document.getElementById('file-dual-input-1').click()">Choose Day Shift File</button>
+            </div>
+          </div>
+
+          <div id="dual-dropzone-2" class="dropzone" style="padding:1.25rem 0.5rem; position:relative;">
+            <i class="fa-solid fa-moon text-purple" style="font-size:1.85rem; margin-bottom:0.4rem;"></i>
+            <div style="font-weight:700; font-size:0.84rem; color:var(--text-primary); white-space:nowrap; letter-spacing:-0.2px;">Night Shift (07:00 PM – 07:00 AM)</div>
+            <div id="dual-file-2-name" style="font-size:0.76rem; color:var(--text-muted); margin:0.4rem 0;">No file selected</div>
+            <input type="file" id="file-dual-input-2" accept=".xlsx, .xls" style="display:none;">
+            <div id="dual-action-wrap-2">
+              <button type="button" class="btn btn-secondary btn-sm" id="btn-choose-dual-2" onclick="document.getElementById('file-dual-input-2').click()">Choose Night Shift File</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:1rem; text-align:center;">
+          <button id="btn-submit-dual-upload" class="btn btn-primary" style="width:100%; justify-content:center;" disabled>
+            <i class="fa-solid fa-cloud-arrow-up"></i> Upload Both Shifts (Day &amp; Night)
+          </button>
+        </div>
+      </div>
+
+      <!-- Upload Progress Bar & Step Flow -->
+      <div id="upload-progress-wrap" style="display:none; margin-top:1.25rem; background:rgba(0,0,0,0.15); border:1px solid var(--border-subtle); border-radius:var(--radius-sm); padding:0.85rem 1rem;">
+        <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.82rem; margin-bottom:0.45rem;">
+          <span id="upload-status-text" style="color:var(--text-primary); font-weight:600;"><i class="fa-solid fa-spinner fa-spin text-cyan"></i> Ingesting Excel telemetry...</span>
+          <span id="upload-pct-text" style="color:var(--accent-cyan); font-family:var(--font-mono); font-weight:700; font-size:0.82rem;">0%</span>
+        </div>
+        <div style="background:var(--bg-primary); border-radius:var(--radius-full); height:8px; overflow:hidden; border:1px solid var(--border-subtle);">
+          <div id="upload-progress-bar" style="background:linear-gradient(90deg, #00d2ff, #00e676); height:100%; width:0%; transition:width 0.4s ease;"></div>
+        </div>
+        <div id="upload-stage-desc" style="font-size:0.73rem; color:var(--text-muted); margin-top:0.4rem;">
+          Analyzing 48 SCADA telemetry intervals, energy balances &amp; motor health thresholds...
+        </div>
+      </div>
+
+      <!-- Column Sequence & Layout Error Alert -->
+      <div id="upload-error-callout" style="display:none; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.35); border-radius:var(--radius-sm); padding:0.75rem 1rem; margin-top:0.85rem;">
+        <div style="display:flex; align-items:flex-start; gap:0.6rem;">
+          <i class="fa-solid fa-triangle-exclamation text-red" style="font-size:1.15rem; margin-top:2px;"></i>
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:0.85rem; color:var(--accent-red); margin-bottom:0.25rem;">
+              Column Sequence &amp; Layout Mismatch Detected
+            </div>
+            <div id="upload-error-callout-text" style="font-size:0.78rem; color:var(--text-primary); line-height:1.45;"></div>
+            <div style="margin-top:0.5rem;">
+              <a href="/api/reports/template/csv" download="EMS_Standard_Column_Template.csv" class="btn btn-secondary btn-sm" style="font-size:0.74rem; padding:0.25rem 0.55rem; text-decoration:none;">
+                <i class="fa-solid fa-file-csv text-emerald"></i> Download Standard Reference Template CSV
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div id="login-modal" class="modal-overlay">
+  <div class="modal-dialog auth-modal-dialog" style="max-width:440px; padding:0; overflow:hidden;">
+    
+    <!-- Header with latest official logos from Images/logos directory (Previous style: direct on card with yellow accent) -->
+    <div class="modal-header" style="justify-content:center; flex-direction:column; gap:0.6rem; text-align:center; padding:1.35rem 1.5rem 1rem; border-bottom:1px solid var(--border-subtle);">
+      <div style="display:flex; justify-content:center; align-items:center; gap:0.75rem;">
+        <img src="/Images/logos/02_Left_Top_Side_Panel_KOGM.png?v=2026" alt="KOGM" style="height:50px; width:50px; border-radius:8px; object-fit:cover; border:1px solid rgba(254,227,0,0.5); box-shadow:0 3px 8px rgba(0,0,0,0.3);">
+        <img src="/Images/logos/03_Right_Top_Side_Panel_MASHAL.png?v=2026" alt="Mashal Mustard Oil" style="height:50px; border-radius:8px; object-fit:contain; border:1px solid rgba(254,227,0,0.5); box-shadow:0 3px 8px rgba(0,0,0,0.3);">
+      </div>
+      <div>
+        <h3 class="modal-title" style="font-size:1.15rem; font-weight:800; letter-spacing:0.3px; color:var(--text-primary); margin:0;">MASHAL EMS INTELLIGENCE</h3>
+        <div style="font-size:0.75rem; color:var(--accent-cyan); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-top:2px;">SCADA 415V Energy Management System</div>
+      </div>
+    </div>
+
+    <!-- Auth Tabs: Sign In / Create Account -->
+    <div class="auth-tab-nav" id="auth-tab-nav">
+      <button type="button" class="auth-tab-btn active" id="btn-tab-signin" onclick="auth.switchAuthMode('signin')">
+        <i class="fa-solid fa-right-to-bracket"></i> Sign In
+      </button>
+      <button type="button" class="auth-tab-btn" id="btn-tab-register" onclick="auth.switchAuthMode('register')">
+        <i class="fa-solid fa-user-plus"></i> Create Account
+      </button>
+    </div>
+
+    <div class="modal-body" style="padding:1.35rem 1.5rem 1.5rem;">
+      <!-- PANE 1: Sign In Form -->
+      <div id="auth-signin-pane">
+        <form id="login-form">
+          <div style="margin-bottom:1rem;">
+            <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.35rem;">
+              <i class="fa-regular fa-user text-cyan"></i> Username or Email
+            </label>
+            <input type="text" id="login-username" class="search-input" placeholder="admin" value="admin" required autofocus style="width:100%;">
+          </div>
+          <div style="margin-bottom:1rem;">
+            <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.35rem;">
+              <i class="fa-solid fa-lock text-cyan"></i> Password
+            </label>
+            <input type="password" id="login-password" class="search-input" placeholder="••••••••••••" value="AdminPassword2026!" required style="width:100%;">
+          </div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.15rem; font-size:0.78rem;">
+            <label style="display:inline-flex; align-items:center; gap:0.4rem; color:var(--text-secondary); cursor:pointer;">
+              <input type="checkbox" id="chk-keep-logged" checked style="accent-color:var(--accent-cyan);">
+              <span>Keep Me Logged In</span>
+            </label>
+          </div>
+          <div id="login-error-msg" style="display:none; color:var(--accent-red); font-size:0.82rem; margin-bottom:1rem; padding:0.5rem 0.75rem; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:var(--radius-sm);"></div>
+          <button type="submit" class="btn btn-primary" id="btn-signin-submit" style="width:100%; justify-content:center; padding:0.68rem 1rem; font-weight:700;">
+            <i class="fa-solid fa-right-to-bracket"></i> Sign In to Dashboard
+          </button>
+          <div style="display:flex; justify-content:space-between; font-size:0.74rem; font-weight:700; text-transform:uppercase; margin-top:1rem; color:var(--text-muted);">
+            <span style="cursor:pointer; color:var(--text-secondary);" onclick="auth.switchAuthMode('forgot')">Forgot Password?</span>
+            <span style="cursor:pointer; color:var(--accent-cyan);" onclick="auth.switchAuthMode('register')">New User? Register</span>
+          </div>
+        </form>
+      </div>
+
+      <!-- PANE 2: Registration Form (Name, Email, Password, Confirm Password) -->
+      <div id="auth-register-pane" style="display:none;">
+        <p style="font-size:0.78rem; color:var(--text-secondary); margin-top:0; margin-bottom:1rem; line-height:1.45;">
+          Register a new operator or staff account. An official 6-digit OTP code will be sent to your email with verified company credentials.
+        </p>
+        <form id="register-form">
+          <div style="margin-bottom:0.85rem;">
+            <label style="display:block; font-size:0.76rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.3rem;">
+              <i class="fa-solid fa-id-card text-cyan"></i> Full Name
+            </label>
+            <input type="text" id="reg-name" class="search-input" placeholder="e.g. Ramesh Kumar" required style="width:100%;">
+          </div>
+          <div style="margin-bottom:0.85rem;">
+            <label style="display:block; font-size:0.76rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.3rem;">
+              <i class="fa-solid fa-envelope text-cyan"></i> Email ID
+            </label>
+            <input type="email" id="reg-email" class="search-input" placeholder="e.g. ramesh@mashaloil.com" required style="width:100%;">
+          </div>
+          <div style="margin-bottom:0.85rem;">
+            <label style="display:block; font-size:0.76rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.3rem;">
+              <i class="fa-solid fa-lock text-cyan"></i> Password
+            </label>
+            <input type="password" id="reg-password" class="search-input" placeholder="At least 6 characters" minlength="6" required style="width:100%;">
+          </div>
+          <!-- Confirm Password Column (Mandatory Image 3 Requirement) -->
+          <div style="margin-bottom:1.15rem;">
+            <label style="display:block; font-size:0.76rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.3rem;">
+              <i class="fa-solid fa-shield-halved text-cyan"></i> Confirm Password
+            </label>
+            <input type="password" id="reg-confirm-password" class="search-input" placeholder="Re-enter your password" minlength="6" required style="width:100%;">
+          </div>
+          <div id="reg-error-msg" style="display:none; color:var(--accent-red); font-size:0.82rem; margin-bottom:1rem; padding:0.5rem 0.75rem; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:var(--radius-sm);"></div>
+          <button type="submit" class="btn btn-primary" id="btn-request-otp" style="width:100%; justify-content:center; padding:0.68rem 1rem; font-weight:700;">
+            <i class="fa-solid fa-paper-plane"></i> Send OTP Verification Code
+          </button>
+          <div style="text-align:center; font-size:0.74rem; font-weight:700; text-transform:uppercase; margin-top:1rem; color:var(--text-muted);">
+            <span style="cursor:pointer; color:var(--accent-cyan);" onclick="auth.switchAuthMode('signin')">Already have an account? Sign In</span>
+          </div>
+        </form>
+      </div>
+
+      <!-- PANE 3: Registration OTP Verification Form -->
+      <div id="auth-otp-pane" style="display:none;">
+        <div style="text-align:center; margin-bottom:1.25rem;">
+          <div style="width:52px; height:52px; border-radius:50%; background:rgba(0,210,255,0.12); border:1px solid rgba(0,210,255,0.35); color:#00d2ff; display:flex; align-items:center; justify-content:center; margin:0 auto 0.75rem; font-size:1.4rem;">
+            <i class="fa-solid fa-envelope-circle-check"></i>
+          </div>
+          <h4 style="font-size:1rem; font-weight:700; color:var(--text-primary); margin:0 0 0.35rem;">Enter 6-Digit Verification Code</h4>
+          <p style="font-size:0.78rem; color:var(--text-secondary); margin:0;">
+            A verification code was dispatched to: <br>
+            <strong id="otp-target-email" style="color:var(--accent-cyan); font-family:monospace;"></strong>
+          </p>
+        </div>
+
+        <form id="otp-form">
+          <div style="margin-bottom:1.25rem;">
+            <input type="text" id="otp-input" class="search-input" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required style="width:100%; text-align:center; font-size:1.5rem; letter-spacing:0.4rem; font-family:monospace; font-weight:700; padding:0.65rem;">
+          </div>
+          <div id="otp-error-msg" style="display:none; color:var(--accent-red); font-size:0.82rem; margin-bottom:1rem; padding:0.5rem 0.75rem; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:var(--radius-sm);"></div>
+          <button type="submit" class="btn btn-primary" id="btn-verify-otp" style="width:100%; justify-content:center; padding:0.65rem 1rem; font-weight:700; margin-bottom:0.85rem;">
+            <i class="fa-solid fa-check-double"></i> Verify OTP &amp; Activate Account
+          </button>
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem;">
+            <button type="button" class="btn-link" style="background:none; border:none; color:var(--text-muted); cursor:pointer; padding:0;" onclick="auth.switchAuthMode('register')">
+              <i class="fa-solid fa-arrow-left"></i> Change Email
+            </button>
+            <button type="button" class="btn-link" id="btn-resend-otp" style="background:none; border:none; color:var(--accent-cyan); cursor:pointer; padding:0;" onclick="auth.resendOtp()">
+              <i class="fa-solid fa-arrows-rotate"></i> Resend Code
+            </button>
+          </div>
+        </form>
+      </div>
+
+      <!-- PANE 4: Forgot Password Request OTP Form -->
+      <div id="auth-forgot-pane" style="display:none;">
+        <div style="text-align:center; margin-bottom:1.15rem;">
+          <div style="width:46px; height:46px; border-radius:50%; background:rgba(245,158,11,0.12); color:#f59e0b; display:flex; align-items:center; justify-content:center; margin:0 auto 0.5rem; font-size:1.25rem;">
+            <i class="fa-solid fa-key"></i>
+          </div>
+          <h4 style="font-size:1rem; font-weight:700; color:var(--text-primary); margin:0 0 0.35rem;">Reset Account Password</h4>
+          <p style="font-size:0.78rem; color:var(--text-secondary); margin:0; line-height:1.45;">
+            Enter your registered email address. We will dispatch an official 6-digit password reset OTP to verify your identity.
+          </p>
+        </div>
+
+        <form id="forgot-form">
+          <div style="margin-bottom:1.15rem;">
+            <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.35rem;">
+              <i class="fa-solid fa-envelope text-cyan"></i> Registered Email Address
+            </label>
+            <input type="email" id="forgot-email" class="search-input" placeholder="e.g. operator@mashaloil.com" required style="width:100%;">
+          </div>
+          <div id="forgot-error-msg" style="display:none; color:var(--accent-red); font-size:0.82rem; margin-bottom:1rem; padding:0.5rem 0.75rem; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:var(--radius-sm);"></div>
+          <button type="submit" class="btn btn-primary" id="btn-forgot-submit" style="width:100%; justify-content:center; padding:0.68rem 1rem; font-weight:700;">
+            <i class="fa-solid fa-paper-plane"></i> Send Password Reset Code
+          </button>
+          <div style="text-align:center; font-size:0.74rem; font-weight:700; text-transform:uppercase; margin-top:1rem; color:var(--text-muted);">
+            <span style="cursor:pointer; color:var(--accent-cyan);" onclick="auth.switchAuthMode('signin')">
+              <i class="fa-solid fa-arrow-left"></i> Back to Sign In
+            </span>
+          </div>
+        </form>
+      </div>
+
+      <!-- PANE 5: Password Reset Verification & New Password Form -->
+      <div id="auth-reset-pane" style="display:none;">
+        <div style="text-align:center; margin-bottom:1.15rem;">
+          <div style="width:46px; height:46px; border-radius:50%; background:rgba(0,210,255,0.12); color:var(--accent-cyan); display:flex; align-items:center; justify-content:center; margin:0 auto 0.5rem; font-size:1.25rem;">
+            <i class="fa-solid fa-lock-open"></i>
+          </div>
+          <h4 style="font-size:1rem; font-weight:700; color:var(--text-primary); margin:0 0 0.35rem;">Set New Password</h4>
+          <p style="font-size:0.78rem; color:var(--text-secondary); margin:0;">
+            Verification code sent to: <strong id="reset-target-email" style="color:var(--accent-cyan); font-family:monospace;"></strong>
+          </p>
+          <div id="reset-demo-hint" style="display:none; font-size:0.75rem; color:var(--accent-amber); background:rgba(245,158,11,0.1); border:1px dashed rgba(245,158,11,0.4); border-radius:4px; padding:0.35rem 0.6rem; margin-top:0.65rem;"></div>
+        </div>
+
+        <form id="reset-form">
+          <div style="margin-bottom:0.85rem;">
+            <label style="display:block; font-size:0.76rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.3rem;">
+              <i class="fa-solid fa-shield-halved text-cyan"></i> 6-Digit Reset Code
+            </label>
+            <input type="text" id="reset-otp-input" class="search-input" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required style="width:100%; text-align:center; font-size:1.35rem; letter-spacing:0.35rem; font-family:monospace; font-weight:700; padding:0.45rem;">
+          </div>
+          <div style="margin-bottom:0.85rem;">
+            <label style="display:block; font-size:0.76rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.3rem;">
+              <i class="fa-solid fa-lock text-cyan"></i> New Password
+            </label>
+            <input type="password" id="reset-new-password" class="search-input" placeholder="At least 6 characters" minlength="6" required style="width:100%;">
+          </div>
+          <div style="margin-bottom:1.15rem;">
+            <label style="display:block; font-size:0.76rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.3rem;">
+              <i class="fa-solid fa-check-double text-cyan"></i> Confirm New Password
+            </label>
+            <input type="password" id="reset-confirm-password" class="search-input" placeholder="Re-enter new password" minlength="6" required style="width:100%;">
+          </div>
+          <div id="reset-error-msg" style="display:none; color:var(--accent-red); font-size:0.82rem; margin-bottom:1rem; padding:0.5rem 0.75rem; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:var(--radius-sm);"></div>
+          <button type="submit" class="btn btn-primary" id="btn-reset-submit" style="width:100%; justify-content:center; padding:0.68rem 1rem; font-weight:700;">
+            <i class="fa-solid fa-circle-check"></i> Update Password &amp; Sign In
+          </button>
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; margin-top:0.85rem;">
+            <button type="button" class="btn-link" style="background:none; border:none; color:var(--text-muted); cursor:pointer; padding:0;" onclick="auth.switchAuthMode('forgot')">
+              <i class="fa-solid fa-arrow-left"></i> Change Email
+            </button>
+            <button type="button" class="btn-link" style="background:none; border:none; color:var(--accent-cyan); cursor:pointer; padding:0;" onclick="auth.switchAuthMode('signin')">
+              Return to Login
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Enterprise Account Blocked / Access Suspended Security Overlay Modal -->
+<div id="account-blocked-modal" class="modal-backdrop" style="display:none; z-index:999999; backdrop-filter:blur(10px); background:rgba(10, 15, 30, 0.92); position:fixed; top:0; left:0; right:0; bottom:0; align-items:center; justify-content:center;">
+  <div class="modal-card" style="max-width:480px; text-align:center; padding:2.2rem 2rem; border:1px solid rgba(239, 68, 68, 0.4); box-shadow:0 25px 60px rgba(0,0,0,0.7), 0 0 35px rgba(239, 68, 68, 0.25); border-radius:16px; background:var(--bg-card); position:relative; animation:modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);">
+    <div style="width:72px; height:72px; border-radius:50%; background:rgba(239, 68, 68, 0.15); border:2px solid rgba(239, 68, 68, 0.5); display:inline-flex; align-items:center; justify-content:center; margin-bottom:1.2rem; box-shadow:0 0 20px rgba(239, 68, 68, 0.35);">
+      <i class="fa-solid fa-user-lock" style="font-size:2.2rem; color:#ef4444;"></i>
+    </div>
+    
+    <div>
+      <span style="display:inline-block; padding:0.25rem 0.85rem; border-radius:999px; background:rgba(239, 68, 68, 0.18); border:1px solid rgba(239, 68, 68, 0.4); color:#fca5a5; font-size:0.75rem; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; margin-bottom:0.75rem;">
+        <i class="fa-solid fa-shield-halved"></i> Security Enforcement
+      </span>
+    </div>
+
+    <h2 style="font-size:1.35rem; font-weight:800; color:var(--text-primary); margin:0 0 0.5rem; line-height:1.25;">
+      Account Access Revoked
+    </h2>
+
+    <p id="account-blocked-reason" style="font-size:0.86rem; color:var(--text-secondary); line-height:1.55; margin:0 0 1.35rem; padding:0 0.5rem;">
+      Your user account has been deactivated or blocked by the Plant Administrator. You are strictly restricted from accessing plant equipment controls, SCADA telemetry, and live analytics.
+    </p>
+
+    <div style="background:var(--bg-secondary); border:1px solid var(--border-subtle); border-radius:8px; padding:0.75rem 1rem; margin-bottom:1.5rem; text-align:left; font-size:0.78rem;">
+      <div style="display:flex; justify-content:space-between; margin-bottom:0.35rem;">
+        <span style="color:var(--text-muted);"><i class="fa-regular fa-clock"></i> Revocation Timestamp:</span>
+        <strong id="blocked-time-ist" style="color:var(--text-primary); font-family:var(--font-mono);">Just now</strong>
+      </div>
+      <div style="display:flex; justify-content:space-between;">
+        <span style="color:var(--text-muted);"><i class="fa-solid fa-lock"></i> Session Security:</span>
+        <span style="color:#ef4444; font-weight:700;">Terminated (Immediate)</span>
+      </div>
+    </div>
+
+    <button type="button" class="btn btn-primary" id="btn-blocked-relogin" style="width:100%; justify-content:center; padding:0.75rem 1rem; font-weight:700; font-size:0.9rem; background:#dc2626; border-color:#ef4444; box-shadow:0 4px 15px rgba(220, 38, 38, 0.4);">
+      <i class="fa-solid fa-right-to-bracket"></i> Switch Account / Sign In Again
+    </button>
+  </div>
+</div>
+
+<!-- Global Toast Container -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- JavaScript Modules -->
+<script src="/js/api.js"></script>
+<script src="/js/charts.js"></script>
+<script src="/js/dashboard.js"></script>
+<script src="/js/validation.js"></script>
+<script src="/js/accounts.js"></script>
+<script src="/js/auth.js"></script>
+<script src="/js/app.js"></script>
+
+</body>
+</html>
