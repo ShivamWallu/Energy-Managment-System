@@ -78,11 +78,10 @@ sudo systemctl daemon-reload
 sudo systemctl enable ems
 sudo systemctl restart ems
 
-# 7. Configure Nginx & SSL
-echo "[7/7] Configuring Nginx reverse proxy..."
+# 7. Configure Nginx Reverse Proxy (Isolated without touching other sites)
+echo "[7/7] Configuring Nginx reverse proxy for EMS..."
 sudo cp ${APP_DIR}/deploy/nginx.conf /etc/nginx/sites-available/ems
 sudo ln -sf /etc/nginx/sites-available/ems /etc/nginx/sites-enabled/ems
-sudo rm -f /etc/nginx/sites-enabled/default
 sudo nginx -t
 sudo systemctl reload nginx
 
