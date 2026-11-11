@@ -1,5 +1,6 @@
 
 import os
+from html import escape as escape_html
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -36,6 +37,10 @@ def generate_otp_email_html(recipient_name: str, otp_code: str, sender_email: st
     kogm_img_src = "cid:kogm_logo"
     mashal_img_src = "cid:mashal_logo"
 
+    recipient_name = escape_html(str(recipient_name or "User"))
+    otp_code = escape_html(str(otp_code or ""))
+    sender_email = escape_html(str(sender_email or ""))
+
     is_pwd_reset = (action == "PASSWORD_RESET")
     subject_label = "Official Password Reset Code" if is_pwd_reset else "Official Account Verification"
     card_label = "PASSWORD RESET CODE (OTP)" if is_pwd_reset else "One-Time Verification Code (OTP)"
@@ -54,26 +59,26 @@ def generate_otp_email_html(recipient_name: str, otp_code: str, sender_email: st
     body {{
       margin: 0;
       padding: 0;
-      background-color: #060b18;
+      background-color: #fff7ed;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      color: #e2e8f0;
+      color: #1e293b;
     }}
     .email-container {{
       max-width: 580px;
       margin: 30px auto;
-      background-color: #0f172a;
-      border: 1px solid rgba(0, 210, 255, 0.35);
+      background-color: #ffffff;
+      border: 1px solid rgba(185, 28, 28, 0.20);
       border-radius: 14px;
       overflow: hidden;
-      box-shadow: 0 15px 40px rgba(0,0,0,0.65);
+      box-shadow: 0 12px 32px rgba(15,23,42,0.12);
     }}
     .email-header {{
-      background: linear-gradient(135deg, #070e20 0%, #0f1c3f 100%);
+      background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%);
       padding: 30px 24px 24px;
       text-align: center;
-      border-bottom: 2px solid #00d2ff;
+      border-bottom: 3px solid #c62828;
     }}
-    .brand-logos-wrap {{
+    .brand-logo-wrap {{
       text-align: center;
       margin-bottom: 14px;
     }}
@@ -81,12 +86,12 @@ def generate_otp_email_html(recipient_name: str, otp_code: str, sender_email: st
       font-size: 21px;
       font-weight: 800;
       letter-spacing: 0.8px;
-      color: #ffffff;
+      color: #b91c1c;
       margin-top: 8px;
     }}
     .company-subtitle {{
       font-size: 11px;
-      color: #38bdf8;
+      color: #92400e;
       text-transform: uppercase;
       letter-spacing: 1.5px;
       font-weight: 700;
@@ -98,18 +103,18 @@ def generate_otp_email_html(recipient_name: str, otp_code: str, sender_email: st
     .greeting {{
       font-size: 16px;
       font-weight: 700;
-      color: #f8fafc;
+      color: #0f172a;
       margin-bottom: 12px;
     }}
     .message-text {{
       font-size: 14px;
       line-height: 1.6;
-      color: #94a3b8;
+      color: #475569;
       margin-bottom: 24px;
     }}
     .otp-card {{
-      background: #020617;
-      border: 1.5px dashed #00d2ff;
+      background: #fffbeb;
+      border: 1.5px dashed #c62828;
       border-radius: 10px;
       padding: 22px 16px;
       text-align: center;
@@ -117,7 +122,7 @@ def generate_otp_email_html(recipient_name: str, otp_code: str, sender_email: st
     }}
     .otp-label {{
       font-size: 11px;
-      color: #94a3b8;
+      color: #475569;
       text-transform: uppercase;
       letter-spacing: 1.8px;
       font-weight: 700;
@@ -127,50 +132,44 @@ def generate_otp_email_html(recipient_name: str, otp_code: str, sender_email: st
       font-family: 'Courier New', Courier, monospace;
       font-size: 36px;
       font-weight: 900;
-      color: #00d2ff;
+      color: #b91c1c;
       letter-spacing: 8px;
       margin: 6px 0;
     }}
     .expiry-note {{
       font-size: 12px;
-      color: #cbd5e1;
+      color: #334155;
       margin-top: 6px;
     }}
     .security-notice {{
-      background: rgba(245, 158, 11, 0.08);
-      border-left: 3px solid #f59e0b;
+      background: #fff7df;
+      border-left: 3px solid #f4b400;
       padding: 12px 14px;
       border-radius: 4px;
       font-size: 12px;
       line-height: 1.5;
-      color: #fcd34d;
+      color: #78350f;
       margin-top: 24px;
     }}
     .email-footer {{
-      background: #060b18;
+      background: #fff7ed;
       padding: 20px 24px;
       text-align: center;
       font-size: 11px;
       color: #64748b;
       line-height: 1.6;
-      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      border-top: 1px solid #fecaca;
     }}
   </style>
 </head>
 <body>
   <div class="email-container">
     <div class="email-header">
-      <div class="brand-logos-wrap">
-        <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
-          <tr>
-            <td style="padding: 0 8px;">
-              <img src="{kogm_img_src}" alt="KOGM — Khandelia Oil &amp; General Mills" style="height: 48px; width: 48px; border-radius: 6px; border: 1px solid #fee300; display: block;">
-            </td>
-            <td style="padding: 0 8px;">
-              <img src="{mashal_img_src}" alt="Mashal Mustard Oil" style="height: 48px; border-radius: 6px; border: 1px solid #fee300; display: block;">
-            </td>
-          </tr>
-        </table>
+      <div class="brand-logo-wrap">
+        <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr>
+          <td style="padding:0 5px;"><img src="{kogm_img_src}" alt="KOGM — Khandelia Oil &amp; General Mills" style="height:54px; width:108px; object-fit:contain; border-radius:6px; border:1px solid #f4b400; background:#fff; display:block;"></td>
+          <td style="padding:0 5px;"><img src="{mashal_img_src}" alt="Mashal Kachi Ghani Mustard Oil" style="height:54px; width:108px; object-fit:contain; border-radius:6px; border:1px solid #f4b400; background:#fff; display:block;"></td>
+        </tr></table>
       </div>
       <div class="company-title">MASHAL EMS INTELLIGENCE</div>
       <div class="company-subtitle">Official Corporate Security &amp; Access Authority</div>
@@ -225,9 +224,9 @@ def _attempt_smtp_send(host: str, port: int, user: str, password: str, to_email:
     # Attach Rich HTML Part Second
     msg_alt.attach(MIMEText(html_content, "html", "utf-8"))
 
-    # Attach both logos as strictly inline CID parts (ZERO filename to prevent Gmail from listing them as bottom attachments)
+    # Attach both 3D brand logos as inline CID parts, without separate attachment rows.
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-    for cid_name, rel_path in [("kogm_logo", "Images/logos/email_kogm_logo.png"), ("mashal_logo", "Images/logos/email_mashal_logo.png")]:
+    for cid_name, rel_path in [("kogm_logo", "Images/logos/3d_logo1.png"), ("mashal_logo", "Images/logos/3d_logo2.png")]:
         full_path = os.path.join(base_dir, rel_path)
         if os.path.exists(full_path):
             try:
@@ -322,7 +321,7 @@ def send_otp_email(to_email: str, recipient_name: str, otp_code: str, action: st
     print(f"To: {recipient_name} <{to_email}>")
     print(f"Action: {action}")
     print(f"Subject: {subject}")
-    print(f"Logos Attached: [KOGM + MASHAL] from Images/logos")
+    print(f"3D Logos Attached: [KOGM + MASHAL] from Images/logos")
     print(f"Failover Status: Configured (Primary: {primary_user} -> Secondary: {secondary_user})")
     print(f"Secure OTP Code: >>> {otp_code} <<< (Valid for 10 minutes)")
     print(f"========================================================================\n")
@@ -367,6 +366,12 @@ def generate_welcome_email_html(recipient_name: str, username: str, role: str, s
     kogm_img_src = "cid:kogm_logo"
     mashal_img_src = "cid:mashal_logo"
 
+    recipient_name = escape_html(str(recipient_name or "User"))
+    username = escape_html(str(username or ""))
+    role = escape_html(str(role or "auditor"))
+    to_email = escape_html(str(to_email or ""))
+    sender_email = escape_html(str(sender_email or ""))
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -376,26 +381,26 @@ def generate_welcome_email_html(recipient_name: str, username: str, role: str, s
     body {{
       margin: 0;
       padding: 0;
-      background-color: #060b18;
+      background-color: #fff7ed;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      color: #e2e8f0;
+      color: #1e293b;
     }}
     .email-container {{
       max-width: 580px;
       margin: 30px auto;
-      background-color: #0f172a;
-      border: 1px solid rgba(0, 210, 255, 0.35);
+      background-color: #ffffff;
+      border: 1px solid rgba(185, 28, 28, 0.20);
       border-radius: 14px;
       overflow: hidden;
-      box-shadow: 0 15px 40px rgba(0,0,0,0.65);
+      box-shadow: 0 12px 32px rgba(15,23,42,0.12);
     }}
     .email-header {{
-      background: linear-gradient(135deg, #070e20 0%, #0f1c3f 100%);
+      background: linear-gradient(135deg, #fff7ed 0%, #ffffff 100%);
       padding: 30px 24px 24px;
       text-align: center;
-      border-bottom: 2px solid #00d2ff;
+      border-bottom: 3px solid #c62828;
     }}
-    .brand-logos-wrap {{
+    .brand-logo-wrap {{
       text-align: center;
       margin-bottom: 14px;
     }}
@@ -403,12 +408,12 @@ def generate_welcome_email_html(recipient_name: str, username: str, role: str, s
       font-size: 21px;
       font-weight: 800;
       letter-spacing: 0.8px;
-      color: #ffffff;
+      color: #b91c1c;
       margin-top: 8px;
     }}
     .company-subtitle {{
       font-size: 11px;
-      color: #38bdf8;
+      color: #92400e;
       text-transform: uppercase;
       letter-spacing: 1.5px;
       font-weight: 700;
@@ -420,18 +425,18 @@ def generate_welcome_email_html(recipient_name: str, username: str, role: str, s
     .greeting {{
       font-size: 18px;
       font-weight: 700;
-      color: #f8fafc;
+      color: #0f172a;
       margin-bottom: 12px;
     }}
     .message-text {{
       font-size: 14px;
       line-height: 1.6;
-      color: #94a3b8;
+      color: #475569;
       margin-bottom: 20px;
     }}
     .info-card {{
-      background: #020617;
-      border: 1px solid rgba(0, 210, 255, 0.3);
+      background: #fffbeb;
+      border: 1px solid rgba(185, 28, 28, 0.20);
       border-radius: 10px;
       padding: 18px 20px;
       margin: 20px 0;
@@ -445,31 +450,31 @@ def generate_welcome_email_html(recipient_name: str, username: str, role: str, s
       border-bottom: none;
     }}
     .info-label {{
-      color: #94a3b8;
+      color: #475569;
       font-weight: 600;
       display: inline-block;
       width: 140px;
     }}
     .info-val {{
-      color: #00d2ff;
+      color: #b91c1c;
       font-weight: 700;
       font-family: monospace;
     }}
     .steps-card {{
-      background: rgba(16, 185, 129, 0.08);
-      border-left: 3px solid #10b981;
+      background: #fff7df;
+      border-left: 3px solid #f4b400;
       padding: 16px 18px;
       border-radius: 4px;
       font-size: 13px;
       line-height: 1.6;
-      color: #d1fae5;
+      color: #78350f;
       margin-top: 24px;
     }}
     .email-footer {{
-      background: #060b18;
+      background: #fff7ed;
       padding: 20px 24px;
       text-align: center;
-      border-top: 1px solid rgba(148, 163, 184, 0.15);
+      border-top: 1px solid #fecaca;
       font-size: 11px;
       color: #64748b;
       line-height: 1.6;
@@ -479,24 +484,19 @@ def generate_welcome_email_html(recipient_name: str, username: str, role: str, s
 <body>
   <div class="email-container">
     <div class="email-header">
-      <div class="brand-logos-wrap">
-        <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin: 0 auto;">
-          <tr>
-            <td style="padding-right: 14px; vertical-align: middle;">
-              <img src="{kogm_img_src}" alt="KOGM" style="height: 48px; border-radius: 6px; display: block; border: 1px solid rgba(254, 227, 0, 0.4);">
-            </td>
-            <td style="border-left: 2px solid rgba(0, 210, 255, 0.4); padding-left: 14px; vertical-align: middle;">
-              <img src="{mashal_img_src}" alt="Mashal" style="height: 48px; border-radius: 6px; display: block; border: 1px solid rgba(254, 227, 0, 0.4);">
-            </td>
-          </tr>
-        </table>
+      <div class="brand-logo-wrap">
+        <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr>
+          <td style="padding:0 5px;"><img src="{kogm_img_src}" alt="KOGM — Khandelia Oil &amp; General Mills" style="height:54px; width:108px; object-fit:contain; border-radius:6px; border:1px solid #f4b400; background:#fff; display:block;"></td>
+          <td style="padding:0 5px;"><img src="{mashal_img_src}" alt="Mashal Kachi Ghani Mustard Oil" style="height:54px; width:108px; object-fit:contain; border-radius:6px; border:1px solid #f4b400; background:#fff; display:block;"></td>
+        </tr></table>
       </div>
       <div class="company-title">MASHAL EMS INTELLIGENCE</div>
       <div class="company-subtitle">SCADA Energy Monitoring &bull; 415V Bus Intelligence</div>
     </div>
 
     <div class="email-body">
-      <div class="greeting">Welcome to the Plant Registry, {recipient_name}!</div>
+      <div class="greeting">Congratulations, {recipient_name}!</div>
+      <div style="background:#fff7df; border:1px solid #f4b400; border-left:4px solid #c62828; border-radius:7px; padding:11px 13px; margin:0 0 16px; color:#991b1b; font-size:13px; font-weight:800;">Your account has been verified and is ready to use.</div>
       <div class="message-text">
         Your user profile has been successfully verified and activated in the <strong>Mashal Mustard Oil Plant Energy Management System</strong>. You are now authorized to access SCADA telemetry, 15-minute motor load benchmarks, and anomaly audits.
       </div>

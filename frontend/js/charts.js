@@ -287,26 +287,35 @@ const charts = {
 
     const tc = getThemeConfig();
     const healthy = healthSummary.healthy_count || 0;
+    const normal = healthSummary.normal_count || 0;
     const idle = healthSummary.idle_count || 0;
     const overload = healthSummary.overload_count || 0;
     const stopped = healthSummary.stopped_count || 0;
+    const missing = healthSummary.missing_count || 0;
+    const anomaly = healthSummary.anomaly_count || 0;
 
     chartInstances[canvasId] = new Chart(ctx, {
       type: 'doughnut',
       data: {
         labels: [
-          'Healthy Load (50% – 80%)',
-          'Low-Load / Idle (10% – 40%)',
-          'Overload Risk (> 80%)',
-          'Stopped / Off (< 10%)'
+          'Healthy Load (50%-80%)',
+          'Normal Load (40%?50%)',
+          'Low-Load / Idle (10%?40%)',
+          'Overload Risk (>80%)',
+          'Stopped / Off (<10%)',
+          'No Reading',
+          'Telemetry Anomaly'
         ],
         datasets: [{
-          data: [healthy, idle, overload, stopped],
+          data: [healthy, normal, idle, overload, stopped, missing, anomaly],
           backgroundColor: [
             tc.healthyBg,
+            tc.isLight ? '#3b82f6' : '#38bdf8',
             tc.idleBg,
             tc.overloadBg,
-            tc.stoppedSlice
+            tc.stoppedSlice,
+            '#64748b',
+            tc.overloadBg
           ],
           borderColor: tc.doughnutBorder,
           borderWidth: 3,
@@ -409,7 +418,8 @@ const charts = {
     const tc = getThemeConfig();
     const timeline = motor.timeline || {};
     const rawLabels = timeline.labels || [];
-    const values = timeline.values || [];
+    const values = timeline.graph_values || timeline.values || [];
+    const rawValues = timeline.values || [];
     const loadPcts = timeline.load_pcts || [];
     const statuses = timeline.statuses || [];
 
@@ -423,15 +433,16 @@ const charts = {
     ]);
     const displayLabels = rawLabels.map((lbl, idx) => (milestoneSet.has(idx) ? formatTime12h(lbl) : ''));
 
-    // Dynamic color per bar: 100% synchronized with backend statuses and count pills
+    // Dynamic color per bar: 80% overload limit synchronized with backend statuses and count pills
     const isKohlu = motor.panel_type === 'KOHLU' || (motor.code && motor.code.startsWith('K'));
-    const overLimit = isKohlu ? 100.0 : 80.0;
-    const overLineLabel = isKohlu ? `100% Full Load (${motor.overload_threshold_kwh} kWh)` : `80% Overload (${motor.overload_threshold_kwh} kWh)`;
+    const overLimit = 80.0;
+    const overLineLabel = `80% Overload (${motor.overload_threshold_kwh} kWh)`;
 
     const barColors = loadPcts.map((pct, idx) => {
       const st = statuses[idx] || '';
-      if (st === 'OVERLOAD') return tc.overloadBg;
-      if (st === 'HEALTHY' || st === 'NORMAL') return tc.healthyBg;
+      if (st === 'OVERLOAD' || st === 'ANOMALY') return tc.overloadBg;
+      if (st === 'HEALTHY') return tc.healthyBg;
+      if (st === 'NORMAL') return tc.isLight ? '#60a5fa' : '#38bdf8';
       if (st === 'IDLE') return tc.idleBg;
       if (st === 'STOPPED') return tc.stoppedSlice;
       if (pct > overLimit) return tc.overloadBg;
@@ -442,8 +453,9 @@ const charts = {
 
     const borderColors = loadPcts.map((pct, idx) => {
       const st = statuses[idx] || '';
-      if (st === 'OVERLOAD') return tc.overloadBorder;
-      if (st === 'HEALTHY' || st === 'NORMAL') return tc.healthyBorder;
+      if (st === 'OVERLOAD' || st === 'ANOMALY') return tc.overloadBorder;
+      if (st === 'HEALTHY') return tc.healthyBorder;
+      if (st === 'NORMAL') return tc.isLight ? '#2563eb' : '#0ea5e9';
       if (st === 'IDLE') return tc.idleBorder;
       if (st === 'STOPPED') return tc.stoppedSlice;
       if (pct > overLimit) return tc.overloadBorder;
@@ -536,15 +548,19 @@ const charts = {
               },
               label(context) {
                 const idx = context.dataIndex;
-                const val = values[idx];
+                const val = rawValues[idx];
                 const pct = loadPcts[idx];
+
+                if (pct === null || pct === undefined) return ['No SCADA reading recorded for this interval.'];
                 
                 let desc = '';
-                const overThreshold = isKohlu ? 100.0 : 80.0;
-                if (pct > overThreshold) {
-                  desc = isKohlu ? '🚨 Overload (>100%)' : '🚨 Overload Risk (>80%)';
+                const overThreshold = 80.0;
+                if (statuses[idx] === 'ANOMALY') {
+                  desc = 'Telemetry anomaly; verify the meter reading';
+                } else if (pct > overThreshold) {
+                  desc = '🚨 Overload Risk (>80%)';
                 } else if (pct >= 50.0) {
-                  desc = isKohlu ? '🟢 Optimal (50%–100%)' : '🟢 Optimal (50%–80%)';
+                  desc = '🟢 Optimal (50%–80%)';
                 } else if (pct >= 40.0) {
                   desc = '🔵 Normal (40%–50%)';
                 } else if (pct >= 10.0) {
@@ -607,19 +623,21 @@ const charts = {
     const tc = getThemeConfig();
     const timeline = motor.timeline || {};
     const rawLabels = timeline.labels || [];
-    const values = timeline.values || [];
+    const values = timeline.graph_values || timeline.values || [];
+    const rawValues = timeline.values || [];
     const loadPcts = timeline.load_pcts || [];
     const statuses = timeline.statuses || [];
 
     const isKohlu = motor.panel_type === 'KOHLU' || (motor.code && motor.code.startsWith('K'));
-    const overLimit = isKohlu ? 100.0 : 80.0;
-    const overLabel = isKohlu ? `100% Full Load Rated Limit (${motor.overload_threshold_kwh} kWh)` : `80% Overload Danger Limit (${motor.overload_threshold_kwh} kWh)`;
+    const overLimit = 80.0;
+    const overLabel = `80% Overload Danger Limit (${motor.overload_threshold_kwh} kWh)`;
 
     // Color mapping synchronized 1:1 with interval statuses & summary counts
     const barColors = loadPcts.map((pct, idx) => {
       const st = statuses[idx] || '';
-      if (st === 'OVERLOAD') return tc.overloadBg;
-      if (st === 'HEALTHY' || st === 'NORMAL') return tc.healthyBg;
+      if (st === 'OVERLOAD' || st === 'ANOMALY') return tc.overloadBg;
+      if (st === 'HEALTHY') return tc.healthyBg;
+      if (st === 'NORMAL') return tc.isLight ? '#60a5fa' : '#38bdf8';
       if (st === 'IDLE') return tc.idleBg;
       if (st === 'STOPPED') return tc.stoppedSlice;
       if (pct > overLimit) return tc.overloadBg;
@@ -630,8 +648,9 @@ const charts = {
 
     const borderColors = loadPcts.map((pct, idx) => {
       const st = statuses[idx] || '';
-      if (st === 'OVERLOAD') return tc.overloadBorder;
-      if (st === 'HEALTHY' || st === 'NORMAL') return tc.healthyBorder;
+      if (st === 'OVERLOAD' || st === 'ANOMALY') return tc.overloadBorder;
+      if (st === 'HEALTHY') return tc.healthyBorder;
+      if (st === 'NORMAL') return tc.isLight ? '#2563eb' : '#0ea5e9';
       if (st === 'IDLE') return tc.idleBorder;
       if (st === 'STOPPED') return tc.stoppedSlice;
       if (pct > overLimit) return tc.overloadBorder;
@@ -641,7 +660,7 @@ const charts = {
     });
 
     // Horizontal benchmark percentage lines
-    const overloadLine = Array(loadPcts.length).fill(isKohlu ? 100 : 80);
+    const overloadLine = Array(loadPcts.length).fill(80);
     const healthyMinLine = Array(loadPcts.length).fill(50);
     const idleMaxLine = Array(loadPcts.length).fill(40);
 
@@ -730,7 +749,10 @@ const charts = {
               let labelColor = tc.legendColor;
               let labelText = '';
 
-              if (pct > overLimit) {
+              if (statuses[index] === 'ANOMALY') {
+                labelColor = tc.isLight ? '#dc2626' : '#ff2a55';
+                labelText = 'SPIKE';
+              } else if (pct > overLimit) {
                 labelColor = tc.isLight ? '#dc2626' : '#ff2a55';
                 labelText = `${Math.round(pct)}%`;
               } else if (pct >= 50.0) {
@@ -828,14 +850,18 @@ const charts = {
               },
               label(context) {
                 const idx = context.dataIndex;
-                const val = values[idx];
+                const val = rawValues[idx];
                 const pct = loadPcts[idx];
 
+                if (pct === null || pct === undefined) return ['No SCADA reading recorded for this interval.'];
+
                 let desc = '';
-                if (pct > overLimit) {
-                  desc = isKohlu ? '🚨 Overload (>100%)' : '🚨 Overload (>80%)';
+                if (statuses[idx] === 'ANOMALY') {
+                  desc = 'Telemetry anomaly; verify the meter reading';
+                } else if (pct > overLimit) {
+                  desc = '🚨 Overload (>80%)';
                 } else if (pct >= 50.0) {
-                  desc = isKohlu ? '🟢 Optimal (50%–100%)' : '🟢 Optimal (50%–80%)';
+                  desc = '🟢 Optimal (50%–80%)';
                 } else if (pct >= 40.0 && pct < 50.0) {
                   desc = '🔵 Normal (40%–50%)';
                 } else if (pct >= 10.0 && pct < 40.0) {
@@ -923,10 +949,9 @@ const charts = {
 
       const timeline = motor.timeline || {};
       const rawLabels = timeline.labels || [];
-      const values = timeline.values || [];
+      const values = timeline.graph_values || timeline.values || [];
       const loadPcts = timeline.load_pcts || [];
       const statuses = timeline.statuses || [];
-
       const totalSlots = rawLabels.length;
       const milestoneSet = new Set([
         0,
@@ -937,20 +962,22 @@ const charts = {
       const displayLabels = rawLabels.map((lbl, idx) => (milestoneSet.has(idx) ? formatTime12h(lbl) : ''));
 
       const isKohlu = motor.panel_type === 'KOHLU' || (motor.code && motor.code.startsWith('K'));
-      const overLimit = isKohlu ? 100.0 : 80.0;
+      const overLimit = 80.0;
 
       const barColors = loadPcts.map((pct, idx) => {
         const st = statuses[idx] || '';
-        if (st === 'OVERLOAD' || pct > overLimit) return '#ef4444';
-        if (st === 'HEALTHY' || st === 'NORMAL' || pct >= 40.0) return '#10b981';
+        if (st === 'OVERLOAD' || st === 'ANOMALY' || pct > overLimit) return '#ef4444';
+        if (st === 'NORMAL') return '#3b82f6';
+        if (st === 'HEALTHY' || pct >= 50.0) return '#10b981';
         if (st === 'IDLE' || pct >= 10.0) return '#f59e0b';
         return '#cbd5e1';
       });
 
       const borderColors = loadPcts.map((pct, idx) => {
         const st = statuses[idx] || '';
-        if (st === 'OVERLOAD' || pct > overLimit) return '#dc2626';
-        if (st === 'HEALTHY' || st === 'NORMAL' || pct >= 40.0) return '#059669';
+        if (st === 'OVERLOAD' || st === 'ANOMALY' || pct > overLimit) return '#dc2626';
+        if (st === 'NORMAL') return '#2563eb';
+        if (st === 'HEALTHY' || pct >= 50.0) return '#059669';
         if (st === 'IDLE' || pct >= 10.0) return '#d97706';
         return '#94a3b8';
       });
@@ -1011,6 +1038,27 @@ const charts = {
             }
           ]
         },
+        plugins: [{
+          // Zero kWh intervals otherwise have no visible bar. Draw a subtle
+          // baseline marker so stopped/offline motors still have a readable graph.
+          id: 'auditZeroIntervalMarkers',
+          afterDatasetsDraw(chartInstance) {
+            const meta = chartInstance.getDatasetMeta(3);
+            const yScale = chartInstance.scales.y;
+            if (!meta || !yScale) return;
+            const baseline = yScale.getPixelForValue(0);
+            const markerCtx = chartInstance.ctx;
+            markerCtx.save();
+            markerCtx.fillStyle = '#94a3b8';
+            meta.data.forEach((bar, index) => {
+              if (Number(values[index] || 0) > 0) return;
+              markerCtx.fillStyle = statuses[index] === 'NO_DATA' ? '#64748b' : '#94a3b8';
+              const markerWidth = statuses[index] === 'NO_DATA' ? 2 : 4;
+              markerCtx.fillRect(bar.x - markerWidth / 2, baseline - 7, markerWidth, 7);
+            });
+            markerCtx.restore();
+          }
+        }],
         options: {
           animation: false,
           responsive: false,
@@ -1067,36 +1115,43 @@ const charts = {
 
       const timeline = motor.timeline || {};
       const rawLabels = timeline.labels || [];
-      const values = timeline.values || [];
+      const values = timeline.graph_values || timeline.values || [];
       const loadPcts = timeline.load_pcts || [];
       const statuses = timeline.statuses || [];
 
       const isKohlu = motor.panel_type === 'KOHLU' || (motor.code && motor.code.startsWith('K'));
-      const overLimit = isKohlu ? 100.0 : 80.0;
-      const overLabel = isKohlu ? `100% Full Load Rated Limit (${motor.overload_threshold_kwh} kWh)` : `80% Overload Danger Limit (${motor.overload_threshold_kwh} kWh)`;
+      // Cap only anomalous display values so one meter spike cannot flatten
+      // normal intervals. The raw value remains in the audit table and alert.
+      const graphLoadPcts = loadPcts.map((pct, idx) =>
+        statuses[idx] === 'ANOMALY' && Number.isFinite(pct) ? Math.min(pct, 120) : pct
+      );
+      const overLimit = 80.0;
+      const overLabel = `80% Overload Danger Limit (${motor.overload_threshold_kwh} kWh)`;
 
       const barColors = loadPcts.map((pct, idx) => {
         const st = statuses[idx] || '';
-        if (st === 'OVERLOAD' || pct > overLimit) return '#ef4444';
-        if (st === 'HEALTHY' || st === 'NORMAL' || pct >= 40.0) return '#10b981';
+        if (st === 'OVERLOAD' || st === 'ANOMALY' || pct > overLimit) return '#ef4444';
+        if (st === 'NORMAL') return '#3b82f6';
+        if (st === 'HEALTHY' || pct >= 50.0) return '#10b981';
         if (st === 'IDLE' || pct >= 10.0) return '#f59e0b';
         return '#94a3b8';
       });
 
       const borderColors = loadPcts.map((pct, idx) => {
         const st = statuses[idx] || '';
-        if (st === 'OVERLOAD' || pct > overLimit) return '#dc2626';
-        if (st === 'HEALTHY' || st === 'NORMAL' || pct >= 40.0) return '#059669';
+        if (st === 'OVERLOAD' || st === 'ANOMALY' || pct > overLimit) return '#dc2626';
+        if (st === 'NORMAL') return '#2563eb';
+        if (st === 'HEALTHY' || pct >= 50.0) return '#059669';
         if (st === 'IDLE' || pct >= 10.0) return '#d97706';
         return '#64748b';
       });
 
-      const overloadLine = Array(loadPcts.length).fill(isKohlu ? 100 : 80);
+      const overloadLine = Array(loadPcts.length).fill(80);
       const healthyMinLine = Array(loadPcts.length).fill(50);
       const idleMaxLine = Array(loadPcts.length).fill(40);
 
-      const maxPct = Math.max(...loadPcts, 0);
-      const suggestedMaxPct = Math.max(105, Math.ceil(maxPct * 1.15));
+      const maxPct = Math.max(...graphLoadPcts.filter(Number.isFinite), 0);
+      const suggestedMaxPct = Math.max(120, Math.ceil(maxPct * 1.15));
 
       const chart = new Chart(ctx, {
         type: 'bar',
@@ -1145,7 +1200,7 @@ const charts = {
             {
               type: 'bar',
               label: 'Actual Operating Load (% of Rated Capacity)',
-              data: loadPcts,
+              data: graphLoadPcts,
               backgroundColor: barColors,
               borderColor: borderColors,
               borderWidth: 1.5,
@@ -1163,6 +1218,7 @@ const charts = {
               const barMeta = chartInstance.getDatasetMeta(3);
               if (!barMeta || !barMeta.data) return;
 
+              const occupiedLabelLanes = [];
               barMeta.data.forEach((bar, index) => {
                 const pct = loadPcts[index];
                 if (pct === undefined || pct === null) return;
@@ -1170,7 +1226,10 @@ const charts = {
                 let labelColor = '#0f172a';
                 let labelText = '';
 
-                if (pct > overLimit) {
+                if (statuses[index] === 'ANOMALY') {
+                  labelColor = '#dc2626';
+                  labelText = 'SPIKE';
+                } else if (pct > overLimit) {
                   labelColor = '#dc2626';
                   labelText = `${Math.round(pct)}%`;
                 } else if (pct >= 50.0) {
@@ -1192,7 +1251,12 @@ const charts = {
                 const textW = chartCtx.measureText(labelText).width;
                 const pillW = Math.max(textW + 8, 30);
                 const pillH = 17;
-                const yPos = Math.max(bar.y - 12, 14);
+                // Assign nearby bars different vertical lanes so all interval labels stay readable.
+                let lane = 0;
+                while (lane < 5 && (occupiedLabelLanes[lane] ?? -Infinity) > bar.x - pillW - 3) lane++;
+                lane = Math.min(lane, 4);
+                occupiedLabelLanes[lane] = bar.x + pillW + 3;
+                const yPos = Math.max(bar.y - 12 - lane * 18, 12);
 
                 chartCtx.fillStyle = '#ffffff';
                 chartCtx.strokeStyle = labelColor;

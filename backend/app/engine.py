@@ -103,6 +103,7 @@ def compute_plant_energy_balance(parsed_data: Dict[str, Any]) -> Dict[str, Any]:
     total_kohlu_incomers = 0.0
     total_kohlu_motors_raw = 0.0
     total_kohlu_motors_cleaned = 0.0
+    total_kohlu_spike_excluded = 0.0
     
     for k_sec in [1, 2]:
         inc_name = f"INC KOHLU {k_sec} 1 F1"
@@ -123,11 +124,18 @@ def compute_plant_energy_balance(parsed_data: Dict[str, Any]) -> Dict[str, Any]:
                 m_calc = calcs[c_idx]
                 val = m_calc["calc_sum"]
                 motors_sum_raw += val
-                
-                # If Kohlu 4 spike (14,326.8 kWh), compute cleaned sum
-                cleaned_val = val
-                if c_idx == col_map.get("KOHLU 4 2 F4") and val > 1000:
-                    cleaned_val = round(val - 14326.8 + 4.0, 2) # substitute typical 4 kWh interval
+
+                # Keep source totals intact. The adjusted total excludes flagged
+                # extreme intervals instead of inventing a replacement reading.
+                motor_values = [
+                    interval["readings"][c_idx]["numeric_val"]
+                    for interval in intervals
+                    if interval["readings"][c_idx]["numeric_val"] is not None
+                ]
+                spike_values = [value for value in motor_values if value > settings.EXTREME_SPIKE_THRESHOLD_KWH]
+                cleaned_val = round(val - sum(spike_values), 2)
+                excluded_spike_kwh = round(sum(spike_values), 2)
+                total_kohlu_spike_excluded += excluded_spike_kwh
                 motors_sum_cleaned += cleaned_val
                 
                 motors.append({
@@ -135,6 +143,8 @@ def compute_plant_energy_balance(parsed_data: Dict[str, Any]) -> Dict[str, Any]:
                     "source_name": src,
                     "consumption_raw_kwh": val,
                     "consumption_cleaned_kwh": cleaned_val,
+                    "excluded_spike_kwh": excluded_spike_kwh,
+                    "excluded_spike_count": len(spike_values),
                     "avg_load_pct": m_calc["avg_load_pct"],
                     "overload_count": m_calc["count_overload"],
                     "idle_count": m_calc["count_idle"],
@@ -157,7 +167,7 @@ def compute_plant_energy_balance(parsed_data: Dict[str, Any]) -> Dict[str, Any]:
         "75_HP": {"count": 0, "total_kwh": 0.0, "rated_15m": 13.95, "overload_events": 0, "idle_events": 0, "valid_readings": 0, "sum_load_pct": 0.0},
         "60_HP": {"count": 0, "total_kwh": 0.0, "rated_15m": 11.16, "overload_events": 0, "idle_events": 0, "valid_readings": 0, "sum_load_pct": 0.0},
         "50_HP": {"count": 0, "total_kwh": 0.0, "rated_15m": 9.30,  "overload_events": 0, "idle_events": 0, "valid_readings": 0, "sum_load_pct": 0.0},
-        "Kohlu_Motors": {"count": 0, "total_kwh": 0.0, "rated_15m": 6.00, "overload_events": 0, "idle_events": 0, "valid_readings": 0, "sum_load_pct": 0.0}
+        "Kohlu_Motors": {"count": 0, "total_kwh": 0.0, "rated_15m": settings.RATED_15MIN_KWH[40], "overload_events": 0, "idle_events": 0, "valid_readings": 0, "sum_load_pct": 0.0}
     }
     
     seen_sources_cat = set()
@@ -202,19 +212,25 @@ def compute_plant_energy_balance(parsed_data: Dict[str, Any]) -> Dict[str, Any]:
     timeline_kohlus_total = []
     timeline_utilities_total = []
     
-    # 15-Minute Motor Health Tracking based on WhatsApp Operating Ranges:
+    # 15-Minute Motor Health Tracking based on plant operating ranges:
     # 10% - 40%: Low-load / Idle
     # 50% - 80%: Healthy Operating Load
     # > 80%: Overload Risk
     timeline_health_healthy = []
+    timeline_health_normal = []
     timeline_health_idle = []
     timeline_health_overload = []
     timeline_health_stopped = []
+    timeline_health_missing = []
+    timeline_health_anomaly = []
 
     total_healthy_readings = 0
+    total_normal_readings = 0
     total_idle_readings = 0
     total_overload_readings = 0
     total_stopped_readings = 0
+    total_missing_readings = 0
+    total_anomaly_readings = 0
     
     motor_cols = [c for c in columns if c["rated_15m_kwh"] and c["rated_15m_kwh"] > 0 and not c["is_duplicate"]]
 
@@ -247,38 +263,54 @@ def compute_plant_energy_balance(parsed_data: Dict[str, Any]) -> Dict[str, Any]:
 
         # Motor Health Count in this 15-min slot
         int_healthy = 0
+        int_normal = 0
         int_idle = 0
         int_overload = 0
         int_stopped = 0
+        int_missing = 0
+        int_anomaly = 0
 
         for mc in motor_cols:
             c_idx = mc["col_index"]
             val = r[c_idx]["numeric_val"]
             rated = mc["rated_15m_kwh"]
+            if val is None:
+                int_missing += 1
+                total_missing_readings += 1
+                continue
+            if val > settings.EXTREME_SPIKE_THRESHOLD_KWH:
+                int_anomaly += 1
+                total_anomaly_readings += 1
+                continue
+            overload_pct = 80.0
+            healthy_max_pct = 80.0
             if val is None or val < (rated * 0.10):
                 int_stopped += 1
                 total_stopped_readings += 1
             else:
                 pct = (val / rated) * 100.0
-                if pct > 80.0:
+                if pct > overload_pct:
                     int_overload += 1
                     total_overload_readings += 1
-                elif 50.0 <= pct <= 80.0:
+                elif 50.0 <= pct <= healthy_max_pct:
                     int_healthy += 1
                     total_healthy_readings += 1
                 elif 10.0 <= pct < 40.0:
                     int_idle += 1
                     total_idle_readings += 1
-                else: # 40% - 50%
-                    int_healthy += 1
-                    total_healthy_readings += 1
+                else: # 40% - 50% normal operation, below the healthy target
+                    int_normal += 1
+                    total_normal_readings += 1
 
         timeline_health_healthy.append(int_healthy)
+        timeline_health_normal.append(int_normal)
         timeline_health_idle.append(int_idle)
         timeline_health_overload.append(int_overload)
         timeline_health_stopped.append(int_stopped)
+        timeline_health_missing.append(int_missing)
+        timeline_health_anomaly.append(int_anomaly)
 
-    total_active_readings = total_healthy_readings + total_idle_readings + total_overload_readings
+    total_active_readings = total_healthy_readings + total_normal_readings + total_idle_readings + total_overload_readings
     health_score_pct = round((total_healthy_readings / total_active_readings * 100.0), 1) if total_active_readings > 0 else 0.0
 
     return {
@@ -290,6 +322,7 @@ def compute_plant_energy_balance(parsed_data: Dict[str, Any]) -> Dict[str, Any]:
         "total_kohlu_incomers_kwh": round(total_kohlu_incomers, 2),
         "total_kohlu_motors_raw_kwh": round(total_kohlu_motors_raw, 2),
         "total_kohlu_motors_cleaned_kwh": round(total_kohlu_motors_cleaned, 2),
+        "total_kohlu_spike_excluded_kwh": round(total_kohlu_spike_excluded, 2),
         "expellers": expellers_summary,
         "kohlus": kohlus_summary,
         "motor_categories": category_metrics,
@@ -297,10 +330,13 @@ def compute_plant_energy_balance(parsed_data: Dict[str, Any]) -> Dict[str, Any]:
         "health_summary": {
             "health_score_pct": health_score_pct,
             "healthy_count": total_healthy_readings,
+            "normal_count": total_normal_readings,
             "idle_count": total_idle_readings,
             "overload_count": total_overload_readings,
             "stopped_count": total_stopped_readings,
-            "total_evaluated": total_active_readings + total_stopped_readings
+            "missing_count": total_missing_readings,
+            "anomaly_count": total_anomaly_readings,
+            "total_evaluated": total_active_readings + total_stopped_readings + total_missing_readings + total_anomaly_readings
         },
         "timeline": {
             "labels": timeline_labels,
@@ -312,8 +348,11 @@ def compute_plant_energy_balance(parsed_data: Dict[str, Any]) -> Dict[str, Any]:
         "health_timeline": {
             "labels": timeline_labels,
             "healthy": timeline_health_healthy,
+            "normal": timeline_health_normal,
             "idle": timeline_health_idle,
             "overload": timeline_health_overload,
-            "stopped": timeline_health_stopped
+            "stopped": timeline_health_stopped,
+            "missing": timeline_health_missing,
+            "anomaly": timeline_health_anomaly
         }
     }

@@ -157,6 +157,11 @@ def test_kohlu_detail_endpoint():
     assert d1["incomer_name"] == "INC KOHLU 1 1 F1"
     assert len(d1["motors"]) == 6  # 6 Kohlus in Panel 1 (Cols 34 to 39 / AH to AM)
     assert [m["code"] for m in d1["motors"]] == ["K1", "K2", "K3", "K4", "K5", "K6"]
+    for motor in d1["motors"]:
+        assert motor["hp"] == 40
+        assert motor["rated_15m_kwh"] == 7.44
+        assert motor["healthy_max_kwh"] == 5.95
+        assert motor["overload_threshold_kwh"] == 5.95
 
     # Test Kohlu Panel 2
     res2 = client.get("/api/analytics/kohlu-detail?panel_num=2", headers=headers)
@@ -167,6 +172,7 @@ def test_kohlu_detail_endpoint():
     assert d2["incomer_name"] == "INC KOHLU 2 1 F1"
     assert len(d2["motors"]) == 6  # 6 Kohlus in Panel 2 (Cols 41 to 46 / AO to AT)
     assert [m["code"] for m in d2["motors"]] == ["K7", "K8", "K9", "K10", "K11", "K12"]
+    assert all(motor["hp"] == 40 for motor in d2["motors"])
 
 def test_all_kohlus_detail_endpoint():
     res_auth = client.post("/api/auth/login", json={
@@ -213,12 +219,17 @@ def test_motors_by_rating_endpoint():
     assert d_50["total_matched"] == 10
     assert all(m["hp"] == 50 for m in d_50["motors"])
 
-    # 30 HP motors: 2 Panels * 6 units = 12
+    # 40 HP Kohlu motors: 2 Panels * 6 units = 12
+    res_40 = client.get("/api/analytics/motors-by-rating?hp=40", headers=headers)
+    assert res_40.status_code == 200
+    d_40 = res_40.json()
+    assert d_40["total_matched"] == 12
+    assert all(m["hp"] == 40 for m in d_40["motors"])
+
+    # No Kohlu motors remain in the 30 HP category.
     res_30 = client.get("/api/analytics/motors-by-rating?hp=30", headers=headers)
     assert res_30.status_code == 200
-    d_30 = res_30.json()
-    assert d_30["total_matched"] == 12
-    assert all(m["hp"] == 30 for m in d_30["motors"])
+    assert res_30.json()["total_matched"] == 0
 
 def test_activity_logs_endpoints():
     # Login as admin

@@ -160,6 +160,11 @@ def parse_ems_excel_file(file_path_or_stream) -> Dict[str, Any]:
         mp_str = str(mp).strip() if mp is not None else ""
         unit_str = str(unit).strip() if unit is not None else "kWh"
         hp = parse_motor_hp(source_str)
+        # Kohlu motor headers do not include the nameplate rating in the workbook.
+        # Plant specification: all 12 Kohlu units are 40 HP; incomers are not motors.
+        source_upper = source_str.upper()
+        if "KOHLU" in source_upper and "INC" not in source_upper and "PANEL" not in source_upper:
+            hp = 40
         rated_kwh = settings.RATED_15MIN_KWH.get(hp) if hp else None
         
         seen_sources.setdefault(source_str, []).append(c)
@@ -252,7 +257,7 @@ def parse_ems_excel_file(file_path_or_stream) -> Dict[str, Any]:
             # Anomaly Checks on individual cell
             if numeric_val is not None:
                 # 1. Extreme spike check
-                if numeric_val > settings.EXTREME_SPIKE_THRESHOLD_KWH and "MAIN INC" not in col_info["source_name"].upper():
+                if numeric_val > settings.EXTREME_SPIKE_THRESHOLD_KWH and col_info["rated_15m_kwh"] is not None:
                     validation_findings.append({
                         "severity": "CRITICAL",
                         "category": "TELEMETRY_SPIKE",
@@ -262,12 +267,13 @@ def parse_ems_excel_file(file_path_or_stream) -> Dict[str, Any]:
                         "row_num": r,
                         "col_num": c,
                         "observed_value": f"{numeric_val:.1f} kWh",
-                        "expected_range": "< 50 kWh / 15-min",
+                        "expected_range": f"<= {settings.EXTREME_SPIKE_THRESHOLD_KWH:g} kWh / 15-min for a motor reading",
                         "explanation": f"Extreme abnormal surge detected: {numeric_val:.1f} kWh in a single 15-minute slot. Likely meter rollover or register corruption."
                     })
                 
                 # 2. Overload Check (if motor HP is known)
-                if col_info["rated_15m_kwh"] and numeric_val > col_info["rated_15m_kwh"]:
+                overload_limit = col_info["rated_15m_kwh"] * (settings.OVERLOAD_THRESHOLD_PCT / 100.0) if col_info["rated_15m_kwh"] else None
+                if overload_limit and numeric_val > overload_limit:
                     load_pct = (numeric_val / col_info["rated_15m_kwh"]) * 100.0
                     validation_findings.append({
                         "severity": "WARNING",
@@ -278,8 +284,8 @@ def parse_ems_excel_file(file_path_or_stream) -> Dict[str, Any]:
                         "row_num": r,
                         "col_num": c,
                         "observed_value": f"{numeric_val:.2f} kWh ({load_pct:.1f}% load)",
-                        "expected_range": f"<= {col_info['rated_15m_kwh']:.2f} kWh (100% full load)",
-                        "explanation": f"{col_info['motor_hp']} HP motor exceeded 100% rated capacity ({numeric_val:.2f} kWh vs rated {col_info['rated_15m_kwh']:.2f} kWh)."
+                        "expected_range": f"<= {overload_limit:.2f} kWh (80% overload-risk limit)",
+                        "explanation": f"{col_info['motor_hp']} HP motor exceeded the 80% overload-risk limit ({numeric_val:.2f} kWh vs rated {col_info['rated_15m_kwh']:.2f} kWh)."
                     })
                 
                 # 3. Idle Running Check (motor active but < 40% load)

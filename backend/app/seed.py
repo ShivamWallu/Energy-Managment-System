@@ -15,7 +15,7 @@ def seed_database():
     try:
         # 1. Seed Default Users
         users = [
-            ("admin", "admin@emsintelligence.io", "AdminPassword2026!", "System Administrator", "admin"),
+            ("admin", "admin@emsintelligence.io", os.getenv("ADMIN_INITIAL_PASSWORD"), "System Administrator", "admin"),
             ("manager", "manager@emsintelligence.io", "ManagerPassword2026!", "Plant Operations Manager", "manager"),
             ("auditor", "auditor@emsintelligence.io", "AuditorPassword2026!", "Energy Auditor & Inspector", "auditor")
         ]
@@ -23,6 +23,8 @@ def seed_database():
         for username, email, pwd, name, role in users:
             existing = db.query(User).filter(User.username == username).first()
             if not existing:
+                if role == "admin" and not pwd:
+                    raise RuntimeError("Set ADMIN_INITIAL_PASSWORD in the environment before creating the initial admin account.")
                 u = User(
                     username=username,
                     email=email,

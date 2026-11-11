@@ -5,6 +5,7 @@ from sqlalchemy import or_
 from backend.app.database import get_db
 from backend.app.models import User, ReportFile, RawReading, ValidationFinding, ShiftCalculation
 from backend.app.auth import get_current_user
+from backend.app.config import settings
 
 router = APIRouter(prefix="/analytics", tags=["Energy Analytics & Insights"])
 
@@ -133,13 +134,19 @@ def get_dashboard_data(
 
     # Health Time-Series & Summary Aggregation
     health_timeline_healthy = []
+    health_timeline_normal = []
     health_timeline_idle = []
     health_timeline_overload = []
     health_timeline_stopped = []
+    health_timeline_missing = []
+    health_timeline_anomaly = []
     total_healthy_all = 0
+    total_normal_all = 0
     total_idle_all = 0
     total_overload_all = 0
     total_stopped_all = 0
+    total_missing_all = 0
+    total_anomaly_all = 0
 
     for r in reports:
         meta = r.metadata_json or {}
@@ -147,16 +154,22 @@ def get_dashboard_data(
         ht = bal.get("health_timeline", {})
         if ht:
             health_timeline_healthy.extend(ht.get("healthy", []))
+            health_timeline_normal.extend(ht.get("normal", []))
             health_timeline_idle.extend(ht.get("idle", []))
             health_timeline_overload.extend(ht.get("overload", []))
             health_timeline_stopped.extend(ht.get("stopped", []))
+            health_timeline_missing.extend(ht.get("missing", []))
+            health_timeline_anomaly.extend(ht.get("anomaly", []))
             
         hs = bal.get("health_summary", {})
         if hs:
             total_healthy_all += hs.get("healthy_count", 0)
+            total_normal_all += hs.get("normal_count", 0)
             total_idle_all += hs.get("idle_count", 0)
             total_overload_all += hs.get("overload_count", 0)
             total_stopped_all += hs.get("stopped_count", 0)
+            total_missing_all += hs.get("missing_count", 0)
+            total_anomaly_all += hs.get("anomaly_count", 0)
 
     # Findings counts from database
     rep_ids = [r.id for r in reports]
@@ -177,8 +190,8 @@ def get_dashboard_data(
     expellers = first_report_balance.get("expellers", [])
     kohlus = first_report_balance.get("kohlus", [])
 
-    total_active_all = total_healthy_all + total_idle_all + total_overload_all
-    overall_health_score = round((total_healthy_all / total_active_all * 100.0), 1) if total_active_all > 0 else 76.5
+    total_active_all = total_healthy_all + total_normal_all + total_idle_all + total_overload_all
+    overall_health_score = round((total_healthy_all / total_active_all * 100.0), 1) if total_active_all > 0 else 0.0
 
     return {
         "selected_report_id": report_id,
@@ -202,9 +215,12 @@ def get_dashboard_data(
         "health_summary": {
             "health_score_pct": overall_health_score,
             "healthy_count": total_healthy_all,
+            "normal_count": total_normal_all,
             "idle_count": total_idle_all,
             "overload_count": total_overload_all,
-            "stopped_count": total_stopped_all
+            "stopped_count": total_stopped_all,
+            "missing_count": total_missing_all,
+            "anomaly_count": total_anomaly_all
         },
         "timeline": {
             "labels": timeline_labels,
@@ -216,9 +232,12 @@ def get_dashboard_data(
         "health_timeline": {
             "labels": timeline_labels,
             "healthy": health_timeline_healthy,
+            "normal": health_timeline_normal,
             "idle": health_timeline_idle,
             "overload": health_timeline_overload,
-            "stopped": health_timeline_stopped
+            "stopped": health_timeline_stopped,
+            "missing": health_timeline_missing,
+            "anomaly": health_timeline_anomaly
         },
         "motor_categories": motor_categories,
         "expellers": expellers,
@@ -372,7 +391,7 @@ def get_expeller_detail(
                     "col_index": col_idx,
                     "hp": hp,
                     "description": desc,
-                    "full_load_kw": round(hp * 0.746, 2),
+                    "full_load_kw": round(hp * settings.HP_TO_KW_FACTOR, 2),
                     "load_pct": 0.0,
                     "status": "OFFLINE",
                     "status_label": "Awaiting Upload",
@@ -407,8 +426,6 @@ def get_expeller_detail(
     total_healthy_slots = 0
     total_active_slots = 0
 
-    from backend.app.config import settings
-
     for code, col, hp, role in cfg["motors"]:
         readings = db.query(RawReading).filter(
             RawReading.report_file_id.in_(report_ids),
@@ -428,14 +445,25 @@ def get_expeller_detail(
         timeline_statuses = []
 
         h_count = 0
+        normal_count = 0
         i_count = 0
         o_count = 0
         s_count = 0
+        missing_count = 0
         m_total = 0.0
         max_reading = 0.0
 
         for r in readings:
-            val = r.numeric_value or 0.0
+            lbl = format_time_12h(r.timestamp_str) if r.timestamp_str else str(r.interval_index)
+            if r.numeric_value is None:
+                missing_count += 1
+                timeline_labels.append(lbl)
+                timeline_values.append(None)
+                timeline_loads.append(None)
+                timeline_statuses.append("NO_DATA")
+                continue
+
+            val = float(r.numeric_value)
             m_total += val
             if val > max_reading:
                 max_reading = val
@@ -457,9 +485,7 @@ def get_expeller_detail(
                 i_count += 1
             else: # 40% to 50%
                 st = "NORMAL"
-                h_count += 1
-
-            lbl = format_time_12h(r.timestamp_str) if r.timestamp_str else str(r.interval_index)
+                normal_count += 1
 
             timeline_labels.append(lbl)
             timeline_values.append(round(val, 2))
@@ -468,14 +494,14 @@ def get_expeller_detail(
 
         total_expeller_motor_kwh += m_total
         total_healthy_slots += h_count
-        active_slots = h_count + i_count + o_count
+        active_slots = h_count + normal_count + i_count + o_count
         total_active_slots += active_slots
 
-        total_rated_capacity = (len(readings) * rated_15m)
+        total_rated_capacity = (len(readings) - missing_count) * rated_15m
         avg_load = round((m_total / total_rated_capacity * 100.0), 1) if (total_rated_capacity > 0) else 0.0
 
         # Calculate Min, Max, Avg, Sum
-        vals_list = [round(r.numeric_value or 0.0, 2) for r in readings]
+        vals_list = [round(float(r.numeric_value), 2) for r in readings if r.numeric_value is not None]
         val_min = min(vals_list) if vals_list else 0.0
         active_vals = [v for v in vals_list if v > 0]
         active_min = min(active_vals) if active_vals else 0.0
@@ -484,8 +510,12 @@ def get_expeller_detail(
         val_sum = round(sum(vals_list), 2) if vals_list else 0.0
 
         # General status based on sustained average load & persistent overloads
-        if m_total == 0 or s_count == len(readings):
+        if not vals_list:
+            gen_status = "NO_DATA"
+        elif m_total == 0 and missing_count == 0:
             gen_status = "STOPPED"
+        elif m_total == 0 and missing_count > 0:
+            gen_status = "NO_DATA"
         elif avg_load > 80.0:
             gen_status = "OVERLOAD"
         elif avg_load >= 50.0:
@@ -499,7 +529,11 @@ def get_expeller_detail(
         slot_word_high = "interval" if o_count == 1 else "intervals"
         slot_word_idle = "interval" if i_count == 1 else "intervals"
 
-        if m_total == 0 or s_count == len(readings):
+        if not vals_list:
+            alert = f"No SCADA readings are available for {missing_count} interval(s)."
+        elif m_total == 0 and missing_count > 0:
+            alert = f"Data incomplete: {missing_count} interval(s) have no SCADA reading; recorded intervals show 0 kWh."
+        elif m_total == 0 and missing_count == 0:
             alert = "Offline: Unit inactive with 0 kWh recorded."
         elif gen_status == "OVERLOAD":
             alert = f"High Load: Sustained >80% load in {o_count} {slot_word_high} (Peak: {round(max_reading, 2)} kWh). Check seed feed gate."
@@ -514,6 +548,9 @@ def get_expeller_detail(
             alert = f"Normal: Operating at {avg_load}% avg load with {h_count} good and {i_count} low intervals."
         else: # IDLE
             alert = f"Low Load: Operating below 40% in {i_count} {slot_word_idle} (Avg: {avg_load}%). Check seed feed hopper."
+
+        if missing_count and vals_list and m_total > 0:
+            alert = f"Data gap: {missing_count} interval(s) have no reading. {alert}"
 
         motors_out.append({
             "code": code,
@@ -537,9 +574,11 @@ def get_expeller_detail(
             "avg_kwh": val_avg,
             "sum_kwh": val_sum,
             "healthy_count": h_count,
+            "normal_count": normal_count,
             "idle_count": i_count,
             "overload_count": o_count,
             "stopped_count": s_count,
+            "missing_count": missing_count,
             "supervisory_alert": alert,
             "timeline": {
                 "labels": timeline_labels,
@@ -549,7 +588,7 @@ def get_expeller_detail(
             }
         })
 
-    expeller_health_score = round((total_healthy_slots / total_active_slots * 100.0), 1) if total_active_slots > 0 else 75.0
+    expeller_health_score = round((total_healthy_slots / total_active_slots * 100.0), 1) if total_active_slots > 0 else 0.0
 
     return {
         "expeller_num": expeller_num,
@@ -584,12 +623,12 @@ KOHLU_MAPPING = {
         "incomer_col": 33,  # AG: INC KOHLU 1 1 F1 (total reading, ignored from motor list)
         "incomer_name": "INC KOHLU 1 1 F1",
         "motors": [
-            ("K1", 34, 30, "Kohlu Cold Press Extraction Unit 1", "KOHLU 1 2 F1"),
-            ("K2", 35, 30, "Kohlu Cold Press Extraction Unit 2", "KOHLU_2_2F2"),
-            ("K3", 36, 30, "Kohlu Cold Press Extraction Unit 3", "KOHLU 3 2 F3"),
-            ("K4", 37, 30, "Kohlu Cold Press Extraction Unit 4", "KOHLU 4 2 F4"),
-            ("K5", 38, 30, "Kohlu Cold Press Extraction Unit 5", "KOHLU 5 2 F5"),
-            ("K6", 39, 30, "Kohlu Cold Press Extraction Unit 6", "KOHLU 6 1 F4"),
+            ("K1", 34, 40, "Kohlu Cold Press Extraction Unit 1", "KOHLU 1 2 F1"),
+            ("K2", 35, 40, "Kohlu Cold Press Extraction Unit 2", "KOHLU_2_2F2"),
+            ("K3", 36, 40, "Kohlu Cold Press Extraction Unit 3", "KOHLU 3 2 F3"),
+            ("K4", 37, 40, "Kohlu Cold Press Extraction Unit 4", "KOHLU 4 2 F4"),
+            ("K5", 38, 40, "Kohlu Cold Press Extraction Unit 5", "KOHLU 5 2 F5"),
+            ("K6", 39, 40, "Kohlu Cold Press Extraction Unit 6", "KOHLU 6 1 F4"),
         ]
     },
     2: {
@@ -597,12 +636,12 @@ KOHLU_MAPPING = {
         "incomer_col": 40,  # AN: INC KOHLU 2 1 F1 (total reading, ignored from motor list)
         "incomer_name": "INC KOHLU 2 1 F1",
         "motors": [
-            ("K7", 41, 30, "Kohlu Cold Press Extraction Unit 7", "KOHLU 7 1 F4"),
-            ("K8", 42, 30, "Kohlu Cold Press Extraction Unit 8", "KOHLU 8 2 F1"),
-            ("K9", 43, 30, "Kohlu Cold Press Extraction Unit 9", "KOHLU 9 2 F2"),
-            ("K10", 44, 30, "Kohlu Cold Press Extraction Unit 10", "KOHLU 10 2 F3"),
-            ("K11", 45, 30, "Kohlu Cold Press Extraction Unit 11", "KOHLU 11 2 F4"),
-            ("K12", 46, 30, "Kohlu Cold Press Extraction Unit 12", "KOHLU 12 2 F5"),
+            ("K7", 41, 40, "Kohlu Cold Press Extraction Unit 7", "KOHLU 7 1 F4"),
+            ("K8", 42, 40, "Kohlu Cold Press Extraction Unit 8", "KOHLU 8 2 F1"),
+            ("K9", 43, 40, "Kohlu Cold Press Extraction Unit 9", "KOHLU 9 2 F2"),
+            ("K10", 44, 40, "Kohlu Cold Press Extraction Unit 10", "KOHLU 10 2 F3"),
+            ("K11", 45, 40, "Kohlu Cold Press Extraction Unit 11", "KOHLU 11 2 F4"),
+            ("K12", 46, 40, "Kohlu Cold Press Extraction Unit 12", "KOHLU 12 2 F5"),
         ]
     }
 }
@@ -678,10 +717,10 @@ def get_kohlu_detail(
     # Fetch 6 Kohlu Units
     motors_out = []
     total_kohlu_motor_kwh = 0.0
+    total_kohlu_motor_validated_kwh = 0.0
     total_healthy_slots = 0
     total_active_slots = 0
-
-    from backend.app.config import settings
+    total_missing_slots = 0
 
     for code, col, hp, role, src_label in cfg["motors"]:
         readings = db.query(RawReading).filter(
@@ -689,51 +728,69 @@ def get_kohlu_detail(
             RawReading.col_index == col
         ).order_by(RawReading.report_file_id.asc(), RawReading.interval_index.asc()).all()
 
-        rated_15m = round((hp * settings.HP_TO_KW_FACTOR) / 4.0, 2)  # 30 * 0.744 / 4 = 5.58 kWh
+        rated_15m = round((hp * settings.HP_TO_KW_FACTOR) / 4.0, 2)
         healthy_min = round(rated_15m * 0.50, 2)
-        healthy_max = rated_15m  # Full nameplate rated capacity (5.58 kWh) for continuous cold press
+        healthy_max = round(rated_15m * 0.80, 2)
         idle_min = round(rated_15m * 0.10, 2)
         idle_max = round(rated_15m * 0.40, 2)
-        overload_threshold = rated_15m  # 100% rated capacity (5.58 kWh)
+        overload_threshold = healthy_max  # 80% overload-risk threshold, matching expeller motors
 
         timeline_labels = []
         timeline_values = []
+        timeline_graph_values = []
         timeline_loads = []
         timeline_statuses = []
 
         h_count = 0
+        normal_count = 0
         i_count = 0
         o_count = 0
         s_count = 0
+        missing_count = 0
+        clean_count = 0
         m_total_cleaned = 0.0
+        m_total_raw = 0.0
         max_reading = 0.0
         has_spike = False
+        spike_values = []
 
         for r in readings:
-            val = r.numeric_value or 0.0
-            
-            # Detect telemetry spike (e.g., Kohlu 4 spike of 14,326.8 kWh)
+            lbl = format_time_12h(r.timestamp_str) if r.timestamp_str else str(r.interval_index)
+            if r.numeric_value is None:
+                missing_count += 1
+                timeline_labels.append(lbl)
+                timeline_values.append(None)
+                timeline_graph_values.append(None)
+                timeline_loads.append(None)
+                timeline_statuses.append("NO_DATA")
+                continue
+
+            val = float(r.numeric_value)
+            m_total_raw += val
+            max_reading = max(max_reading, val)
+
+            # Preserve the raw meter value; exclude spikes only from the
+            # separate validated total. Never substitute an estimated value.
             is_spike = val > settings.EXTREME_SPIKE_THRESHOLD_KWH
             if is_spike:
                 has_spike = True
-                display_val = 4.0  # Nominal active 15m interval for display
+                spike_values.append(val)
             else:
-                display_val = val
+                m_total_cleaned += val
+                clean_count += 1
 
-            m_total_cleaned += display_val
-            if not is_spike and val > max_reading:
-                max_reading = val
-
-            load_pct = round((display_val / rated_15m * 100.0), 1) if rated_15m > 0 else 0.0
+            load_pct = round((val / rated_15m * 100.0), 1) if rated_15m > 0 else 0.0
             
-            # Status classification: Cold press continuous duty healthy band is 50% to 100% of rated capacity
-            if load_pct < 10.0:
+            # Use the same 80% overload-risk threshold as the expeller motors.
+            if is_spike:
+                st = "ANOMALY"
+            elif load_pct < 10.0:
                 st = "STOPPED"
                 s_count += 1
-            elif load_pct > 100.0:
+            elif load_pct > 80.0:
                 st = "OVERLOAD"
                 o_count += 1
-            elif 50.0 <= load_pct <= 100.0:
+            elif 50.0 <= load_pct <= 80.0:
                 st = "HEALTHY"
                 h_count += 1
             elif 10.0 <= load_pct < 40.0:
@@ -741,36 +798,42 @@ def get_kohlu_detail(
                 i_count += 1
             else:
                 st = "NORMAL"
-                h_count += 1
-
-            lbl = format_time_12h(r.timestamp_str) if r.timestamp_str else str(r.interval_index)
+                normal_count += 1
 
             timeline_labels.append(lbl)
-            timeline_values.append(round(display_val, 2))
+            timeline_values.append(round(val, 2))
+            timeline_graph_values.append(round(min(val, rated_15m * 1.25), 2) if is_spike else round(val, 2))
             timeline_loads.append(load_pct)
             timeline_statuses.append(st)
 
-        total_kohlu_motor_kwh += m_total_cleaned
+        total_kohlu_motor_kwh += m_total_raw
+        total_kohlu_motor_validated_kwh += m_total_cleaned
         total_healthy_slots += h_count
-        active_slots = h_count + i_count + o_count
+        active_slots = h_count + normal_count + i_count + o_count
         total_active_slots += active_slots
+        total_missing_slots += missing_count
 
-        total_rated_capacity = (len(readings) * rated_15m)
+        total_rated_capacity = clean_count * rated_15m
         avg_load = round((m_total_cleaned / total_rated_capacity * 100.0), 1) if (total_rated_capacity > 0) else 0.0
 
-        # Min, Max, Avg, Sum calculations
-        vals_cleaned = [round(v, 2) for v in timeline_values]
-        val_min = min(vals_cleaned) if vals_cleaned else 0.0
-        active_vals = [v for v in vals_cleaned if v > 0]
+        # Summary statistics retain all numeric readings. The validated total
+        # separately excludes flagged spikes and does not guess replacements.
+        vals_raw = [round(float(r.numeric_value), 2) for r in readings if r.numeric_value is not None]
+        val_min = min(vals_raw) if vals_raw else 0.0
+        active_vals = [v for v in vals_raw if v > 0]
         active_min = min(active_vals) if active_vals else 0.0
-        val_max = max(vals_cleaned) if vals_cleaned else 0.0
-        val_avg = round(sum(vals_cleaned) / len(vals_cleaned), 2) if vals_cleaned else 0.0
-        val_sum = round(sum(vals_cleaned), 2) if vals_cleaned else 0.0
+        val_max = max(vals_raw) if vals_raw else 0.0
+        val_avg = round(sum(vals_raw) / len(vals_raw), 2) if vals_raw else 0.0
+        val_sum = round(m_total_raw, 2)
 
         # General status based on sustained average load & persistent overloads
-        if m_total_cleaned == 0 or s_count == len(readings):
+        if not vals_raw:
+            gen_status = "NO_DATA"
+        elif has_spike and clean_count == 0:
+            gen_status = "ANOMALY"
+        elif m_total_cleaned == 0 and not has_spike:
             gen_status = "STOPPED"
-        elif avg_load > 100.0:
+        elif avg_load > 80.0:
             gen_status = "OVERLOAD"
         elif avg_load >= 50.0:
             gen_status = "HEALTHY"
@@ -783,16 +846,18 @@ def get_kohlu_detail(
         slot_word_idle = "interval" if i_count == 1 else "intervals"
 
         if has_spike:
-            alert = f"Glitch Isolated: 14,326.8 kWh single slot spike isolated. Cleaned sum is {val_sum} kWh."
-        elif m_total_cleaned == 0 or s_count == len(readings):
+            alert = f"Telemetry anomaly: {len(spike_values)} reading(s) exceed {settings.EXTREME_SPIKE_THRESHOLD_KWH:g} kWh. Raw sum: {val_sum} kWh; validated sum excludes {sum(spike_values):.2f} kWh. No reading was replaced; verify the meter."
+        elif missing_count and not vals_raw:
+            alert = f"No SCADA readings are available for {missing_count} interval(s)."
+        elif m_total_cleaned == 0:
             alert = "Offline: Unit inactive with 0 kWh recorded."
         elif gen_status == "OVERLOAD":
-            alert = f"High Load: Sustained >100% overload in {o_count} {slot_word_high} (Peak: {round(max_reading, 2)} kWh). Check seed cake resistance & feed."
+            alert = f"High Load: Sustained >80% overload risk in {o_count} {slot_word_high} (Peak: {round(max_reading, 2)} kWh). Check seed cake resistance & feed."
         elif gen_status == "HEALTHY":
             if o_count > 0:
                 alert = f"Optimal: Steady at {avg_load}% avg load ({h_count} slots good, {o_count} {slot_word_high} peak up to {round(max_reading, 2)} kWh)."
             else:
-                alert = f"Optimal: Steady continuous operation in 50%–100% target range (Avg: {avg_load}%)."
+                alert = f"Optimal: Steady continuous operation in 50%–80% target range (Avg: {avg_load}%)."
         elif gen_status == "NORMAL":
             alert = f"Normal: Operating at {avg_load}% avg load."
         else: # IDLE
@@ -812,10 +877,12 @@ def get_kohlu_detail(
             "idle_min_kwh": idle_min,
             "idle_max_kwh": idle_max,
             "overload_threshold_kwh": overload_threshold,
-            "overload_pct": 100,
+            "overload_pct": 80,
             "avg_load_pct": avg_load,
+            "raw_avg_load_pct": round((val_avg / rated_15m * 100.0), 1) if rated_15m > 0 else 0.0,
             "current_status": gen_status,
-            "total_kwh": round(m_total_cleaned, 2),
+            "total_kwh": round(m_total_raw, 2),
+            "validated_total_kwh": round(m_total_cleaned, 2),
             "min_kwh": val_min,
             "active_min_kwh": active_min,
             "max_kwh": val_max,
@@ -823,19 +890,23 @@ def get_kohlu_detail(
             "sum_kwh": val_sum,
             "has_spike": has_spike,
             "healthy_count": h_count,
+            "normal_count": normal_count,
             "idle_count": i_count,
             "overload_count": o_count,
             "stopped_count": s_count,
+            "missing_count": missing_count,
+            "spike_count": len(spike_values),
             "supervisory_alert": alert,
             "timeline": {
                 "labels": timeline_labels,
                 "values": timeline_values,
+                "graph_values": timeline_graph_values,
                 "load_pcts": timeline_loads,
                 "statuses": timeline_statuses
             }
         })
 
-    kohlu_health_score = round((total_healthy_slots / total_active_slots * 100.0), 1) if total_active_slots > 0 else 85.0
+    kohlu_health_score = round((total_healthy_slots / total_active_slots * 100.0), 1) if total_active_slots > 0 else 0.0
 
     return {
         "panel_num": panel_num,
@@ -845,8 +916,11 @@ def get_kohlu_detail(
         "incomer_col": cfg["incomer_col"],
         "incomer_total_kwh": round(inc_total, 2),
         "motors_total_kwh": round(total_kohlu_motor_kwh, 2),
+        "motors_validated_total_kwh": round(total_kohlu_motor_validated_kwh, 2),
         "health_score_pct": kohlu_health_score,
         "loss_kwh": round(inc_total - total_kohlu_motor_kwh, 2),
+        "validated_loss_kwh": round(inc_total - total_kohlu_motor_validated_kwh, 2),
+        "missing_count": total_missing_slots,
         "motors": motors_out
     }
 
@@ -868,7 +942,7 @@ def get_all_kohlus_detail(
 
 @router.get("/motors-by-rating")
 def get_motors_by_rating(
-    hp: Optional[int] = Query(None, description="Filter by HP rating (75, 60, 50, 30) or None for all"),
+    hp: Optional[int] = Query(None, description="Filter by HP rating (75, 60, 50, 40) or None for all"),
     motor_pos: Optional[str] = Query(None, description="Filter by motor position code (P1, P2, P3, P4, P5, or KOHLU)"),
     report_id: Optional[int] = Query(None, description="Report ID or None for combined view"),
     db: Session = Depends(get_db),
@@ -915,7 +989,7 @@ def get_motors_by_rating(
         else:
             filtered = [m for m in all_motors if m.get("code") == pos_clean]
     elif hp is not None and hp > 0:
-        if hp == 30:
+        if hp == 40:
             filtered = [m for m in all_motors if m.get("panel_type") == "KOHLU"]
         else:
             filtered = [m for m in all_motors if m.get("hp") == hp]

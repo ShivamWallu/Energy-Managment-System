@@ -200,7 +200,7 @@ const dashboard = {
             <span class="flow-step-tag">Tier 4 • Machine End-Use</span>
             <i class="fa-solid fa-gears text-emerald"></i>
           </div>
-          <div class="flow-step-name">Cleaned Sub-Motors Sum</div>
+          <div class="flow-step-name">Validated Sub-Motors Sum</div>
           <div class="flow-step-value" style="color:var(--text-muted);">-- <span style="font-size:0.8rem; font-weight:normal;">kWh</span></div>
           <div class="flow-step-detail">Awaiting shift report ingestion.</div>
         </div>
@@ -253,9 +253,9 @@ const dashboard = {
           <span class="flow-step-tag">Tier 4 • Machine End-Use</span>
           <i class="fa-solid fa-gears text-emerald"></i>
         </div>
-        <div class="flow-step-name">Cleaned Sub-Motors Sum</div>
+        <div class="flow-step-name">Validated Sub-Motors Sum</div>
         <div class="flow-step-value">${Number((kpis.expeller_motors_deduped_kwh || 0) + (kpis.kohlu_motors_cleaned_kwh || 0)).toLocaleString()} <span style="font-size:0.8rem; font-weight:normal;">kWh</span></div>
-        <div class="flow-step-detail">Validated sub-motor telemetry (deduped P4 instances & filtered Kohlu 4 register glitch).</div>
+        <div class="flow-step-detail">Duplicate motor columns are counted once; readings above the telemetry-spike limit are excluded from this adjusted total, with raw readings retained.</div>
       </div>
     `;
 
@@ -354,9 +354,11 @@ const dashboard = {
       if (sectionVal === 'PCC' && !(m.location.toUpperCase().includes('POWER HOUSE') || m.source_name.toUpperCase().includes('INC') || m.source_name.toUpperCase().includes('PANEL'))) return false;
 
       // Health Filter
-      if (healthVal === 'HEALTHY') return m.motor_hp && m.avg_load_pct >= 50.0 && m.avg_load_pct <= 80.0;
+      const healthyMaxPct = 80.0;
+      const overloadPct = 80.0;
+      if (healthVal === 'HEALTHY') return m.motor_hp && m.avg_load_pct >= 50.0 && m.avg_load_pct <= healthyMaxPct;
       if (healthVal === 'IDLE') return m.motor_hp && m.avg_load_pct >= 10.0 && m.avg_load_pct < 40.0;
-      if (healthVal === 'OVERLOAD') return m.motor_hp && m.avg_load_pct > 80.0;
+      if (healthVal === 'OVERLOAD') return m.motor_hp && m.avg_load_pct > overloadPct;
 
       return true;
     });
@@ -379,6 +381,36 @@ const dashboard = {
   allKohlusData: null,
   currentRatingMotors: null,
   currentMatrixMaxCol: null,
+
+  setRatingFilterStatus(filterDescription = '') {
+    const container = document.getElementById('motor-rating-filter-container');
+    const status = document.getElementById('rating-filter-status');
+    const isFiltered = Boolean(filterDescription);
+    if (container) container.classList.toggle('has-active-filter', isFiltered);
+    if (!status) return;
+
+    status.classList.toggle('is-filtered', isFiltered);
+    status.replaceChildren();
+    if (!isFiltered) {
+      status.textContent = 'Showing: All Motors in Current Section';
+      return;
+    }
+
+    const label = document.createElement('span');
+    label.className = 'rating-filter-active-label';
+    label.innerHTML = '<i class="fa-solid fa-filter-circle-dollar" aria-hidden="true"></i> Filter active';
+    const description = document.createElement('strong');
+    description.className = 'rating-filter-active-description';
+    description.textContent = filterDescription;
+    const clearButton = document.createElement('button');
+    clearButton.type = 'button';
+    clearButton.className = 'rating-filter-clear-btn';
+    clearButton.setAttribute('aria-label', 'Remove motor rating filter');
+    clearButton.title = 'Remove filter and show all motors';
+    clearButton.innerHTML = '<i class="fa-solid fa-xmark" aria-hidden="true"></i> Clear';
+    clearButton.addEventListener('click', () => this.filterByRating('all'));
+    status.append(label, description, clearButton);
+  },
 
   async loadExpellerDetail(expellerNum = 1) {
     if (expellerNum === 'all') {
@@ -586,11 +618,18 @@ const dashboard = {
     const load = Number((m.avg_load_pct || 0).toFixed(1));
     const sum = m.sum_kwh || m.total_kwh || 0;
     const st = m.current_status;
+
+    if (st === 'NO_DATA' || (m.missing_count >= 48 && !sum)) {
+      return `<span class="motor-status-pill pill-offline"><i class="fa-solid fa-circle-question"></i> No Data</span>`;
+    }
+    if (m.has_spike || st === 'ANOMALY') {
+      return `<span class="motor-status-pill pill-high"><i class="fa-solid fa-triangle-exclamation"></i> Meter Anomaly</span>`;
+    }
     
     if (sum === 0 || m.stopped_count === 48 || st === 'STOPPED') {
       return `<span class="motor-status-pill pill-offline"><i class="fa-solid fa-power-off"></i> Offline</span>`;
     }
-    if (st === 'OVERLOAD' || (!isKohlu && load > 80.0) || (isKohlu && load > 100.0)) {
+    if (st === 'OVERLOAD' || load > 80.0) {
       return `<span class="motor-status-pill pill-high"><i class="fa-solid fa-triangle-exclamation"></i> Overload (${load}%)</span>`;
     }
     if (st === 'HEALTHY' || load >= 50.0) {
@@ -604,21 +643,27 @@ const dashboard = {
 
   getMotorSlotBreakdownHtml(m) {
     const isKohlu = m.panel_type === 'KOHLU' || (m.code && m.code.startsWith('K'));
-    const overLimit = isKohlu ? 100.0 : 80.0;
-    const overLabel = isKohlu ? '100%' : '80%';
-    const targetLabel = isKohlu ? '50%–100%' : '50%–80%';
+    const overLimit = 80.0;
+    const overLabel = '80%';
+    const targetLabel = '50%–80%';
     const loadPct = Number((m.avg_load_pct || 0).toFixed(1));
     const good = m.healthy_count || 0;
+    const normal = m.normal_count || 0;
     const low = m.idle_count || 0;
     const high = m.overload_count || 0;
     const off = m.stopped_count || 0;
-    const isOffline = (m.sum_kwh || m.total_kwh || 0) === 0 || off === 48 || m.current_status === 'STOPPED';
+    const isNoData = m.current_status === 'NO_DATA' || (m.missing_count >= 48 && !(m.sum_kwh || m.total_kwh));
+    const isOffline = !isNoData && ((m.sum_kwh || m.total_kwh || 0) === 0 || off === 48 || m.current_status === 'STOPPED');
 
     let zoneClass = 'zone-healthy';
     let fillClass = 'fill-healthy';
     let zoneText = `🟢 Optimal (${targetLabel})`;
 
-    if (isOffline) {
+    if (isNoData) {
+      zoneClass = 'zone-stopped';
+      fillClass = 'fill-stopped';
+      zoneText = 'No SCADA readings';
+    } else if (isOffline) {
       zoneClass = 'zone-stopped';
       fillClass = 'fill-stopped';
       zoneText = '⏹️ Offline (0 kWh)';
@@ -655,7 +700,7 @@ const dashboard = {
           <div class="load-gauge-fill ${fillClass}" style="width: ${fillWidth}%;"></div>
           <div class="load-gauge-marker marker-40" title="40% Low-Load Limit"></div>
           <div class="load-gauge-marker marker-50" title="50% Healthy Target Minimum"></div>
-          <div class="load-gauge-marker marker-80" style="${isKohlu ? 'left:100%;' : ''}" title="${overLabel} Overload Red Danger Line"></div>
+          <div class="load-gauge-marker marker-80" title="${overLabel} Overload Red Danger Line"></div>
         </div>
         <div class="load-gauge-ticks">
           <span>0%</span>
@@ -667,6 +712,7 @@ const dashboard = {
 
         <div class="motor-slots-counts">
           <span class="slot-count-tag count-good" title="${good} intervals in optimal zone (${targetLabel})"><i class="fa-solid fa-circle"></i> ${good} Good</span>
+          <span class="slot-count-tag count-normal" title="${normal} intervals in the 40%-50% normal zone"><i class="fa-solid fa-circle"></i> ${normal} Normal</span>
           <span class="slot-count-tag count-low" title="${low} intervals in low-load zone (10%–40%)"><i class="fa-solid fa-circle"></i> ${low} Low</span>
           <span class="slot-count-tag count-high" title="${high} intervals in high-load zone (>${overLabel})"><i class="fa-solid fa-circle"></i> ${high} High</span>
           <span class="slot-count-tag count-off" title="${off} intervals stopped (0 kWh)"><i class="fa-solid fa-circle"></i> ${off} Off</span>
@@ -677,7 +723,7 @@ const dashboard = {
 
   getMotorBenchmarkLegendHtml(m) {
     const isKohlu = m.panel_type === 'KOHLU' || (m.code && m.code.startsWith('K'));
-    const overPctLabel = isKohlu ? '100%' : '80%';
+    const overPctLabel = '80%';
     const overVal = m.overload_threshold_kwh ? `${Number(m.overload_threshold_kwh).toFixed(1)}k` : overPctLabel;
     const healVal = m.healthy_min_kwh ? `${Number(m.healthy_min_kwh).toFixed(1)}k` : '50%';
     const idleVal = m.idle_max_kwh ? `${Number(m.idle_max_kwh).toFixed(1)}k` : '40%';
@@ -1038,11 +1084,11 @@ const dashboard = {
   },
 
   resetRatingFilterUI() {
+    currentRatingFilter = 'all';
     document.querySelectorAll('.rating-filter-btn').forEach(btn => {
       btn.classList.toggle('active', btn.getAttribute('data-rating-filter') === 'all');
     });
-    const statusEl = document.getElementById('rating-filter-status');
-    if (statusEl) statusEl.innerHTML = 'Showing: <strong>All Motors in Current Section</strong>';
+    this.setRatingFilterStatus();
     this.currentRatingMotors = null;
   },
 
@@ -1054,6 +1100,7 @@ const dashboard = {
     });
 
     if (filterKey === 'all') {
+      this.resetRatingFilterUI();
       if (currentPanelType === 'KOHLU') {
         if (currentKohluNum === 'all') this.loadAllKohlusDetail();
         else this.loadKohluDetail(currentKohluNum);
@@ -1064,7 +1111,6 @@ const dashboard = {
       return;
     }
 
-    const statusEl = document.getElementById('rating-filter-status');
     const viewModeBar = document.getElementById('expeller-view-mode-bar');
     if (viewModeBar) viewModeBar.style.display = 'none';
 
@@ -1084,13 +1130,11 @@ const dashboard = {
       filterDesc = '60 HP Motors (P2 & P3 across Expellers 1 to 5)';
     } else if (keyUpper === '50') {
       filterDesc = '50 HP Motors (P4 & P5 across Expellers 1 to 5)';
-    } else if (keyUpper === 'KOHLU' || keyUpper === '30') {
-      filterDesc = '30 HP Kohlu Units (K1 to K12 across Panels 1 & 2)';
+    } else if (keyUpper === 'KOHLU' || keyUpper === '40') {
+      filterDesc = '40 HP Kohlu Units (K1 to K12 across Panels 1 & 2)';
     }
 
-    if (statusEl) {
-      statusEl.innerHTML = `Showing: <strong style="color:var(--accent-cyan);">${filterDesc}</strong>`;
-    }
+    this.setRatingFilterStatus(filterDesc);
 
     try {
       const data = await api.getMotorsByRating(filterKey, currentReportId);
@@ -1224,6 +1268,11 @@ const dashboard = {
     }
 
     if (!motor) return;
+    this.currentFocusedMotor = {
+      ...motor,
+      panel_type: motor.panel_type || panelType,
+      panel_name: motor.panel_name || expellerName.replace(/\s*[•·]\s*$/, '')
+    };
 
     // Switch view containers
     const grid = document.getElementById('expeller-motors-grid');
@@ -1301,11 +1350,14 @@ const dashboard = {
         const st = statuses[i];
 
         const isKohlu = motor.panel_type === 'KOHLU' || (motor.code && motor.code.startsWith('K'));
-        const isOver = st === 'OVERLOAD' || (!isKohlu && pct > 80.0) || (isKohlu && pct > 100.0);
+        const isTelemetryAnomaly = st === 'ANOMALY';
+        const isOver = st === 'OVERLOAD' || (!isTelemetryAnomaly && pct > 80.0);
 
         let stBadge = '<span class="badge" style="background:rgba(100,116,139,0.15); color:#94a3b8;">⏹️ Stopped (0 kWh)</span>';
-        if (isOver) stBadge = `<span class="badge badge-critical">🚨 ${isKohlu ? '>100%' : '>80%'} Overload</span>`;
-        else if (st === 'HEALTHY' || pct >= 50.0) stBadge = `<span class="badge badge-success">🟢 ${isKohlu ? '50%–100%' : '50%–80%'} Optimal</span>`;
+        if (isTelemetryAnomaly) stBadge = '<span class="badge badge-critical">Telemetry anomaly - verify meter</span>';
+        else if (st === 'NO_DATA') stBadge = '<span class="badge" style="background:rgba(100,116,139,0.15);color:#64748b;">No SCADA reading</span>';
+        else if (isOver) stBadge = `<span class="badge badge-critical">🚨 >80% Overload</span>`;
+        else if (st === 'HEALTHY' || pct >= 50.0) stBadge = `<span class="badge badge-success">🟢 50%–80% Optimal</span>`;
         else if (st === 'NORMAL' || pct >= 40.0) stBadge = '<span class="badge badge-info">🔵 40%–50% Normal</span>';
         else if (pct >= 10.0) stBadge = '<span class="badge badge-warning">🟡 10%–40% Low Load</span>';
 
@@ -1313,9 +1365,9 @@ const dashboard = {
           <tr>
             <td style="font-family:var(--font-mono); font-weight:600;">#${i + 1}</td>
             <td style="font-family:var(--font-mono); font-weight:700; color:var(--text-primary);">${window.formatTime12h ? window.formatTime12h(labels[i]) : labels[i]}</td>
-            <td style="font-family:var(--font-mono); font-weight:700; color:var(--accent-cyan);">${val} kWh</td>
+            <td style="font-family:var(--font-mono); font-weight:700; color:var(--accent-cyan);">${val === null || val === undefined ? 'No data' : `${val} kWh`}</td>
             <td style="font-family:var(--font-mono); color:var(--text-muted);">${motor.rated_15m_kwh} kWh</td>
-            <td style="font-family:var(--font-mono); font-weight:700; color:${isOver ? 'var(--accent-red)' : (pct >= 50 ? 'var(--accent-emerald)' : (pct >= 10 ? 'var(--accent-amber)' : 'var(--text-muted)'))};">${pct}%</td>
+            <td style="font-family:var(--font-mono); font-weight:700; color:${isOver ? 'var(--accent-red)' : (pct >= 50 ? 'var(--accent-emerald)' : (pct >= 10 ? 'var(--accent-amber)' : 'var(--text-muted)'))};">${pct === null || pct === undefined ? '?' : `${pct}%`}</td>
             <td>${stBadge}</td>
           </tr>
         `;
@@ -1327,6 +1379,7 @@ const dashboard = {
   showAllMotorsGrid() {
     const grid = document.getElementById('expeller-motors-grid');
     const focusView = document.getElementById('expeller-single-motor-focus');
+    this.currentFocusedMotor = null;
     if (grid) grid.style.display = 'grid';
     if (focusView) focusView.style.display = 'none';
 
@@ -1568,9 +1621,7 @@ const dashboard = {
     });
   },
 
-  currentPDFMeta: null,
-
-  async openPDFPreviewModal() {
+  async openLegacyPDFPreviewModal() {
     try {
       showToast('Preparing audit PDF preview...', 'info');
 
@@ -1801,25 +1852,17 @@ const dashboard = {
       istHours = istHours % 12 || 12;
       const istTimeStr = `${String(istHours).padStart(2, '0')}:${istMins} ${istAmpm}`;
 
-      // Clean filename
-      const cleanDate = (reportText || 'Report').replace(/[^a-zA-Z0-9]/g, '_');
-      const cleanShift = (activeShift || 'Shift').replace(/[^a-zA-Z0-9]/g, '_');
-      const filename = `EMS_Audit_Report_${cleanDate}_${cleanShift}.pdf`;
-
-      this.currentPDFMeta = {
-        filename,
-        reportText,
-        activeShift
-      };
-
       const container = document.getElementById('pdf-preview-document-container');
       if (!container) return;
 
       container.innerHTML = `
         <!-- Header Banner (Clean, Professional SCADA Title with Official Mashal Emblem) -->
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #0284c7; padding-bottom: 10px; margin-bottom: 12px;">
-          <div style="display:flex; align-items:center; gap: 14px;">
-            <img src="/img/mashal_brand_logo.png?v=2026" style="height: 52px; max-width: 150px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));" alt="Mashal Mustard Oil">
+          <div style="display:flex; align-items:center; gap: 12px;">
+            <div style="display:flex; align-items:center; gap:6px; flex:0 0 auto;">
+              <img src="/img/3d_logo1.png?v=20261111_brand_v1" style="height:42px; width:88px; padding:2px; object-fit:contain; border:1px solid #f4b400; border-radius:6px; background:#fff;" alt="KOGM — Khandelia Oil &amp; General Mills">
+              <img src="/img/3d_logo2.png?v=20261111_brand_v1" style="height:42px; width:88px; padding:2px; object-fit:contain; border:1px solid #f4b400; border-radius:6px; background:#fff;" alt="Mashal Kachi Ghani Mustard Oil">
+            </div>
             <div>
               <div style="font-size: 1.15rem; font-weight: 800; color: #0f172a; letter-spacing: 0.3px;">MASHAL MUSTARD OIL PLANT • SCADA 415V BUS</div>
               <div style="font-size: 0.80rem; font-weight: 700; color: #0284c7; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 1px;">EXECUTIVE ENERGY AUDIT &amp; MOTOR TELEMETRY REPORT</div>
@@ -1878,56 +1921,167 @@ const dashboard = {
     }
   },
 
-  async generateAndSavePDF() {
-    const btn = document.getElementById('btn-modal-download-pdf');
-    const originalText = btn ? btn.innerHTML : 'Download PDF';
+  currentFocusedMotor: null,
+
+  async openPDFPreviewModal() {
     try {
-      if (btn) {
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Rendering PDF...';
-      }
-      showToast('Rendering high-resolution executive landscape PDF...', 'info');
+      const grid = document.getElementById('expeller-motors-grid');
+      const focusView = document.getElementById('expeller-single-motor-focus');
+      const isSingleFocus = Boolean(focusView && getComputedStyle(focusView).display !== 'none');
+      const sectionTitle = document.getElementById('section-main-title')?.innerText?.trim() || 'Motor Telemetry';
+      const selector = document.getElementById('shift-filter-select') || document.getElementById('report-selector');
+      const reportText = selector ? (selector.options[selector.selectedIndex]?.text || 'Selected Report') : 'Selected Report';
+      const activeShift = document.querySelector('.shift-radio-label.active-day')
+        ? 'Day Shift (07:00–19:00)'
+        : (document.querySelector('.shift-radio-label.active-night') ? 'Night Shift (19:00–07:00)' : 'Selected Shift');
+      const user = (typeof api !== 'undefined' && api.getUser) ? api.getUser() : {};
+      const now = new Date();
+      const generatedAt = new Intl.DateTimeFormat('en-IN', {
+        dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Kolkata'
+      }).format(now);
+      const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[char]);
 
-      const element = document.getElementById('pdf-preview-document-container');
-      if (!element) throw new Error('Preview container not found');
+      const models = [];
+      const addPanel = (panel, panelType) => {
+        if (!panel?.motors) return;
+        for (const motor of panel.motors) {
+          models.push({
+            ...motor,
+            panel_type: panelType,
+            panel_num: motor.panel_num || panel.expeller_num || panel.panel_num,
+            panel_name: panel.panel_name || motor.panel_name || ''
+          });
+        }
+      };
 
-      const filename = this.currentPDFMeta?.filename || `EMS_Audit_Report_${Date.now()}.pdf`;
-
-      if (typeof window.html2pdf === 'function') {
-        const opt = {
-          margin: [5, 8, 5, 8],
-          filename: filename,
-          image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: {
-            scale: 2,
-            useCORS: true,
-            letterRendering: true,
-            logging: false,
-            windowWidth: 1140,
-            scrollX: 0,
-            scrollY: 0
-          },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-          pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
-        };
-
-        await window.html2pdf().set(opt).from(element).save();
-        showToast('Executive landscape PDF downloaded successfully!', 'success');
+      if (this.currentRatingMotors?.length) {
+        models.push(...this.currentRatingMotors);
+      } else if (currentPanelType === 'EXPELLER') {
+        if (currentExpellerNum === 'all') {
+          (this.allExpellersData || []).forEach(panel => addPanel(panel, 'EXPELLER'));
+        } else {
+          addPanel(this.currentExpellerData, 'EXPELLER');
+        }
+      } else if (currentPanelType === 'KOHLU') {
+        if (currentKohluNum === 'all') {
+          (this.allKohlusData || []).forEach(panel => addPanel(panel, 'KOHLU'));
+        } else {
+          addPanel(this.currentKohluData, 'KOHLU');
+        }
       } else {
-        window.print();
+        addPanel(this.currentExpellerData, 'EXPELLER');
+        addPanel(this.currentKohluData, 'KOHLU');
       }
+
+      const dedupedModels = [...new Map(models.map(m => [`${m.panel_type}:${m.panel_num}:${m.code}`, m])).values()];
+      let visibleMotors = [];
+      if (isSingleFocus && this.currentFocusedMotor) {
+        visibleMotors = [this.currentFocusedMotor];
+      } else if (grid) {
+        const visibleCards = [...grid.querySelectorAll('.motor-card')].filter(card => {
+          const style = getComputedStyle(card);
+          return style.display !== 'none' && style.visibility !== 'hidden';
+        });
+        visibleMotors = visibleCards.map(card => {
+          const code = card.querySelector('.motor-code-tag')?.innerText?.trim();
+          const panelLabel = card.querySelector('.motor-panel-mini-tag')?.innerText?.trim() || '';
+          const panelNum = Number(panelLabel.match(/\d+/)?.[0]) || null;
+          const candidates = dedupedModels.filter(m => m.code === code);
+          return (panelNum && candidates.find(m => Number(m.panel_num) === panelNum)) || candidates[0];
+        }).filter(Boolean);
+      }
+
+      if (!visibleMotors.length) {
+        throw new Error('Current view has no visible motor graphs to export.');
+      }
+
+      const toKwh = (value) => `${Number(value || 0).toFixed(2)} kWh`;
+      const makeItem = (motor) => {
+        const chartImg = isSingleFocus
+          ? charts.createAuditFocusChart(motor, 1800, 520)
+          : charts.createAuditCardChart(motor, 600, 300);
+        return {
+          title: `${motor.panel_name ? `${motor.panel_name} · ` : ''}${motor.name || `${motor.code} (${motor.hp} HP)`}${motor.role ? ` · ${motor.role}` : ''}`,
+          status: `${motor.current_status || 'UNKNOWN'} · ${Number(motor.avg_load_pct || 0).toFixed(1)}% average load`,
+          min: toKwh(motor.active_min_kwh ?? motor.min_kwh),
+          max: toKwh(motor.max_kwh),
+          avg: toKwh(motor.avg_kwh),
+          sum: toKwh(motor.sum_kwh ?? motor.total_kwh),
+          rating: `${motor.hp || '—'} HP · ${Number(motor.rated_15m_kwh || 0).toFixed(2)} kWh / 15 min`,
+          threshold: '80% overload risk',
+          note: motor.supervisory_alert || 'No additional operating note.',
+          chartImg
+        };
+      };
+      const items = visibleMotors.map(makeItem);
+      const pageSize = isSingleFocus ? 1 : 2;
+      const pages = [];
+      for (let i = 0; i < items.length; i += pageSize) pages.push(items.slice(i, i + pageSize));
+
+      const reportSafe = reportText.replace(/[^a-zA-Z0-9]+/g, '_').replace(/^_|_$/g, '') || 'Report';
+
+      const container = document.getElementById('pdf-preview-document-container');
+      if (!container) throw new Error('PDF preview container not found.');
+      container.innerHTML = pages.map((pageItems, pageIndex) => `
+        <section class="pdf-current-page" style="width:100%; box-sizing:border-box; padding:12px 12px 14px; background:#fff; color:#0f172a;">
+          ${pageIndex === 0 ? `<header style="display:flex; justify-content:space-between; align-items:center; gap:12px; border-bottom:2px solid #0284c7; padding-bottom:7px; margin-bottom:9px;">
+            <div style="display:flex; align-items:center; gap:10px; min-width:0;">
+              <div style="display:flex; align-items:center; gap:4px; flex:0 0 auto;">
+                <img src="/img/3d_logo1.png?v=20261111_brand_v1" alt="KOGM" style="height:34px; width:70px; padding:2px; object-fit:contain; border:1px solid #f4b400; border-radius:5px; background:#fff;">
+                <img src="/img/3d_logo2.png?v=20261111_brand_v1" alt="Mashal" style="height:34px; width:70px; padding:2px; object-fit:contain; border:1px solid #f4b400; border-radius:5px; background:#fff;">
+              </div>
+              <div style="min-width:0;">
+                <div style="font-size:16px; font-weight:800; line-height:1.2;">${escapeHtml(sectionTitle)}</div>
+              <div style="font-size:10px; color:#475569; margin-top:3px; white-space:nowrap;">${escapeHtml(reportText)} · ${escapeHtml(activeShift)} · Generated ${escapeHtml(generatedAt)} IST</div>
+              </div>
+            </div>
+            <div style="text-align:right; font-size:9px; color:#475569; flex:0 0 auto;">${escapeHtml(user.full_name || user.username || 'EMS User')}<br>Page ${pageIndex + 1} of ${pages.length}</div>
+          </header>` : `<div style="text-align:right; font-size:8px; color:#64748b; margin:0 0 5px;">Page ${pageIndex + 1} of ${pages.length}</div>`}
+          <div style="display:grid; grid-template-columns:${pageItems.length === 1 ? '1fr' : '1fr 1fr'}; gap:10px; align-items:start;">
+            ${pageItems.map(item => `
+              <article style="border:1px solid #cbd5e1; border-radius:8px; padding:9px; background:#fff; break-inside:avoid; page-break-inside:avoid;">
+                <div style="display:flex; justify-content:space-between; gap:8px; align-items:flex-start; border-bottom:1px solid #e2e8f0; padding-bottom:6px; margin-bottom:6px;">
+                  <div>
+                    <div style="font-size:13px; font-weight:800;">${escapeHtml(item.title)}</div>
+                    <div style="font-size:10px; color:#475569; margin-top:3px;">${escapeHtml(item.rating)} · ${escapeHtml(item.threshold)}</div>
+                  </div>
+                  <span style="font-size:9px; font-weight:700; color:#075985; background:#e0f2fe; padding:4px 6px; border-radius:5px; white-space:nowrap;">${escapeHtml(item.status)}</span>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:5px; margin-bottom:5px;">
+                  ${[['MIN', item.min], ['MAX', item.max], ['AVG', item.avg], ['SHIFT SUM', item.sum]].map(([label, value]) => `
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:5px; padding:5px;">
+                      <div style="font-size:8px; font-weight:700; color:#64748b;">${label}</div><div style="font-size:10px; font-weight:700; margin-top:2px;">${escapeHtml(value)}</div>
+                    </div>`).join('')}
+                </div>
+                ${item.chartImg ? `<img src="${item.chartImg}" alt="48 interval motor load graph" style="width:100%; height:${isSingleFocus ? 450 : 235}px; object-fit:fill; display:block;">` : '<div style="padding:24px;text-align:center;color:#64748b;">Graph could not be rendered.</div>'}
+                <div style="font-size:9px; line-height:1.35; color:#334155; border-left:3px solid #0284c7; background:#f8fafc; padding:6px 8px; margin-top:6px;">${escapeHtml(item.note)}</div>
+              </article>`).join('')}
+          </div>
+          <footer style="border-top:1px solid #cbd5e1; margin-top:8px; padding-top:5px; font-size:9px; color:#64748b;">SCADA readings shown for the selected report and visible motor view · 15-minute intervals</footer>
+        </section>`).join('');
+
+      const modal = document.getElementById('pdf-preview-modal');
+      if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+      }
+      showToast(`PDF preview ready: ${visibleMotors.length} visible motor graph(s).`, 'success');
     } catch (err) {
-      console.error('PDF Export Error:', err);
-      showToast(`PDF Export error: ${err.message}`, 'error');
-    } finally {
-      if (btn) {
-        btn.disabled = false;
-        btn.innerHTML = originalText;
-      }
+      console.error('PDF Preview Error:', err);
+      showToast(`PDF Preview error: ${err.message}`, 'error');
     }
   },
 
-  printPreviewPDF() {
+  async printPreviewPDF() {
+    const element = document.getElementById('pdf-preview-document-container');
+    if (element) {
+      await Promise.all([...element.querySelectorAll('img')].map(img => {
+        if (img.complete && img.naturalWidth > 0) return Promise.resolve();
+        return img.decode().catch(() => undefined);
+      }));
+    }
     window.print();
   },
 
@@ -1937,11 +2091,6 @@ const dashboard = {
       modal.style.display = 'none';
       modal.classList.remove('active');
     }
-  },
-
-  // Backward compatibility alias
-  async downloadCurrentViewPDF() {
-    return this.openPDFPreviewModal();
   },
 
   initExpellerTabs() {

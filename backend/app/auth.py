@@ -64,11 +64,6 @@ def get_current_user(token: Optional[str] = Depends(oauth2_scheme), db: Session 
         except Exception:
             pass
 
-    # Seamless fallback to default admin user for instant dashboard visualization (when no bearer token is passed)
-    default_user = db.query(User).filter(User.username == "admin").first()
-    if default_user:
-        return default_user
-
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Authentication required. Please provide a valid bearer token.",

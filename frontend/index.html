@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mashal EMS Intelligence — SCADA Plant Energy &amp; Motor Analytics</title>
   <meta name="description" content="Mashal Mustard Oil Plant SCADA Telemetry, 15-Minute Motor Operating Health, and Energy Distribution.">
-  <link rel="icon" type="image/png" href="/img/mashal_brand_logo.png?v=2026">
+  <link rel="icon" type="image/png" href="/img/3d_logo2.png?v=20261111_brand_v1">
 
   <!-- Google Fonts: Outfit & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -19,7 +19,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <!-- Application CSS -->
-  <link rel="stylesheet" href="/css/style.css?v=20261111_fast_v2">
+  <link rel="stylesheet" href="/css/style.css?v=20261111_perf_accuracy_v6">
 
   <!-- Preload Optimized Background & Machinery Images for 2X Faster Loading -->
   <link rel="preload" as="image" href="/img/land1_background.webp?v=2026_land1" type="image/webp" fetchpriority="high">
@@ -50,8 +50,9 @@
   <!-- Top Application Header -->
   <header class="header">
     <div class="brand-wrapper">
-      <div class="brand-logo-img-wrap" title="Mashal — Kachi Ghani Mustard Oil (Trusted By Millions Since 1976)">
-        <img src="/img/mashal_brand_logo.png?v=2026" alt="Mashal Mustard Oil" class="brand-logo-img" style="height:46px; border-radius:6px; object-fit:contain; filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25));">
+      <div class="brand-logo-img-wrap" title="Khandelia Oil &amp; General Mills and Mashal Mustard Oil">
+        <img src="/img/3d_logo1.png?v=20261111_brand_v1" alt="KOGM — Khandelia Oil &amp; General Mills" class="brand-logo-img">
+        <img src="/img/3d_logo2.png?v=20261111_brand_v1" alt="Mashal Kachi Ghani Mustard Oil" class="brand-logo-img">
       </div>
       <div class="brand-divider"></div>
       <div>
@@ -194,14 +195,14 @@
               <span class="badge badge-info" id="section-main-badge" style="font-weight:700;"><i class="fa-solid fa-bolt"></i> SCADA Motors Telemetry</span>
               <h2 class="chart-title" id="section-main-title" style="margin:0;"><i class="fa-solid fa-industry text-cyan"></i> Production Machine Motors (5 Expellers &amp; 2 Kohlu Panels)</h2>
             </div>
-            <p class="chart-subtitle" id="section-main-subtitle">Select an Expeller or Kohlu panel below, or filter by motor rating (75 HP, 60 HP, 50 HP, Kohlu 30 HP). Status: <strong>Green = Good (50%–80%)</strong>, <strong>Yellow = Empty/Low (10%–40%)</strong>, <strong>Red = Overload (&gt;80%)</strong>.</p>
+            <p class="chart-subtitle" id="section-main-subtitle">Select an Expeller or Kohlu panel below, or filter by motor rating (75 HP, 60 HP, 50 HP, Kohlu 40 HP). Motor status: <strong>Green = Good (50%–80%)</strong>, <strong>Yellow = Empty/Low (10%–40%)</strong>, <strong>Red = Overload (&gt;80%)</strong>.</p>
           </div>
 
-          <!-- Top-Right Actions: Professional Landscape PDF Download Button (Image 5) -->
+          <!-- Open the current-view report preview and print controls -->
           <div style="display:flex; align-items:center; gap:0.6rem;">
-            <button id="btn-download-view-pdf" class="btn btn-primary" onclick="dashboard.openPDFPreviewModal()" title="Preview and download current telemetry &amp; motor health view as an executive Landscape PDF" style="display:inline-flex; align-items:center; gap:0.5rem; padding:0.55rem 1.15rem; font-size:0.84rem; font-weight:700; border-radius:8px; box-shadow:0 4px 14px rgba(0,210,255,0.25);">
+            <button id="btn-preview-print-report" class="btn btn-primary" onclick="dashboard.openPDFPreviewModal()" title="Preview and print the visible motor graphs and their readings" style="display:inline-flex; align-items:center; gap:0.5rem; padding:0.55rem 1.15rem; font-size:0.84rem; font-weight:700; border-radius:8px; box-shadow:0 4px 14px rgba(0,210,255,0.25);">
               <i class="fa-solid fa-file-pdf" style="font-size:1rem; color:#fee300;"></i>
-              <span>Download PDF Report</span>
+              <span>Preview / Print Report</span>
             </button>
           </div>
         </div>
@@ -255,11 +256,11 @@
                 <i class="fa-solid fa-bolt text-cyan"></i> P5 (50 HP) <span class="badge" style="background:rgba(0,210,255,0.2); color:var(--accent-cyan); font-size:0.7rem; padding:1px 5px; margin-left:3px;">5 Motors</span>
               </button>
               <button class="rating-filter-btn" data-rating-filter="KOHLU" onclick="dashboard.filterByRating('KOHLU')">
-                <i class="fa-solid fa-seedling text-emerald"></i> Kohlu (30 HP) <span class="badge" style="background:rgba(16,185,129,0.2); color:#10b981; font-size:0.7rem; padding:1px 5px; margin-left:3px;">12 Units</span>
+                <i class="fa-solid fa-seedling text-emerald"></i> Kohlu (40 HP) <span class="badge" style="background:rgba(16,185,129,0.2); color:#10b981; font-size:0.7rem; padding:1px 5px; margin-left:3px;">12 Units</span>
               </button>
             </div>
           </div>
-          <div id="rating-filter-status" style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono);">
+          <div id="rating-filter-status" aria-live="polite" style="font-size:0.75rem; color:var(--text-muted); font-family:var(--font-mono);">
             Showing: <strong>All Motors in Current Section</strong>
           </div>
         </div>
@@ -699,16 +700,13 @@
           <i class="fa-solid fa-file-pdf"></i>
         </div>
         <div>
-          <h3 class="modal-title" style="margin:0; font-size:1.05rem; font-weight:800; color:var(--text-primary);">Audit PDF Preview</h3>
-          <span style="font-size:0.75rem; color:var(--text-muted);">Executive Landscape 15-Minute SCADA Telemetry &amp; Motor Health Report</span>
+          <h3 class="modal-title" style="margin:0; font-size:1.05rem; font-weight:800; color:var(--text-primary);">Current View PDF Preview</h3>
+          <span style="font-size:0.75rem; color:var(--text-muted);">Selected view only · readable 15-minute motor graphs</span>
         </div>
       </div>
       <div style="display:flex; align-items:center; gap:0.6rem;">
         <button type="button" class="btn btn-secondary btn-sm" onclick="dashboard.printPreviewPDF()" style="font-weight:700; padding:0.42rem 0.95rem; border-radius:6px; display:inline-flex; align-items:center; gap:0.45rem;">
           <i class="fa-solid fa-print"></i> Print Report
-        </button>
-        <button type="button" id="btn-modal-download-pdf" class="btn btn-primary btn-sm" onclick="dashboard.generateAndSavePDF()" style="font-weight:800; padding:0.45rem 1.15rem; border-radius:6px; display:inline-flex; align-items:center; gap:0.45rem; box-shadow:0 4px 14px rgba(0,210,255,0.3);">
-          <i class="fa-solid fa-file-arrow-down"></i> Download PDF
         </button>
         <button type="button" class="btn-icon" onclick="dashboard.closePDFPreview()" title="Close Preview" style="border:none; width:34px; height:34px; font-size:1.15rem; border-radius:6px; cursor:pointer;">
           <i class="fa-solid fa-xmark"></i>
@@ -719,7 +717,7 @@
     <!-- Modal Body: Scrollable Preview Sheet Container -->
     <div class="pdf-preview-viewport" style="flex:1; overflow-y:auto; overflow-x:auto; padding:1.25rem 1.5rem; background:#1e293b; display:flex; justify-content:center;">
       <!-- The Printable Document Container -->
-      <div id="pdf-preview-document-container" class="pdf-document-sheet" style="background:#ffffff; color:#0f172a; width:1120px; min-width:1120px; padding:24px 28px 36px 28px; margin-bottom:24px; box-shadow:0 12px 35px rgba(0,0,0,0.45); border-radius:6px; box-sizing:border-box; overflow:visible;">
+      <div id="pdf-preview-document-container" class="pdf-document-sheet" style="background:#ffffff; color:#0f172a; width:1120px; min-width:1120px; padding:12px 12px 20px; margin-bottom:24px; box-shadow:0 12px 35px rgba(0,0,0,0.45); border-radius:6px; box-sizing:border-box; overflow:visible;">
         <!-- Populated dynamically by dashboard.openPDFPreviewModal() -->
       </div>
     </div>
@@ -772,7 +770,10 @@
   <div class="modal-dialog" style="max-width: 680px;">
     <div class="modal-header">
       <div style="display:flex; align-items:center; gap:0.65rem;">
-        <img src="/img/mashal_brand_logo.png?v=2026" alt="Mashal" style="height:34px; border-radius:4px; filter:drop-shadow(0 1px 4px rgba(0,0,0,0.25));">
+        <div style="display:inline-flex; align-items:center; gap:5px;">
+          <img src="/img/3d_logo1.png?v=20261111_brand_v1" alt="KOGM" style="height:32px; width:64px; object-fit:contain; background:#fff; border:1px solid #f4b400; border-radius:5px; padding:2px;">
+          <img src="/img/3d_logo2.png?v=20261111_brand_v1" alt="Mashal" style="height:32px; width:64px; object-fit:contain; background:#fff; border:1px solid #f4b400; border-radius:5px; padding:2px;">
+        </div>
         <h3 class="modal-title"><i class="fa-solid fa-file-excel text-emerald" style="font-size:0.95rem; margin-right:0.25rem;"></i> Ingest Shift Telemetry Report</h3>
       </div>
       <button id="btn-close-upload" class="btn-icon" style="border:none;"><i class="fa-solid fa-xmark"></i></button>
@@ -904,10 +905,11 @@
     <!-- Right Column: The Login Dialog -->
     <div class="modal-dialog auth-modal-dialog" style="max-width:440px; padding:0; overflow:hidden;">
     
-    <!-- Header with latest official Mashal logo (Image 3) -->
+    <!-- Header with the official 3D KOGM and Mashal logos -->
     <div class="modal-header" style="justify-content:center; flex-direction:column; gap:0.5rem; text-align:center; padding:1.4rem 1.6rem 1rem; border-bottom:1px solid rgba(255,255,255,0.45);">
-      <div style="display:flex; justify-content:center; align-items:center;">
-        <img src="/img/mashal_brand_logo.png?v=2026" alt="Mashal Mustard Oil" style="height:62px; max-width:200px; object-fit:contain; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.18));">
+      <div style="display:flex; justify-content:center; align-items:center; gap:10px;">
+        <img src="/img/3d_logo1.png?v=20261111_brand_v1" alt="KOGM — Khandelia Oil &amp; General Mills" style="height:68px; width:165px; padding:3px; border:1px solid rgba(244,180,0,0.55); border-radius:7px; background:#fff; object-fit:contain;">
+        <img src="/img/3d_logo2.png?v=20261111_brand_v1" alt="Mashal Kachi Ghani Mustard Oil" style="height:68px; width:165px; padding:3px; border:1px solid rgba(244,180,0,0.55); border-radius:7px; background:#fff; object-fit:contain;">
       </div>
       <div>
         <h3 class="modal-title" style="font-size:1.20rem; font-weight:800; letter-spacing:0.4px; color:#0f172a; margin:0;">MASHAL EMS INTELLIGENCE</h3>
@@ -1155,11 +1157,10 @@
 <!-- Global Toast Container -->
 <div id="toast-container" class="toast-container"></div>
 
-<!-- JavaScript Modules with Cache Busting for Instant 2X Fast Loading -->
-<script src="/js/html2pdf.bundle.min.js?v=20261111_fast_v2"></script>
+<!-- Versioned JavaScript assets -->
 <script src="/js/api.js?v=20261111_fast_v2"></script>
-<script src="/js/charts.js?v=20261111_fast_v2"></script>
-<script src="/js/dashboard.js?v=20261111_fast_v2"></script>
+<script src="/js/charts.js?v=20261111_accuracy_v3"></script>
+<script src="/js/dashboard.js?v=20261111_accuracy_v3"></script>
 <script src="/js/validation.js?v=20261111_fast_v2"></script>
 <script src="/js/accounts.js?v=20261111_fast_v2"></script>
 <script src="/js/auth.js?v=20261111_fast_v2"></script>
