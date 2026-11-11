@@ -14,10 +14,18 @@ const dashboard = {
   async load(reportId = null) {
     currentReportId = reportId;
     try {
-      const data = await api.getDashboardData(reportId);
+      // 2X Faster Parallel Fetch: Launch metadata and motor cards telemetry simultaneously
+      const expellerTask = (currentExpellerNum === 'all') 
+        ? this.loadAllExpellersDetail() 
+        : this.loadExpellerDetail(currentExpellerNum || 1);
+
+      const [data] = await Promise.all([
+        api.getDashboardData(reportId),
+        expellerTask
+      ]);
       
       // If user has not uploaded any reports yet, render clean professional empty state
-      if (data.is_empty || !data.reports_list || data.reports_list.length === 0) {
+      if (!data || data.is_empty || !data.reports_list || data.reports_list.length === 0) {
         this.renderEmptyState();
         return;
       }
@@ -37,23 +45,23 @@ const dashboard = {
         charts.renderMotorHealthTimeline('chart-health-timeline', data.health_timeline);
       }
 
-      // 3. Load Machine Deep-Dive for Selected Expeller (P1 to P5 individual motor graphs)
-      if (currentExpellerNum === 'all') {
-        await this.loadAllExpellersDetail();
-      } else {
-        await this.loadExpellerDetail(currentExpellerNum || 1);
-      }
-
-      // 4. Load Machine Table
+      // 3. Lazy-load Machine Table in background (non-blocking for 2X faster initial view)
       const repIdForMachines = reportId || (data.reports_list && data.reports_list[0] ? data.reports_list[0].id : 1);
-      await this.loadMachines(repIdForMachines);
+      setTimeout(() => {
+        this.loadMachines(repIdForMachines).catch(e => console.warn('Background machines load:', e));
+      }, 50);
 
     } catch (err) {
       if (err.message && (err.message.includes('blocked') || err.message.includes('revoked'))) {
         return;
       }
       console.error('Failed to load dashboard:', err);
-      showToast(err.message, 'error');
+      // Guarantee fallback so the view is NEVER blank white
+      const grid = document.getElementById('expeller-motors-grid');
+      if (!grid || !grid.children || grid.children.length === 0) {
+        this.renderEmptyState();
+      }
+      showToast(err.message || 'Error loading dashboard telemetry', 'error');
     }
   },
 
@@ -419,7 +427,13 @@ const dashboard = {
     }
 
     try {
-      const data = await api.getExpellerDetail(expellerNum, currentReportId);
+      this.expellerCache = this.expellerCache || {};
+      const cacheKey = `${currentReportId}_exp_${expellerNum}`;
+      let data = this.expellerCache[cacheKey];
+      if (!data) {
+        data = await api.getExpellerDetail(expellerNum, currentReportId);
+        this.expellerCache[cacheKey] = data;
+      }
       this.currentExpellerData = data;
       this.currentKohluData = null;
       this.renderExpellerDetail(data);

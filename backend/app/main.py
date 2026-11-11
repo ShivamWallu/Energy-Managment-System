@@ -40,13 +40,15 @@ app.include_router(export_router.router, prefix=settings.API_V1_PREFIX)
 app.include_router(activity_router.router, prefix=settings.API_V1_PREFIX)
 app.include_router(accounts_router.router, prefix=settings.API_V1_PREFIX)
 
-# Performance & Image Caching Middleware (2X faster loading for static images & assets)
+# Performance & Asset Caching Middleware (2X faster loading for static images & assets)
 @app.middleware("http")
 async def add_cache_headers_middleware(request: Request, call_next):
     response = await call_next(request)
     path = request.url.path
-    if any(path.startswith(prefix) for prefix in ["/img/", "/Images/", "/images/", "/css/", "/js/"]):
+    if any(path.startswith(prefix) for prefix in ["/img/", "/Images/", "/images/"]):
         response.headers["Cache-Control"] = "public, max-age=86400, stale-while-revalidate=43200"
+    elif any(path.startswith(prefix) for prefix in ["/css/", "/js/"]):
+        response.headers["Cache-Control"] = "no-cache, must-revalidate"
     return response
 
 @app.get("/health")

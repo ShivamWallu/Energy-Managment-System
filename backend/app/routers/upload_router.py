@@ -308,13 +308,15 @@ def download_standard_template_csv():
 @router.get("/list")
 def list_reports(
     only_my_uploads: bool = False,
+    all_users: bool = False,
     db: Session = Depends(get_db), 
     current_user: User = Depends(get_current_user)
 ):
     query = db.query(ReportFile)
-    if (only_my_uploads or (current_user and current_user.role != "admin")) and current_user:
+    # Strictly scope to logged-in user's own uploads by default per user requirement
+    if current_user and not all_users:
         query = query.filter(ReportFile.uploaded_by_user_id == current_user.id)
-    reports = query.order_by(ReportFile.id.asc()).all()
+    reports = query.order_by(ReportFile.id.desc()).all()
     out = []
     for r in reports:
         meta_json = r.metadata_json or {}

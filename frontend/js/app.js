@@ -111,21 +111,28 @@ function initTabs() {
 }
 
 window.appRefreshReports = async function() {
+  const select = document.getElementById('shift-filter-select');
+  const radioContainer = document.getElementById('shift-radio-container');
+  const lblDay = document.getElementById('lbl-shift-day');
+  const lblNight = document.getElementById('lbl-shift-night');
+  const rdoDay = lblDay ? lblDay.querySelector('input') : null;
+  const rdoNight = lblNight ? lblNight.querySelector('input') : null;
+  const uploadBtn = document.getElementById('btn-open-upload');
+  const onboardingBanner = document.getElementById('onboarding-empty-state-banner');
+
   try {
-    const reports = await api.getReportsList();
-    window.allPlantReports = reports;
-    const select = document.getElementById('shift-filter-select');
-    const radioContainer = document.getElementById('shift-radio-container');
-    const lblDay = document.getElementById('lbl-shift-day');
-    const lblNight = document.getElementById('lbl-shift-night');
-    const rdoDay = lblDay ? lblDay.querySelector('input') : null;
-    const rdoNight = lblNight ? lblNight.querySelector('input') : null;
+    let reports = null;
+    try {
+      reports = await api.getReportsList();
+    } catch (fetchErr) {
+      console.warn('Initial getReportsList attempt failed, retrying once:', fetchErr);
+      await new Promise(r => setTimeout(r, 250));
+      reports = await api.getReportsList().catch(() => []);
+    }
+    window.allPlantReports = reports || [];
 
     if (!select) return;
     select.innerHTML = '';
-
-    const uploadBtn = document.getElementById('btn-open-upload');
-    const onboardingBanner = document.getElementById('onboarding-empty-state-banner');
 
     if (!reports || reports.length === 0) {
       select.innerHTML = '<option value="">No Reports Uploaded (Upload to Begin)</option>';

@@ -35,7 +35,7 @@ class ReportFile(Base):
     start_time = Column(DateTime, nullable=True)
     end_time = Column(DateTime, nullable=True)
     upload_timestamp = Column(DateTime, default=datetime.datetime.utcnow)
-    uploaded_by_user_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    uploaded_by_user_id = Column(Integer, ForeignKey("users.id"), index=True, nullable=True)
     
     total_intervals = Column(Integer, default=0)
     total_columns = Column(Integer, default=0)
@@ -57,7 +57,7 @@ class RawReading(Base):
     interval_index = Column(Integer, nullable=False) # 0 to 47
     timestamp_str = Column(String(30), nullable=False)
     timestamp = Column(DateTime, nullable=True, index=True)
-    col_index = Column(Integer, nullable=False)
+    col_index = Column(Integer, nullable=False, index=True)
     source_name = Column(String(100), nullable=False, index=True)
     location = Column(String(100), nullable=True)
     measurement_point = Column(String(50), nullable=True)
@@ -94,7 +94,7 @@ class ShiftCalculation(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     report_file_id = Column(Integer, ForeignKey("report_files.id"), index=True, nullable=False)
-    col_index = Column(Integer, nullable=False)
+    col_index = Column(Integer, nullable=False, index=True)
     source_name = Column(String(100), nullable=False)
     location = Column(String(100), nullable=True)
     motor_hp = Column(Integer, nullable=True)
