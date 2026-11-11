@@ -2984,42 +2984,83 @@ body {
   transition: transform 0.2s ease;
 }
 
+/* ==========================================================================
+   Executive PDF Print & Landscape Isolation Styles
+   ========================================================================== */
 @media print {
-  /* When printing, show clean document sheet without UI chrome */
-  body > *:not(#pdf-preview-modal):not(.app-container) {
+  @page {
+    size: A4 landscape;
+    margin: 5mm 8mm;
+  }
+
+  html, body {
+    background: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Completely suppress entire application UI, header, navigation, and other modals */
+  .app-container,
+  .header,
+  .nav-tabs-wrapper,
+  .main-content,
+  #login-modal,
+  #upload-modal,
+  #delete-account-modal,
+  #account-blocked-modal,
+  .toast-container {
     display: none !important;
   }
-  #pdf-preview-modal.active {
+
+  /* When printing, show ONLY the PDF document sheet */
+  #pdf-preview-modal {
     position: static !important;
     display: block !important;
-    background: transparent !important;
+    background: #ffffff !important;
     padding: 0 !important;
     margin: 0 !important;
+    width: 100% !important;
+    height: auto !important;
   }
+
   .pdf-preview-dialog {
     max-width: 100% !important;
     width: 100% !important;
     border: none !important;
     box-shadow: none !important;
-    background: transparent !important;
+    background: #ffffff !important;
+    margin: 0 !important;
+    padding: 0 !important;
   }
+
   .pdf-preview-dialog .modal-header,
   .pdf-preview-dialog .btn,
   .pdf-preview-dialog .btn-icon {
     display: none !important;
   }
+
   .pdf-preview-viewport {
-    background: transparent !important;
+    background: #ffffff !important;
     padding: 0 !important;
     margin: 0 !important;
     overflow: visible !important;
+    display: block !important;
+    width: 100% !important;
   }
+
   .pdf-document-sheet {
     box-shadow: none !important;
     border: none !important;
     width: 100% !important;
     min-width: 100% !important;
+    max-width: 100% !important;
     padding: 0 !important;
+    margin: 0 !important;
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
   }
 }
 
