@@ -1278,7 +1278,10 @@ const dashboard = {
     const grid = document.getElementById('expeller-motors-grid');
     const focusView = document.getElementById('expeller-single-motor-focus');
     if (grid) grid.style.display = 'none';
-    if (focusView) focusView.style.display = 'flex';
+    if (focusView) {
+      focusView.style.display = 'flex';
+      focusView.offsetHeight; // Force synchronous reflow so canvas dimensions are correctly computed
+    }
 
     // Update buttons
     document.querySelectorAll('.motor-view-btn').forEach(btn => {
@@ -1332,8 +1335,16 @@ const dashboard = {
       alertBox.className = `motor-audit-box audit-box-${motor.current_status.toLowerCase()}`;
     }
 
-    // Render Enlarged Chart with % Y-Axis and % on each bar
-    charts.renderEnlargedMotorChart('chart-single-motor-focus', motor);
+    // Render Enlarged Chart with % Y-Axis and % on each bar (Double-frame RAF guarantees clean dimensions)
+    requestAnimationFrame(() => {
+      charts.renderEnlargedMotorChart('chart-single-motor-focus', motor);
+      setTimeout(() => {
+        const inst = window.chartInstances && window.chartInstances['chart-single-motor-focus'];
+        if (inst && typeof inst.resize === 'function') {
+          inst.resize();
+        }
+      }, 50);
+    });
 
     // Populate 48-Interval Forensic Table
     const tbody = document.getElementById('focus-motor-intervals-tbody');

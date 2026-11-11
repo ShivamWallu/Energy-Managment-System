@@ -5,6 +5,7 @@
 // ==========================================================================
 
 const chartInstances = {};
+window.chartInstances = chartInstances;
 
 function formatTime12h(str) {
   if (!str) return '';
@@ -623,14 +624,15 @@ const charts = {
     const tc = getThemeConfig();
     const timeline = motor.timeline || {};
     const rawLabels = timeline.labels || [];
-    const values = timeline.graph_values || timeline.values || [];
-    const rawValues = timeline.values || [];
-    const loadPcts = timeline.load_pcts || [];
-    const statuses = timeline.statuses || [];
+    const rawLoadPcts = timeline.load_pcts || [];
+    const rawStatuses = timeline.statuses || [];
 
-    const isKohlu = motor.panel_type === 'KOHLU' || (motor.code && motor.code.startsWith('K'));
+    // Ensure all load percentages are clean numbers without NaN or null breaks
+    const loadPcts = rawLoadPcts.map(v => (v === null || v === undefined || isNaN(v) ? 0 : Number(v)));
+    const statuses = rawStatuses;
+
     const overLimit = 80.0;
-    const overLabel = `80% Overload Danger Limit (${motor.overload_threshold_kwh} kWh)`;
+    const overLabel = `80% Overload Danger Limit (${motor.overload_threshold_kwh || 0} kWh)`;
 
     // Color mapping synchronized 1:1 with interval statuses & summary counts
     const barColors = loadPcts.map((pct, idx) => {
@@ -664,7 +666,8 @@ const charts = {
     const healthyMinLine = Array(loadPcts.length).fill(50);
     const idleMaxLine = Array(loadPcts.length).fill(40);
 
-    const maxPct = Math.max(...loadPcts, 0);
+    const validPcts = loadPcts.filter(v => typeof v === 'number' && !isNaN(v) && v > 0);
+    const maxPct = validPcts.length ? Math.max(...validPcts) : 50;
     const suggestedMaxPct = Math.max(105, Math.ceil(maxPct * 1.15));
 
     // High-visibility, professional industrial colors for benchmark lines
@@ -693,7 +696,7 @@ const charts = {
           },
           {
             type: 'line',
-            label: `50% Healthy Target Line (${motor.healthy_min_kwh} kWh)`,
+            label: `50% Healthy Target Line (${motor.healthy_min_kwh || 0} kWh)`,
             data: healthyMinLine,
             borderColor: colorHealthy,
             backgroundColor: colorHealthy,
@@ -707,7 +710,7 @@ const charts = {
           },
           {
             type: 'line',
-            label: `40% Low-Load Threshold (${motor.idle_max_kwh} kWh)`,
+            label: `40% Low-Load Threshold (${motor.idle_max_kwh || 0} kWh)`,
             data: idleMaxLine,
             borderColor: colorLowLoad,
             backgroundColor: colorLowLoad,
@@ -737,64 +740,62 @@ const charts = {
         {
           id: 'barPercentageLabels',
           afterDatasetsDraw(chart) {
-            const chartCtx = chart.ctx;
-            // Find the bar dataset index
-            const barMeta = chart.getDatasetMeta(3);
-            if (!barMeta || !barMeta.data) return;
+            try {
+              const chartCtx = chart.ctx;
+              const barMeta = chart.getDatasetMeta(3);
+              if (!barMeta || !barMeta.data || !Array.isArray(barMeta.data)) return;
 
-            barMeta.data.forEach((bar, index) => {
-              const pct = loadPcts[index];
-              if (pct === undefined || pct === null) return;
+              barMeta.data.forEach((bar, index) => {
+                if (!bar || typeof bar.x !== 'number' || typeof bar.y !== 'number' || isNaN(bar.x) || isNaN(bar.y)) return;
+                const pct = loadPcts[index];
+                if (pct === undefined || pct === null || isNaN(pct) || pct <= 0) return;
 
-              let labelColor = tc.legendColor;
-              let labelText = '';
+                let labelColor = tc.legendColor;
+                let labelText = `${Math.round(pct)}%`;
 
-              if (statuses[index] === 'ANOMALY') {
-                labelColor = tc.isLight ? '#dc2626' : '#ff2a55';
-                labelText = 'SPIKE';
-              } else if (pct > overLimit) {
-                labelColor = tc.isLight ? '#dc2626' : '#ff2a55';
-                labelText = `${Math.round(pct)}%`;
-              } else if (pct >= 50.0) {
-                labelColor = tc.isLight ? '#059669' : '#00f59b';
-                labelText = `${Math.round(pct)}%`;
-              } else if (pct >= 10.0 && pct < 50.0) {
-                labelColor = tc.isLight ? '#d97706' : '#ffb703';
-                labelText = `${Math.round(pct)}%`;
-              } else {
-                labelColor = tc.isLight ? '#475569' : '#94a3b8';
-                labelText = 'OFF';
-              }
+                if (statuses[index] === 'ANOMALY') {
+                  labelColor = tc.isLight ? '#dc2626' : '#ff2a55';
+                  labelText = 'SPIKE';
+                } else if (pct > overLimit) {
+                  labelColor = tc.isLight ? '#dc2626' : '#ff2a55';
+                } else if (pct >= 50.0) {
+                  labelColor = tc.isLight ? '#059669' : '#00f59b';
+                } else if (pct >= 40.0) {
+                  labelColor = tc.isLight ? '#2563eb' : '#38bdf8';
+                } else if (pct >= 10.0) {
+                  labelColor = tc.isLight ? '#d97706' : '#ffb703';
+                }
 
-              chartCtx.save();
-              chartCtx.font = 'bold 11px "JetBrains Mono", monospace';
-              chartCtx.textAlign = 'center';
-              chartCtx.textBaseline = 'middle';
+                chartCtx.save();
+                chartCtx.font = 'bold 11px "JetBrains Mono", monospace';
+                chartCtx.textAlign = 'center';
+                chartCtx.textBaseline = 'middle';
 
-              const textW = chartCtx.measureText(labelText).width;
-              const pillW = Math.max(textW + 8, 30);
-              const pillH = 17;
-              const yPos = Math.max(bar.y - 12, 14);
+                const textW = chartCtx.measureText(labelText).width || 20;
+                const pillW = Math.max(textW + 8, 28);
+                const pillH = 16;
+                const yPos = Math.max(bar.y - 10, 12);
 
-              // 1st Preference: Draw solid opaque background pill so benchmark lines NEVER slice through percentage numbers
-              chartCtx.fillStyle = tc.isLight ? '#ffffff' : '#070e20';
-              chartCtx.strokeStyle = labelColor;
-              chartCtx.lineWidth = 1.2;
+                chartCtx.fillStyle = tc.isLight ? '#ffffff' : '#070e20';
+                chartCtx.strokeStyle = labelColor;
+                chartCtx.lineWidth = 1.2;
 
-              chartCtx.beginPath();
-              if (chartCtx.roundRect) {
-                chartCtx.roundRect(bar.x - (pillW / 2), yPos - (pillH / 2), pillW, pillH, 4);
-              } else {
-                chartCtx.rect(bar.x - (pillW / 2), yPos - (pillH / 2), pillW, pillH);
-              }
-              chartCtx.fill();
-              chartCtx.stroke();
+                chartCtx.beginPath();
+                if (typeof chartCtx.roundRect === 'function') {
+                  chartCtx.roundRect(bar.x - (pillW / 2), yPos - (pillH / 2), pillW, pillH, 4);
+                } else {
+                  chartCtx.rect(bar.x - (pillW / 2), yPos - (pillH / 2), pillW, pillH);
+                }
+                chartCtx.fill();
+                chartCtx.stroke();
 
-              // Draw the sharp percentage text inside the pill
-              chartCtx.fillStyle = labelColor;
-              chartCtx.fillText(labelText, bar.x, yPos);
-              chartCtx.restore();
-            });
+                chartCtx.fillStyle = labelColor;
+                chartCtx.fillText(labelText, bar.x, yPos);
+                chartCtx.restore();
+              });
+            } catch (pluginErr) {
+              console.warn('Error in barPercentageLabels plugin:', pluginErr);
+            }
           }
         }
       ],
@@ -832,7 +833,6 @@ const charts = {
           },
           tooltip: {
             filter: function(item) {
-              // Hide repetitive benchmark threshold lines from hover tooltip for a clean, concise card
               return item.dataset.type !== 'line';
             },
             backgroundColor: tc.isLight ? 'rgba(15, 23, 42, 0.95)' : 'rgba(7, 14, 32, 0.95)',
@@ -850,7 +850,8 @@ const charts = {
               },
               label(context) {
                 const idx = context.dataIndex;
-                const val = rawValues[idx];
+                const rawValues = (timeline && (timeline.graph_values || timeline.values)) || [];
+                const val = rawValues[idx] || 0;
                 const pct = loadPcts[idx];
 
                 if (pct === null || pct === undefined) return ['No SCADA reading recorded for this interval.'];
@@ -872,7 +873,7 @@ const charts = {
 
                 return [
                   ` Load: ${pct}% (${desc})`,
-                  ` Consumed: ${val} kWh / ${motor.rated_15m_kwh} kWh max`
+                  ` Consumed: ${val} kWh / ${motor.rated_15m_kwh || 0} kWh max`
                 ];
               }
             }
@@ -883,7 +884,7 @@ const charts = {
             grid: { display: false },
             ticks: {
               color: tc.isLight ? '#0f172a' : '#f8fafc',
-              font: { family: 'JetBrains Mono', size: 12, weight: 700 },
+              font: { family: 'JetBrains Mono', size: 11, weight: 700 },
               maxRotation: 45,
               minRotation: 35,
               autoSkip: true,
@@ -895,7 +896,7 @@ const charts = {
             grid: { color: tc.gridColor },
             ticks: {
               color: tc.isLight ? '#0f172a' : '#f8fafc',
-              font: { family: 'JetBrains Mono', size: 13, weight: 700 },
+              font: { family: 'JetBrains Mono', size: 12, weight: 700 },
               callback: (v) => `${v}%`
             },
             title: {
@@ -903,26 +904,6 @@ const charts = {
               text: 'Operating Load Percentage (% of Rated HP)',
               color: tc.isLight ? '#0f172a' : '#00d2ff',
               font: { family: 'Outfit', size: 13, weight: 800 }
-            },
-            suggestedMax: suggestedMaxPct,
-            beginAtZero: true
-          },
-          y1: {
-            position: 'right',
-            grid: { display: false },
-            ticks: {
-              color: tc.isLight ? '#334155' : '#cbd5e1',
-              font: { family: 'JetBrains Mono', size: 12, weight: 600 },
-              callback: (v) => {
-                const kwh = (v * (motor.rated_15m_kwh || 10) / 100).toFixed(1);
-                return `${kwh} kWh`;
-              }
-            },
-            title: {
-              display: true,
-              text: '15-Minute Energy (kWh)',
-              color: tc.isLight ? '#0f172a' : '#38bdf8',
-              font: { family: 'Outfit', size: 12, weight: 700 }
             },
             suggestedMax: suggestedMaxPct,
             beginAtZero: true
