@@ -1580,26 +1580,12 @@ const dashboard = {
       const singleFocusEl = document.getElementById('expeller-single-motor-focus');
       const isSingleFocus = singleFocusEl && singleFocusEl.style.display !== 'none';
 
-      // Helper to capture base64 from loaded logo image
-      const captureImgDataUrl = (selector) => {
-        const img = document.querySelector(selector);
-        if (!img) return '';
-        try {
-          const c = document.createElement('canvas');
-          c.width = img.naturalWidth || 64;
-          c.height = img.naturalHeight || 64;
-          const ctx = c.getContext('2d');
-          ctx.drawImage(img, 0, 0, c.width, c.height);
-          return c.toDataURL('image/png');
-        } catch (e) {
-          return img.src || '';
-        }
-      };
+      // Current raw dataset motors
+      const currentMotors = (this.currentExpellerData && this.currentExpellerData.motors) 
+        ? this.currentExpellerData.motors 
+        : ((this.currentKohluData && this.currentKohluData.motors) ? this.currentKohluData.motors : []);
 
-      const kogmLogo = captureImgDataUrl('img[alt*="KOGM"]') || '/img/02_Left_Top_Side_Panel_KOGM.png';
-      const mashalLogo = captureImgDataUrl('img[alt*="Mashal"]') || '/img/03_Right_Top_Side_Panel_MASHAL.png';
-
-      // Extract Motor Data & Canvas Snapshots
+      // Extract Motor Data & Synchronous High-Definition Audit Charts
       let motorItems = [];
       let focusSubtitle = '';
 
@@ -1613,10 +1599,23 @@ const dashboard = {
         const sumVal = document.getElementById('focus-stat-sum')?.innerText?.trim() || '0.0 kWh';
         const alertNote = document.getElementById('focus-motor-alert-text')?.innerText?.trim() || 'Normal telemetry operations within calibrated range.';
 
+        let focusMotorObj = this.currentFocusedMotor;
+        if (!focusMotorObj && this.activeFocusMotorCode) {
+          focusMotorObj = currentMotors.find(m => m.code === this.activeFocusMotorCode);
+        }
+        if (!focusMotorObj && currentMotors.length > 0) {
+          focusMotorObj = currentMotors[0];
+        }
+
         let chartImg = '';
-        const focusCanvas = document.getElementById('chart-single-motor-focus');
-        if (focusCanvas) {
-          try { chartImg = focusCanvas.toDataURL('image/png'); } catch (e) {}
+        if (typeof charts !== 'undefined' && charts.createAuditFocusChart && focusMotorObj) {
+          chartImg = charts.createAuditFocusChart(focusMotorObj, 1100, 340);
+        }
+        if (!chartImg) {
+          const focusCanvas = document.getElementById('chart-single-motor-focus');
+          if (focusCanvas) {
+            try { chartImg = focusCanvas.toDataURL('image/png'); } catch (e) {}
+          }
         }
 
         motorItems.push({
@@ -1626,7 +1625,7 @@ const dashboard = {
         });
       } else {
         const motorCards = document.querySelectorAll('#expeller-motors-grid .motor-card');
-        motorCards.forEach(card => {
+        motorCards.forEach((card, idx) => {
           if (card.style.display === 'none') return; // Skip filtered out cards
           const title = card.querySelector('.motor-title')?.innerText?.trim() || 'Motor';
           const hpTag = card.querySelector('.motor-hp-tag')?.innerText?.trim() || '';
@@ -1642,10 +1641,17 @@ const dashboard = {
 
           const note = card.querySelector('.motor-audit-box')?.innerText?.replace('Manager Note:', '')?.trim() || 'Operational status nominal.';
 
+          const rawMotor = currentMotors[idx] || currentMotors.find(m => card.innerHTML.includes(m.code));
+
           let chartImg = '';
-          const canvas = card.querySelector('canvas');
-          if (canvas) {
-            try { chartImg = canvas.toDataURL('image/png'); } catch (e) {}
+          if (typeof charts !== 'undefined' && charts.createAuditCardChart && rawMotor) {
+            chartImg = charts.createAuditCardChart(rawMotor, 480, 240);
+          }
+          if (!chartImg) {
+            const canvas = card.querySelector('canvas');
+            if (canvas) {
+              try { chartImg = canvas.toDataURL('image/png'); } catch (e) {}
+            }
           }
 
           motorItems.push({
@@ -1658,26 +1664,6 @@ const dashboard = {
           });
         });
       }
-
-      // Compute Real-time Industrial KPI figures from Motor Items
-      const sumKwh = motorItems.reduce((acc, m) => acc + (parseFloat(m.sumVal) || 0), 0);
-      const activeUnits = motorItems.filter(m => !m.badge.toUpperCase().includes('OFFLINE') && !m.badge.toUpperCase().includes('STOPPED')).length;
-      const overloadUnits = motorItems.filter(m => m.badge.toUpperCase().includes('OVERLOAD') || m.badge.toUpperCase().includes('CRITICAL')).length;
-      
-      let avgLoadPct = 0;
-      const parsedLoads = motorItems.map(m => {
-        const match = m.avgVal.match(/([\d\.]+)%/);
-        return match ? parseFloat(match[1]) : 0;
-      }).filter(v => v > 0);
-      if (parsedLoads.length > 0) {
-        avgLoadPct = (parsedLoads.reduce((a, b) => a + b, 0) / parsedLoads.length).toFixed(1);
-      }
-
-      const kpiTotal = sumKwh > 0 ? `${sumKwh.toFixed(1)} kWh` : '0.0 kWh';
-      const kpiLoad = avgLoadPct > 0 ? `${avgLoadPct}% Avg` : '0.0% Avg';
-      const kpiActive = `${activeUnits} of ${motorItems.length} Units`;
-      const kpiAnomalies = overloadUnits > 0 ? `${overloadUnits} Warning(s)` : '0 Overloads';
-      const kpiBalance = '99.8% Balanced';
 
       // Status pill color helper
       const getPillStyle = (status) => {
@@ -1698,120 +1684,96 @@ const dashboard = {
       let mainContentHtml = '';
 
       if (isSingleFocus && motorItems.length > 0) {
-        // ENLARGED SINGLE-MOTOR AUDIT VIEW (Resolves Image 4 & Image 5)
+        // ENLARGED SINGLE-MOTOR AUDIT VIEW
         const m = motorItems[0];
         mainContentHtml = `
-          <div style="border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; padding: 12px 16px; margin-bottom: 10px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px; border-bottom: 2px solid #0284c7; padding-bottom: 6px;">
+          <div style="border: 1px solid #cbd5e1; border-radius: 8px; background: #ffffff; padding: 14px 18px; margin-bottom: 12px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 10px; border-bottom: 2px solid #0284c7; padding-bottom: 8px;">
               <div>
-                <span style="font-size: 1.02rem; font-weight: 800; color: #0f172a;">${m.title}</span>
-                <span style="font-size: 0.76rem; color: #64748b; margin-left: 8px;">${focusSubtitle}</span>
+                <span style="font-size: 1.08rem; font-weight: 800; color: #0f172a;">${m.title}</span>
+                <span style="font-size: 0.78rem; color: #64748b; margin-left: 8px;">${focusSubtitle}</span>
               </div>
-              <span style="font-size: 0.74rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; ${getPillStyle(m.badge)}">${m.badge}</span>
+              <span style="font-size: 0.76rem; font-weight: 800; padding: 4px 12px; border-radius: 999px; ${getPillStyle(m.badge)}">${m.badge}</span>
             </div>
 
             <!-- 4-Stat Metric Strip -->
-            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 8px; font-size: 0.72rem; margin-bottom: 10px;">
-              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px;">
-                <span style="color:#64748b; font-size:0.65rem; display:block; font-weight:700;">MIN INTERVAL LOAD</span>
-                <strong style="font-size:0.95rem; color:#0f172a;">${m.minVal}</strong>
+            <div style="display:grid; grid-template-columns: repeat(4, 1fr); gap: 10px; font-size: 0.74rem; margin-bottom: 12px;">
+              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px;">
+                <span style="color:#64748b; font-size:0.68rem; display:block; font-weight:700;">MIN INTERVAL LOAD</span>
+                <strong style="font-size:1.05rem; color:#0f172a;">${m.minVal}</strong>
               </div>
-              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px;">
-                <span style="color:#64748b; font-size:0.65rem; display:block; font-weight:700;">PEAK INTERVAL (MAX)</span>
-                <strong style="font-size:0.95rem; color:#dc2626;">${m.maxVal}</strong>
+              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px;">
+                <span style="color:#64748b; font-size:0.68rem; display:block; font-weight:700;">PEAK INTERVAL (MAX)</span>
+                <strong style="font-size:1.05rem; color:#dc2626;">${m.maxVal}</strong>
               </div>
-              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px;">
-                <span style="color:#64748b; font-size:0.65rem; display:block; font-weight:700;">AVG OPERATING LOAD</span>
-                <strong style="font-size:0.95rem; color:#059669;">${m.avgVal}</strong>
+              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px;">
+                <span style="color:#64748b; font-size:0.68rem; display:block; font-weight:700;">AVG OPERATING LOAD</span>
+                <strong style="font-size:1.05rem; color:#059669;">${m.avgVal}</strong>
               </div>
-              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px;">
-                <span style="color:#64748b; font-size:0.65rem; display:block; font-weight:700;">TOTAL SHIFT CONSUMPTION</span>
-                <strong style="font-size:0.95rem; color:#0284c7;">${m.sumVal}</strong>
+              <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px;">
+                <span style="color:#64748b; font-size:0.68rem; display:block; font-weight:700;">TOTAL SHIFT CONSUMPTION</span>
+                <strong style="font-size:1.05rem; color:#0284c7;">${m.sumVal}</strong>
               </div>
             </div>
 
-            <!-- Expansive High-Definition 48-Interval Telemetry Graph -->
+            <!-- Expansive High-Definition 48-Interval Telemetry Graph with Bold Numbers & Times -->
             ${m.chartImg ? `
-              <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; text-align:center; margin-bottom:8px;">
-                <img src="${m.chartImg}" style="width: 100%; height: 260px; max-height: 270px; object-fit: contain; display: block;" alt="Focused 48-Interval Telemetry Chart">
+              <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px; text-align:center; margin-bottom:10px;">
+                <img src="${m.chartImg}" style="width: 100%; height: 290px; max-height: 300px; object-fit: contain; display: block;" alt="Focused 48-Interval Telemetry Chart">
               </div>
             ` : ''}
 
             <!-- Supervisory Audit Finding Note -->
-            <div style="font-size: 0.74rem; color: #334155; background: #f8fafc; border-left: 3px solid #0284c7; border-radius: 4px; padding: 6px 10px; line-height: 1.35;">
+            <div style="font-size: 0.78rem; color: #334155; background: #f8fafc; border-left: 3.5px solid #0284c7; border-radius: 4px; padding: 8px 12px; line-height: 1.4;">
               <strong>Plant Supervisory Finding:</strong> ${m.note}
             </div>
           </div>
         `;
       } else if (motorItems.length > 0) {
-        // 5-MOTORS GRID VIEW WITH COMPACT DIAGNOSTICS TABLE (Resolves Image 3)
+        // 5-MOTORS EXPANSIVE GRID VIEW (Top KPI strip & bottom table permanently removed per requirements)
         const cols = Math.min(motorItems.length, 5);
         mainContentHtml = `
-          <!-- 5 Motor Cards Side-by-Side -->
-          <div style="display:grid; grid-template-columns: repeat(${cols}, 1fr); gap: 8px; margin-bottom: 10px;">
+          <!-- 5 Motor Cards Side-by-Side with Clear, Visible Graphs -->
+          <div style="display:grid; grid-template-columns: repeat(${cols}, 1fr); gap: 10px; margin-bottom: 12px;">
             ${motorItems.map(m => `
-              <div style="border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; padding: 8px 10px; display:flex; flex-direction:column; justify-content:space-between;">
+              <div style="border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; padding: 10px 10px; display:flex; flex-direction:column; justify-content:space-between;">
                 <div>
-                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 5px; border-bottom: 1px solid #e2e8f0; padding-bottom: 3px;">
-                    <strong style="font-size: 0.78rem; color:#0f172a;">${m.title}</strong>
-                    <span style="font-size: 0.62rem; font-weight:700; padding: 1px 5px; border-radius: 4px; ${getPillStyle(m.badge)}">${m.badge}</span>
+                  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
+                    <strong style="font-size: 0.82rem; color:#0f172a;">${m.title}</strong>
+                    <span style="font-size: 0.65rem; font-weight:700; padding: 2px 6px; border-radius: 4px; ${getPillStyle(m.badge)}">${m.badge}</span>
                   </div>
 
-                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 3px; font-size: 0.66rem; margin-bottom: 5px;">
-                    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:3px; padding:2px 4px;">
-                      <span style="color:#64748b; display:block; font-size:0.58rem;">MIN:</span>
+                  <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 0.68rem; margin-bottom: 6px;">
+                    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:3px; padding:2px 5px;">
+                      <span style="color:#64748b; display:block; font-size:0.58rem; font-weight:700;">MIN:</span>
                       <strong style="color:#0f172a;">${m.minVal}</strong>
                     </div>
-                    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:3px; padding:2px 4px;">
-                      <span style="color:#64748b; display:block; font-size:0.58rem;">MAX:</span>
+                    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:3px; padding:2px 5px;">
+                      <span style="color:#64748b; display:block; font-size:0.58rem; font-weight:700;">MAX:</span>
                       <strong style="color:#dc2626;">${m.maxVal}</strong>
                     </div>
-                    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:3px; padding:2px 4px;">
-                      <span style="color:#64748b; display:block; font-size:0.58rem;">AVG:</span>
+                    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:3px; padding:2px 5px;">
+                      <span style="color:#64748b; display:block; font-size:0.58rem; font-weight:700;">AVG:</span>
                       <strong style="color:#059669;">${m.avgVal}</strong>
                     </div>
-                    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:3px; padding:2px 4px;">
-                      <span style="color:#64748b; display:block; font-size:0.58rem;">SUM:</span>
+                    <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:3px; padding:2px 5px;">
+                      <span style="color:#64748b; display:block; font-size:0.58rem; font-weight:700;">SUM:</span>
                       <strong style="color:#0284c7;">${m.sumVal}</strong>
                     </div>
                   </div>
                 </div>
 
                 ${m.chartImg ? `
-                  <div style="margin: 4px 0; background:#ffffff; border:1px solid #e2e8f0; border-radius:6px; padding:3px 2px; text-align:center;">
-                    <img src="${m.chartImg}" style="width: 100%; height: 110px; object-fit: contain; display: block;" alt="Load Curve">
+                  <div style="margin: 6px 0; background:#ffffff; border:1px solid #cbd5e1; border-radius:6px; padding:4px 3px; text-align:center;">
+                    <img src="${m.chartImg}" style="width: 100%; height: 165px; object-fit: contain; display: block;" alt="Load Curve">
                   </div>
                 ` : ''}
 
-                <div style="font-size: 0.60rem; color: #475569; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 3px; padding: 3px 5px; margin-top: 3px; line-height: 1.25;">
+                <div style="font-size: 0.64rem; color: #334155; background: #ffffff; border: 1px dashed #cbd5e1; border-radius: 4px; padding: 4px 6px; margin-top: 4px; line-height: 1.3;">
                   <strong>Note:</strong> ${m.note}
                 </div>
               </div>
             `).join('')}
-          </div>
-
-          <!-- Compact Supervisory Anomaly & Health Diagnostics Table -->
-          <div style="margin-bottom: 8px; border: 1px solid #cbd5e1; border-radius: 6px; overflow: hidden;">
-            <table style="width: 100%; border-collapse: collapse; font-size: 0.70rem;">
-              <thead>
-                <tr style="background: #f1f5f9; color: #1e293b; text-align: left; border-bottom: 1.5px solid #cbd5e1;">
-                  <th style="padding: 4px 8px; font-weight: 800; width: 22%;">Motor / Unit</th>
-                  <th style="padding: 4px 8px; font-weight: 800; text-align:center; width: 14%;">Health Condition</th>
-                  <th style="padding: 4px 8px; font-weight: 800; text-align:right; width: 14%;">Shift Energy</th>
-                  <th style="padding: 4px 8px; font-weight: 800;">Plant Supervisory Finding &amp; Anomaly Audit</th>
-                </tr>
-              </thead>
-              <tbody>
-                ${motorItems.map((m, idx) => `
-                  <tr style="border-bottom: 1px solid #e2e8f0; background: ${idx % 2 === 0 ? '#ffffff' : '#f8fafc'};">
-                    <td style="padding: 3.5px 8px; font-weight:700; color:#0f172a;">${m.title}</td>
-                    <td style="padding: 3.5px 8px; text-align:center;"><span style="font-size: 0.62rem; font-weight:700; padding: 1px 6px; border-radius: 3px; ${getPillStyle(m.badge)}">${m.badge}</span></td>
-                    <td style="padding: 3.5px 8px; font-family:monospace; text-align:right; color:#0284c7; font-weight:700;">${m.sumVal}</td>
-                    <td style="padding: 3.5px 8px; font-size:0.68rem; color:#334155;">${m.note}</td>
-                  </tr>
-                `).join('')}
-              </tbody>
-            </table>
           </div>
         `;
       }
@@ -1840,21 +1802,18 @@ const dashboard = {
       if (!container) return;
 
       container.innerHTML = `
-        <!-- Header Banner (Clean, Professional SCADA Title) -->
-        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #0284c7; padding-bottom: 10px; margin-bottom: 10px;">
-          <div style="display:flex; align-items:center; gap: 12px;">
-            <div style="display:flex; gap: 6px;">
-              <img src="${kogmLogo}" style="height: 44px; width: 44px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0;" alt="KOGM">
-              <img src="${mashalLogo}" style="height: 44px; width: 44px; object-fit: contain; border-radius: 6px; border: 1px solid #e2e8f0;" alt="Mashal">
-            </div>
+        <!-- Header Banner (Clean, Professional SCADA Title with Official Mashal Emblem) -->
+        <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #0284c7; padding-bottom: 10px; margin-bottom: 12px;">
+          <div style="display:flex; align-items:center; gap: 14px;">
+            <img src="/img/mashal_brand_logo.png?v=2026" style="height: 52px; max-width: 150px; object-fit: contain; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.15));" alt="Mashal Mustard Oil">
             <div>
-              <div style="font-size: 1.10rem; font-weight: 800; color: #0f172a; letter-spacing: 0.3px;">MASHAL MUSTARD OIL PLANT • SCADA 415V BUS</div>
-              <div style="font-size: 0.78rem; font-weight: 700; color: #0284c7; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 1px;">EXECUTIVE ENERGY AUDIT &amp; MOTOR TELEMETRY REPORT</div>
-              <div style="font-size: 0.68rem; color: #64748b; margin-top: 1px;">${sectionTitle} — 15-Minute Interval Load Diagnostics</div>
+              <div style="font-size: 1.15rem; font-weight: 800; color: #0f172a; letter-spacing: 0.3px;">MASHAL MUSTARD OIL PLANT • SCADA 415V BUS</div>
+              <div style="font-size: 0.80rem; font-weight: 700; color: #0284c7; text-transform: uppercase; letter-spacing: 0.8px; margin-top: 1px;">EXECUTIVE ENERGY AUDIT &amp; MOTOR TELEMETRY REPORT</div>
+              <div style="font-size: 0.70rem; color: #64748b; margin-top: 2px;">${sectionTitle} — 15-Minute Interval Load Diagnostics</div>
             </div>
           </div>
 
-          <div style="text-align:right; font-size: 0.70rem; line-height: 1.4; border-left: 1px solid #e2e8f0; padding-left: 14px;">
+          <div style="text-align:right; font-size: 0.72rem; line-height: 1.45; border-left: 1px solid #e2e8f0; padding-left: 16px;">
             <div><span style="color:#64748b;">Report:</span> <strong style="color:#0f172a;">${reportText}</strong></div>
             <div><span style="color:#64748b;">Shift:</span> <strong style="color:#0284c7;">${activeShift}</strong></div>
             <div><span style="color:#64748b;">Generated On:</span> <strong style="color:#0f172a;">${istDateStr} at ${istTimeStr} IST</strong></div>
@@ -1862,55 +1821,31 @@ const dashboard = {
           </div>
         </div>
 
-        <!-- 5-Metric KPI Summary Strip -->
-        <div style="display:grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 10px;">
-          <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:6px 8px;">
-            <div style="font-size:0.62rem; font-weight:700; color:#64748b; text-transform:uppercase;">Total Plant Energy</div>
-            <div style="font-size:0.95rem; font-weight:800; color:#0284c7; margin-top:1px;">${kpiTotal}</div>
-          </div>
-          <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:6px 8px;">
-            <div style="font-size:0.62rem; font-weight:700; color:#64748b; text-transform:uppercase;">Avg Motor Load</div>
-            <div style="font-size:0.95rem; font-weight:800; color:#059669; margin-top:1px;">${kpiLoad}</div>
-          </div>
-          <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:6px 8px;">
-            <div style="font-size:0.62rem; font-weight:700; color:#64748b; text-transform:uppercase;">Active Units</div>
-            <div style="font-size:0.95rem; font-weight:800; color:#0f172a; margin-top:1px;">${kpiActive}</div>
-          </div>
-          <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:6px 8px;">
-            <div style="font-size:0.62rem; font-weight:700; color:#64748b; text-transform:uppercase;">Overload Alerts</div>
-            <div style="font-size:0.95rem; font-weight:800; color:#dc2626; margin-top:1px;">${kpiAnomalies}</div>
-          </div>
-          <div style="background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; padding:6px 8px;">
-            <div style="font-size:0.62rem; font-weight:700; color:#64748b; text-transform:uppercase;">Bus Energy Balance</div>
-            <div style="font-size:0.95rem; font-weight:800; color:#0284c7; margin-top:1px;">${kpiBalance}</div>
-          </div>
-        </div>
-
         <!-- Section Title Bar -->
-        <div style="background:#0f172a; color:#ffffff; padding: 5px 10px; border-radius: 4px; font-size: 0.76rem; font-weight: 700; margin-bottom: 8px; display:flex; justify-content:space-between; align-items:center;">
+        <div style="background:#0f172a; color:#ffffff; padding: 6px 12px; border-radius: 4px; font-size: 0.78rem; font-weight: 700; margin-bottom: 12px; display:flex; justify-content:space-between; align-items:center;">
           <span>${sectionTitle}</span>
-          <span style="font-size:0.66rem; font-weight:normal; color:#94a3b8;">48 Intervals (15-Minute SCADA Telemetry)</span>
+          <span style="font-size:0.68rem; font-weight:normal; color:#94a3b8;">48 Intervals (15-Minute SCADA Telemetry)</span>
         </div>
 
         <!-- Main Showcase (Responsive to Focus vs All 5 Motors Grid) -->
         ${mainContentHtml}
 
-        <!-- Footer Sign-off & Audit Seal (Guaranteed 1-Page Landscape Fit) -->
-        <div style="display:flex; justify-content:space-between; align-items:flex-end; border-top: 1.5px solid #cbd5e1; padding-top: 8px; margin-top: 6px; font-size: 0.65rem; color: #475569;">
-          <div>
-            <div style="font-weight:800; color:#0f172a; font-size:0.72rem;">Certified Industrial Energy Audit Telemetry</div>
-            <div>Generated by Mashal EMS Intelligence SCADA Engine • ems.khandelia.online</div>
-            <div style="color:#0284c7; font-weight:600;">ISO 50001 Energy Management Telemetry System Compliant</div>
+        <!-- Footer Sign-off & Audit Seal (Guaranteed 1-Page Landscape Fit with Zero Bottom Clipping) -->
+        <div style="display:flex; justify-content:space-between; align-items:flex-end; border-top: 1.5px solid #cbd5e1; padding-top: 14px; margin-top: 16px; padding-bottom: 8px; font-size: 0.72rem; color: #475569; overflow: visible;">
+          <div style="line-height: 1.5;">
+            <div style="font-weight:800; color:#0f172a; font-size:0.78rem; letter-spacing:0.2px;">Certified Industrial Energy Audit Telemetry</div>
+            <div style="color:#334155; font-size:0.70rem;">Generated by Mashal EMS Intelligence SCADA Engine • ems.khandelia.online</div>
+            <div style="color:#0284c7; font-weight:700; font-size:0.70rem; margin-top:2px;">ISO 50001 Energy Management Telemetry System Compliant</div>
           </div>
 
-          <div style="display:flex; gap: 40px; text-align:center;">
+          <div style="display:flex; gap: 48px; text-align:center;">
             <div>
-              <div style="width: 140px; border-bottom: 1px solid #475569; margin-bottom: 4px; height: 20px;"></div>
-              <span style="font-weight:700; color:#0f172a;">Plant Electrical Engineer</span>
+              <div style="width: 155px; border-bottom: 1.5px solid #334155; margin-bottom: 6px; height: 28px;"></div>
+              <span style="font-weight:700; color:#0f172a; font-size:0.75rem;">Plant Electrical Engineer</span>
             </div>
             <div>
-              <div style="width: 140px; border-bottom: 1px solid #475569; margin-bottom: 4px; height: 20px;"></div>
-              <span style="font-weight:700; color:#0f172a;">Operations Manager</span>
+              <div style="width: 155px; border-bottom: 1.5px solid #334155; margin-bottom: 6px; height: 28px;"></div>
+              <span style="font-weight:700; color:#0f172a; font-size:0.75rem;">Operations Manager</span>
             </div>
           </div>
         </div>

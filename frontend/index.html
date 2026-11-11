@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mashal EMS Intelligence — SCADA Plant Energy &amp; Motor Analytics</title>
   <meta name="description" content="Mashal Mustard Oil Plant SCADA Telemetry, 15-Minute Motor Operating Health, and Energy Distribution.">
-  <link rel="icon" type="image/png" href="/Images/logos/03_Right_Top_Side_Panel_MASHAL.png?v=2026">
+  <link rel="icon" type="image/png" href="/img/mashal_brand_logo.png?v=2026">
 
   <!-- Google Fonts: Outfit & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -50,11 +50,8 @@
   <!-- Top Application Header -->
   <header class="header">
     <div class="brand-wrapper">
-      <div class="brand-logo-img-wrap" title="KOGM — Khandelia Oil &amp; General Mills">
-        <img src="/Images/logos/02_Left_Top_Side_Panel_KOGM.png?v=2026" alt="KOGM" class="brand-logo-img" style="height:42px; width:42px; border-radius:6px; object-fit:cover; border:1px solid rgba(254,227,0,0.5); box-shadow:0 2px 6px rgba(0,0,0,0.25);">
-      </div>
-      <div class="brand-logo-img-wrap" title="Mashal — Kachi Ghani Mustard Oil (Trusted Since 1976)">
-        <img src="/Images/logos/03_Right_Top_Side_Panel_MASHAL.png?v=2026" alt="Mashal Mustard Oil" class="brand-logo-img" style="height:42px; border-radius:6px; object-fit:contain; border:1px solid rgba(254,227,0,0.5); box-shadow:0 2px 6px rgba(0,0,0,0.25);">
+      <div class="brand-logo-img-wrap" title="Mashal — Kachi Ghani Mustard Oil (Trusted By Millions Since 1976)">
+        <img src="/img/mashal_brand_logo.png?v=2026" alt="Mashal Mustard Oil" class="brand-logo-img" style="height:46px; border-radius:6px; object-fit:contain; filter:drop-shadow(0 2px 6px rgba(0,0,0,0.25));">
       </div>
       <div class="brand-divider"></div>
       <div>
@@ -722,7 +719,7 @@
     <!-- Modal Body: Scrollable Preview Sheet Container -->
     <div class="pdf-preview-viewport" style="flex:1; overflow-y:auto; overflow-x:auto; padding:1.25rem 1.5rem; background:#1e293b; display:flex; justify-content:center;">
       <!-- The Printable Document Container -->
-      <div id="pdf-preview-document-container" class="pdf-document-sheet" style="background:#ffffff; color:#0f172a; width:1120px; min-width:1120px; padding:24px 28px; box-shadow:0 12px 35px rgba(0,0,0,0.45); border-radius:6px; box-sizing:border-box;">
+      <div id="pdf-preview-document-container" class="pdf-document-sheet" style="background:#ffffff; color:#0f172a; width:1120px; min-width:1120px; padding:24px 28px 36px 28px; margin-bottom:24px; box-shadow:0 12px 35px rgba(0,0,0,0.45); border-radius:6px; box-sizing:border-box; overflow:visible;">
         <!-- Populated dynamically by dashboard.openPDFPreviewModal() -->
       </div>
     </div>
@@ -775,7 +772,7 @@
   <div class="modal-dialog" style="max-width: 680px;">
     <div class="modal-header">
       <div style="display:flex; align-items:center; gap:0.65rem;">
-        <img src="/Images/logos/03_Right_Top_Side_Panel_MASHAL.png?v=2026" alt="Mashal" style="height:30px; border-radius:4px; box-shadow:0 1px 4px rgba(0,0,0,0.25); border:1px solid rgba(254,227,0,0.4);">
+        <img src="/img/mashal_brand_logo.png?v=2026" alt="Mashal" style="height:34px; border-radius:4px; filter:drop-shadow(0 1px 4px rgba(0,0,0,0.25));">
         <h3 class="modal-title"><i class="fa-solid fa-file-excel text-emerald" style="font-size:0.95rem; margin-right:0.25rem;"></i> Ingest Shift Telemetry Report</h3>
       </div>
       <button id="btn-close-upload" class="btn-icon" style="border:none;"><i class="fa-solid fa-xmark"></i></button>
@@ -907,15 +904,14 @@
     <!-- Right Column: The Login Dialog -->
     <div class="modal-dialog auth-modal-dialog" style="max-width:440px; padding:0; overflow:hidden;">
     
-    <!-- Header with latest official logos from Images/logos directory (Previous style: direct on card with yellow accent) -->
-    <div class="modal-header" style="justify-content:center; flex-direction:column; gap:0.6rem; text-align:center; padding:1.35rem 1.5rem 1rem; border-bottom:1px solid var(--border-subtle);">
-      <div style="display:flex; justify-content:center; align-items:center; gap:0.75rem;">
-        <img src="/Images/logos/02_Left_Top_Side_Panel_KOGM.png?v=2026" alt="KOGM" style="height:50px; width:50px; border-radius:8px; object-fit:cover; border:1px solid rgba(254,227,0,0.5); box-shadow:0 3px 8px rgba(0,0,0,0.3);">
-        <img src="/Images/logos/03_Right_Top_Side_Panel_MASHAL.png?v=2026" alt="Mashal Mustard Oil" style="height:50px; border-radius:8px; object-fit:contain; border:1px solid rgba(254,227,0,0.5); box-shadow:0 3px 8px rgba(0,0,0,0.3);">
+    <!-- Header with latest official Mashal logo (Image 3) -->
+    <div class="modal-header" style="justify-content:center; flex-direction:column; gap:0.5rem; text-align:center; padding:1.4rem 1.6rem 1rem; border-bottom:1px solid rgba(255,255,255,0.45);">
+      <div style="display:flex; justify-content:center; align-items:center;">
+        <img src="/img/mashal_brand_logo.png?v=2026" alt="Mashal Mustard Oil" style="height:62px; max-width:200px; object-fit:contain; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.18));">
       </div>
       <div>
-        <h3 class="modal-title" style="font-size:1.15rem; font-weight:800; letter-spacing:0.3px; color:var(--text-primary); margin:0;">MASHAL EMS INTELLIGENCE</h3>
-        <div style="font-size:0.75rem; color:var(--accent-cyan); font-weight:600; text-transform:uppercase; letter-spacing:1px; margin-top:2px;">SCADA 415V Energy Management System</div>
+        <h3 class="modal-title" style="font-size:1.20rem; font-weight:800; letter-spacing:0.4px; color:#0f172a; margin:0;">MASHAL EMS INTELLIGENCE</h3>
+        <div style="font-size:0.72rem; color:#0369a1; font-weight:700; text-transform:uppercase; letter-spacing:1.2px; margin-top:4px; background:rgba(2,132,199,0.08); border-radius:20px; padding:2px 12px; display:inline-block;">SCADA 415V Energy Management System</div>
       </div>
     </div>
 

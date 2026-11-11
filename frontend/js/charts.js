@@ -565,8 +565,8 @@ const charts = {
           x: {
             grid: { display: false },
             ticks: {
-              color: tc.isLight ? '#334155' : '#cbd5e1',
-              font: { family: 'JetBrains Mono', size: 8, weight: 700 },
+              color: tc.isLight ? '#0f172a' : '#f1f5f9',
+              font: { family: 'JetBrains Mono', size: 9, weight: 700 },
               maxRotation: 0,
               minRotation: 0,
               autoSkip: false,
@@ -578,8 +578,8 @@ const charts = {
           y: {
             grid: { color: tc.gridColor },
             ticks: {
-              color: tc.isLight ? '#334155' : '#cbd5e1',
-              font: { family: 'JetBrains Mono', size: 9, weight: 600 },
+              color: tc.isLight ? '#0f172a' : '#f1f5f9',
+              font: { family: 'JetBrains Mono', size: 10, weight: 700 },
               maxTicksLimit: 5,
               callback: (v) => `${v}`
             },
@@ -904,5 +904,390 @@ const charts = {
         }
       }
     });
+  },
+
+  // 7. Dedicated High-Contrast Synchronous Chart Renderers for Executive PDF Audit Sheets
+  // Generates pure white-background, razor-sharp slate/dark labels (#0f172a) for maximum legibility in print & PDF
+  createAuditCardChart(motor, width = 480, height = 240) {
+    if (!motor || !motor.timeline) return '';
+    try {
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = width;
+      offCanvas.height = height;
+      const ctx = offCanvas.getContext('2d');
+      if (!ctx) return '';
+      
+      // Solid opaque white background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+
+      const timeline = motor.timeline || {};
+      const rawLabels = timeline.labels || [];
+      const values = timeline.values || [];
+      const loadPcts = timeline.load_pcts || [];
+      const statuses = timeline.statuses || [];
+
+      const totalSlots = rawLabels.length;
+      const milestoneSet = new Set([
+        0,
+        Math.floor(totalSlots / 3),
+        Math.floor((2 * totalSlots) / 3),
+        Math.max(0, totalSlots - 1)
+      ]);
+      const displayLabels = rawLabels.map((lbl, idx) => (milestoneSet.has(idx) ? formatTime12h(lbl) : ''));
+
+      const isKohlu = motor.panel_type === 'KOHLU' || (motor.code && motor.code.startsWith('K'));
+      const overLimit = isKohlu ? 100.0 : 80.0;
+
+      const barColors = loadPcts.map((pct, idx) => {
+        const st = statuses[idx] || '';
+        if (st === 'OVERLOAD' || pct > overLimit) return '#ef4444';
+        if (st === 'HEALTHY' || st === 'NORMAL' || pct >= 40.0) return '#10b981';
+        if (st === 'IDLE' || pct >= 10.0) return '#f59e0b';
+        return '#cbd5e1';
+      });
+
+      const borderColors = loadPcts.map((pct, idx) => {
+        const st = statuses[idx] || '';
+        if (st === 'OVERLOAD' || pct > overLimit) return '#dc2626';
+        if (st === 'HEALTHY' || st === 'NORMAL' || pct >= 40.0) return '#059669';
+        if (st === 'IDLE' || pct >= 10.0) return '#d97706';
+        return '#94a3b8';
+      });
+
+      const overloadLine = Array(values.length).fill(motor.overload_threshold_kwh || 0);
+      const healthyMinLine = Array(values.length).fill(motor.healthy_min_kwh || 0);
+      const idleMaxLine = Array(values.length).fill(motor.idle_max_kwh || 0);
+
+      const maxVal = Math.max(...values, 0);
+      const maxBound = Math.max(maxVal * 1.25, (motor.rated_15m_kwh || 10) * 1.25);
+
+      const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: displayLabels,
+          datasets: [
+            {
+              type: 'line',
+              label: 'Overload Limit',
+              data: overloadLine,
+              borderColor: '#dc2626',
+              borderWidth: 2,
+              borderDash: [5, 4],
+              pointRadius: 0,
+              fill: false,
+              tension: 0
+            },
+            {
+              type: 'line',
+              label: 'Target Limit',
+              data: healthyMinLine,
+              borderColor: '#059669',
+              borderWidth: 2,
+              borderDash: [4, 3],
+              pointRadius: 0,
+              fill: false,
+              tension: 0
+            },
+            {
+              type: 'line',
+              label: 'Low Load',
+              data: idleMaxLine,
+              borderColor: '#d97706',
+              borderWidth: 1.8,
+              borderDash: [4, 4],
+              pointRadius: 0,
+              fill: false,
+              tension: 0
+            },
+            {
+              type: 'bar',
+              label: 'kWh',
+              data: values,
+              backgroundColor: barColors,
+              borderColor: borderColors,
+              borderWidth: 1.5,
+              borderRadius: 2
+            }
+          ]
+        },
+        options: {
+          animation: false,
+          responsive: false,
+          plugins: { legend: { display: false }, tooltip: { enabled: false } },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: {
+                color: '#0f172a',
+                font: { family: 'JetBrains Mono', size: 10, weight: 800 },
+                maxRotation: 0,
+                minRotation: 0,
+                autoSkip: false,
+                callback: function(val, idx) {
+                  return milestoneSet.has(idx) ? formatTime12h(rawLabels[idx]) : '';
+                }
+              }
+            },
+            y: {
+              grid: { color: '#e2e8f0', lineWidth: 1 },
+              ticks: {
+                color: '#0f172a',
+                font: { family: 'JetBrains Mono', size: 11, weight: 800 },
+                maxTicksLimit: 5,
+                callback: (v) => `${v}`
+              },
+              suggestedMax: maxBound,
+              beginAtZero: true
+            }
+          }
+        }
+      });
+
+      const dataUrl = offCanvas.toDataURL('image/png');
+      chart.destroy();
+      return dataUrl;
+    } catch (e) {
+      console.warn('createAuditCardChart error:', e);
+      return '';
+    }
+  },
+
+  createAuditFocusChart(motor, width = 1080, height = 340) {
+    if (!motor || !motor.timeline) return '';
+    try {
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = width;
+      offCanvas.height = height;
+      const ctx = offCanvas.getContext('2d');
+      if (!ctx) return '';
+      
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, width, height);
+
+      const timeline = motor.timeline || {};
+      const rawLabels = timeline.labels || [];
+      const values = timeline.values || [];
+      const loadPcts = timeline.load_pcts || [];
+      const statuses = timeline.statuses || [];
+
+      const isKohlu = motor.panel_type === 'KOHLU' || (motor.code && motor.code.startsWith('K'));
+      const overLimit = isKohlu ? 100.0 : 80.0;
+      const overLabel = isKohlu ? `100% Full Load Rated Limit (${motor.overload_threshold_kwh} kWh)` : `80% Overload Danger Limit (${motor.overload_threshold_kwh} kWh)`;
+
+      const barColors = loadPcts.map((pct, idx) => {
+        const st = statuses[idx] || '';
+        if (st === 'OVERLOAD' || pct > overLimit) return '#ef4444';
+        if (st === 'HEALTHY' || st === 'NORMAL' || pct >= 40.0) return '#10b981';
+        if (st === 'IDLE' || pct >= 10.0) return '#f59e0b';
+        return '#94a3b8';
+      });
+
+      const borderColors = loadPcts.map((pct, idx) => {
+        const st = statuses[idx] || '';
+        if (st === 'OVERLOAD' || pct > overLimit) return '#dc2626';
+        if (st === 'HEALTHY' || st === 'NORMAL' || pct >= 40.0) return '#059669';
+        if (st === 'IDLE' || pct >= 10.0) return '#d97706';
+        return '#64748b';
+      });
+
+      const overloadLine = Array(loadPcts.length).fill(isKohlu ? 100 : 80);
+      const healthyMinLine = Array(loadPcts.length).fill(50);
+      const idleMaxLine = Array(loadPcts.length).fill(40);
+
+      const maxPct = Math.max(...loadPcts, 0);
+      const suggestedMaxPct = Math.max(105, Math.ceil(maxPct * 1.15));
+
+      const chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: rawLabels.map(lbl => formatTime12h(lbl)),
+          datasets: [
+            {
+              type: 'line',
+              label: overLabel,
+              data: overloadLine,
+              borderColor: '#dc2626',
+              backgroundColor: '#dc2626',
+              borderWidth: 2.5,
+              borderDash: [8, 5],
+              pointRadius: 0,
+              fill: false,
+              order: 2,
+              yAxisID: 'y'
+            },
+            {
+              type: 'line',
+              label: `50% Healthy Target (${motor.healthy_min_kwh} kWh)`,
+              data: healthyMinLine,
+              borderColor: '#059669',
+              backgroundColor: '#059669',
+              borderWidth: 2.5,
+              borderDash: [8, 5],
+              pointRadius: 0,
+              fill: false,
+              order: 2,
+              yAxisID: 'y'
+            },
+            {
+              type: 'line',
+              label: `40% Low-Load Floor (${motor.idle_max_kwh} kWh)`,
+              data: idleMaxLine,
+              borderColor: '#d97706',
+              backgroundColor: '#d97706',
+              borderWidth: 2.2,
+              borderDash: [6, 4],
+              pointRadius: 0,
+              fill: false,
+              order: 2,
+              yAxisID: 'y'
+            },
+            {
+              type: 'bar',
+              label: 'Actual Operating Load (% of Rated Capacity)',
+              data: loadPcts,
+              backgroundColor: barColors,
+              borderColor: borderColors,
+              borderWidth: 1.5,
+              borderRadius: 3,
+              order: 1,
+              yAxisID: 'y'
+            }
+          ]
+        },
+        plugins: [
+          {
+            id: 'barLabelsAudit',
+            afterDatasetsDraw(chartInstance) {
+              const chartCtx = chartInstance.ctx;
+              const barMeta = chartInstance.getDatasetMeta(3);
+              if (!barMeta || !barMeta.data) return;
+
+              barMeta.data.forEach((bar, index) => {
+                const pct = loadPcts[index];
+                if (pct === undefined || pct === null) return;
+
+                let labelColor = '#0f172a';
+                let labelText = '';
+
+                if (pct > overLimit) {
+                  labelColor = '#dc2626';
+                  labelText = `${Math.round(pct)}%`;
+                } else if (pct >= 50.0) {
+                  labelColor = '#059669';
+                  labelText = `${Math.round(pct)}%`;
+                } else if (pct >= 10.0 && pct < 50.0) {
+                  labelColor = '#d97706';
+                  labelText = `${Math.round(pct)}%`;
+                } else {
+                  labelColor = '#475569';
+                  labelText = 'OFF';
+                }
+
+                chartCtx.save();
+                chartCtx.font = 'bold 11px "JetBrains Mono", monospace';
+                chartCtx.textAlign = 'center';
+                chartCtx.textBaseline = 'middle';
+
+                const textW = chartCtx.measureText(labelText).width;
+                const pillW = Math.max(textW + 8, 30);
+                const pillH = 17;
+                const yPos = Math.max(bar.y - 12, 14);
+
+                chartCtx.fillStyle = '#ffffff';
+                chartCtx.strokeStyle = labelColor;
+                chartCtx.lineWidth = 1.3;
+
+                chartCtx.beginPath();
+                if (chartCtx.roundRect) {
+                  chartCtx.roundRect(bar.x - (pillW / 2), yPos - (pillH / 2), pillW, pillH, 4);
+                } else {
+                  chartCtx.rect(bar.x - (pillW / 2), yPos - (pillH / 2), pillW, pillH);
+                }
+                chartCtx.fill();
+                chartCtx.stroke();
+
+                chartCtx.fillStyle = labelColor;
+                chartCtx.fillText(labelText, bar.x, yPos);
+                chartCtx.restore();
+              });
+            }
+          }
+        ],
+        options: {
+          animation: false,
+          responsive: false,
+          plugins: {
+            legend: {
+              position: 'top',
+              labels: {
+                color: '#0f172a',
+                font: { family: 'Outfit', size: 12, weight: 700 },
+                usePointStyle: true,
+                padding: 14
+              }
+            },
+            tooltip: { enabled: false }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: {
+                color: '#0f172a',
+                font: { family: 'JetBrains Mono', size: 11, weight: 700 },
+                maxRotation: 45,
+                minRotation: 35,
+                autoSkip: true,
+                maxTicksLimit: 24
+              }
+            },
+            y: {
+              position: 'left',
+              grid: { color: '#e2e8f0' },
+              ticks: {
+                color: '#0f172a',
+                font: { family: 'JetBrains Mono', size: 12, weight: 800 },
+                callback: (v) => `${v}%`
+              },
+              title: {
+                display: true,
+                text: 'Operating Load Percentage (% of Rated HP)',
+                color: '#0284c7',
+                font: { family: 'Outfit', size: 12, weight: 800 }
+              },
+              suggestedMax: suggestedMaxPct,
+              beginAtZero: true
+            },
+            y1: {
+              position: 'right',
+              grid: { display: false },
+              ticks: {
+                color: '#0f172a',
+                font: { family: 'JetBrains Mono', size: 11, weight: 700 },
+                callback: (v) => {
+                  const kwh = (v * (motor.rated_15m_kwh || 10) / 100).toFixed(1);
+                  return `${kwh} kWh`;
+                }
+              },
+              title: {
+                display: true,
+                text: '15-Minute Energy (kWh)',
+                color: '#0284c7',
+                font: { family: 'Outfit', size: 12, weight: 700 }
+              },
+              suggestedMax: suggestedMaxPct,
+              beginAtZero: true
+            }
+          }
+        }
+      });
+
+      const dataUrl = offCanvas.toDataURL('image/png');
+      chart.destroy();
+      return dataUrl;
+    } catch (e) {
+      console.warn('createAuditFocusChart error:', e);
+      return '';
+    }
   }
 };
