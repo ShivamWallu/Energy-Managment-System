@@ -2951,60 +2951,78 @@ body {
 /* ==========================================================================
    Executive Landscape PDF & Print Formatting Styles
    ========================================================================== */
-@media print {
-  @page {
-    size: A4 landscape;
-    margin: 8mm 10mm;
-  }
-  
-  html, body {
-    background: #ffffff !important;
-    color: #0f172a !important;
-    font-size: 11pt !important;
-    -webkit-print-color-adjust: exact !important;
-    print-color-adjust: exact !important;
-  }
+/* ==========================================================================
+   Executive PDF Preview Modal & Landscape Sheet Styles
+   ========================================================================== */
+#pdf-preview-modal {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  background: rgba(15, 23, 42, 0.75);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 9999;
+}
 
-  /* Hide app navigation and modal chrome when printing */
-  .header, 
-  .nav-tabs-wrapper, 
-  #login-modal, 
-  #upload-modal, 
-  #delete-account-modal, 
-  #account-blocked-modal,
-  .toast-container,
-  #btn-download-view-pdf,
-  #btn-open-upload,
-  .btn-view-details {
+.pdf-preview-dialog {
+  animation: modalScaleIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes modalScaleIn {
+  from { opacity: 0; transform: scale(0.96) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.pdf-document-sheet {
+  font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+  transition: transform 0.2s ease;
+}
+
+@media print {
+  /* When printing, show clean document sheet without UI chrome */
+  body > *:not(#pdf-preview-modal):not(.app-container) {
     display: none !important;
   }
-
-  .app-container {
+  #pdf-preview-modal.active {
+    position: static !important;
+    display: block !important;
+    background: transparent !important;
     padding: 0 !important;
     margin: 0 !important;
+  }
+  .pdf-preview-dialog {
+    max-width: 100% !important;
     width: 100% !important;
-  }
-
-  .chart-card {
-    border: 1px solid #cbd5e1 !important;
-    background: #ffffff !important;
+    border: none !important;
     box-shadow: none !important;
-    page-break-inside: avoid;
+    background: transparent !important;
   }
-
-  .expeller-motors-grid {
-    display: grid !important;
-    grid-template-columns: repeat(5, 1fr) !important;
-    gap: 8px !important;
+  .pdf-preview-dialog .modal-header,
+  .pdf-preview-dialog .btn,
+  .pdf-preview-dialog .btn-icon {
+    display: none !important;
   }
-
-  .motor-card {
-    border: 1px solid #cbd5e1 !important;
-    background: #f8fafc !important;
+  .pdf-preview-viewport {
+    background: transparent !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    overflow: visible !important;
+  }
+  .pdf-document-sheet {
     box-shadow: none !important;
-    page-break-inside: avoid;
+    border: none !important;
+    width: 100% !important;
+    min-width: 100% !important;
+    padding: 0 !important;
   }
 }
+
 
 
 

@@ -95,6 +95,9 @@ function initTabs() {
       const targetPane = document.getElementById(targetId);
       if (targetPane) targetPane.classList.add('active');
 
+      // Instantly reset scroll to top so tables/cards sit right at the top without unwanted space
+      window.scrollTo({ top: 0, behavior: 'instant' });
+
       // Trigger sub-view lazy loading
       if (targetId === 'tab-machines') {
         dashboard.loadTelemetryMatrixAndLogs();
@@ -220,6 +223,29 @@ window.appRefreshReports = async function() {
     // Group reports by upload session / batch and shift date
     const groupMap = new Map();
     for (const r of reports) {
+      // Normalize upload timestamp to Indian Standard Time (IST) / local time
+      if (r.upload_timestamp_iso) {
+        try {
+          const iso = r.upload_timestamp_iso.endsWith('Z') || r.upload_timestamp_iso.includes('+')
+            ? r.upload_timestamp_iso 
+            : r.upload_timestamp_iso + 'Z';
+          const dt = new Date(iso);
+          if (!isNaN(dt.getTime())) {
+            const day = String(dt.getDate()).padStart(2, '0');
+            const month = String(dt.getMonth() + 1).padStart(2, '0');
+            const year = dt.getFullYear();
+            let hours = dt.getHours();
+            const mins = String(dt.getMinutes()).padStart(2, '0');
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            hours = hours % 12 || 12;
+            const strH = String(hours).padStart(2, '0');
+            r.upload_date = `${day}/${month}/${year}`;
+            r.upload_time = `${strH}:${mins} ${ampm}`;
+            r.upload_timestamp = `${day}/${month}/${year}, ${strH}:${mins} ${ampm}`;
+          }
+        } catch (e) {}
+      }
+
       // Each distinct upload batch (or date+time) gets its own distinct group
       const gKey = r.batch_id 
         ? `batch_${r.batch_id}` 

@@ -115,7 +115,7 @@ def _process_report_bytes(
         created_by_in_report=meta.get("created_by"),
         report_created_on=meta.get("created_on"),
         time_range=meta.get("time_range"),
-        upload_timestamp=datetime.datetime.now(),
+        upload_timestamp=datetime.datetime.utcnow(),
         total_intervals=len(parsed["intervals"]),
         total_columns=len(parsed["columns"]),
         validation_status=val_status,
@@ -374,10 +374,23 @@ def list_reports(
         username = user_obj.username if user_obj else "admin"
         uploader_name = user_obj.full_name if (user_obj and user_obj.full_name) else username
         
-        # Upload date & time formatted strictly as DD/MM/YYYY, hh:mm A
-        upload_date_str = r.upload_timestamp.strftime("%d/%m/%Y") if r.upload_timestamp else "—"
-        upload_time_str = r.upload_timestamp.strftime("%I:%M %p") if r.upload_timestamp else "—"
-        formatted_upload_time = r.upload_timestamp.strftime("%d/%m/%Y, %I:%M %p") if r.upload_timestamp else "—"
+        # Upload date & time formatted strictly in Indian Standard Time (IST, UTC+5:30) as DD/MM/YYYY, hh:mm A
+        IST_TZ = datetime.timezone(datetime.timedelta(hours=5, minutes=30))
+        if r.upload_timestamp:
+            if r.upload_timestamp.tzinfo is None:
+                ts_utc = r.upload_timestamp.replace(tzinfo=datetime.timezone.utc)
+            else:
+                ts_utc = r.upload_timestamp.astimezone(datetime.timezone.utc)
+            ts_ist = ts_utc.astimezone(IST_TZ)
+            upload_date_str = ts_ist.strftime("%d/%m/%Y")
+            upload_time_str = ts_ist.strftime("%I:%M %p")
+            formatted_upload_time = ts_ist.strftime("%d/%m/%Y, %I:%M %p")
+            upload_iso = ts_utc.isoformat()
+        else:
+            upload_date_str = "—"
+            upload_time_str = "—"
+            formatted_upload_time = "—"
+            upload_iso = None
 
         # Extract or construct session batch ID
         batch_id = meta_json.get("batch_id")

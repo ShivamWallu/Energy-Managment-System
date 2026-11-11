@@ -202,7 +202,7 @@
 
           <!-- Top-Right Actions: Professional Landscape PDF Download Button (Image 5) -->
           <div style="display:flex; align-items:center; gap:0.6rem;">
-            <button id="btn-download-view-pdf" class="btn btn-primary" onclick="dashboard.downloadCurrentViewPDF()" title="Download current telemetry &amp; motor health view as an executive Landscape PDF" style="display:inline-flex; align-items:center; gap:0.5rem; padding:0.55rem 1.15rem; font-size:0.84rem; font-weight:700; border-radius:8px; box-shadow:0 4px 14px rgba(0,210,255,0.25);">
+            <button id="btn-download-view-pdf" class="btn btn-primary" onclick="dashboard.openPDFPreviewModal()" title="Preview and download current telemetry &amp; motor health view as an executive Landscape PDF" style="display:inline-flex; align-items:center; gap:0.5rem; padding:0.55rem 1.15rem; font-size:0.84rem; font-weight:700; border-radius:8px; box-shadow:0 4px 14px rgba(0,210,255,0.25);">
               <i class="fa-solid fa-file-pdf" style="font-size:1rem; color:#fee300;"></i>
               <span>Download PDF Report</span>
             </button>
@@ -360,7 +360,6 @@
             </div>
           </details>
         </div>
-      </div>
     </section>
 
     <!-- TAB 2: UPLOADED TELEMETRY MATRIX & SHIFT LOGS -->
@@ -372,21 +371,11 @@
           <div>
             <div style="display:flex; align-items:center; gap:0.6rem;">
               <h3 class="chart-title" style="font-size:1.05rem; margin:0;"><i class="fa-solid fa-clock-rotate-left text-cyan"></i> Shift Ingestion Logs &amp; Upload History</h3>
-              <span id="upload-logs-user-filter-badge" class="badge badge-info" style="font-size:0.75rem;"><i class="fa-solid fa-user-check"></i> Showing Logged-in User</span>
             </div>
             <p class="chart-subtitle" style="margin:0.15rem 0 0 0; font-size:0.78rem;">Click any shift row or "View in Matrix" to immediately inspect its 15-Minute Telemetry Matrix below. Date format: <strong>DD/MM/YYYY</strong>.</p>
           </div>
           
           <div style="display:flex; gap:0.6rem; align-items:center; flex-wrap:wrap;">
-            <!-- Professional Segmented Shift Filter Pill -->
-            <div class="upload-scope-selector" style="display:inline-flex; background:rgba(0,0,0,0.3); border:1px solid rgba(0,210,255,0.25); border-radius:var(--radius-sm); padding:2px;">
-              <button type="button" class="scope-btn active" id="btn-filter-my-uploads" onclick="dashboard.toggleUploadLogsFilter(true)" style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.32rem 0.85rem; border-radius:4px; font-size:0.78rem; font-weight:700; border:none; cursor:pointer; background:var(--accent-cyan); color:#060b18; transition:all 0.2s ease;">
-                <i class="fa-solid fa-user-check"></i> My Uploads
-              </button>
-              <button type="button" class="scope-btn" id="btn-filter-all-uploads" onclick="dashboard.toggleUploadLogsFilter(false)" style="display:inline-flex; align-items:center; gap:0.4rem; padding:0.32rem 0.85rem; border-radius:4px; font-size:0.78rem; font-weight:600; border:none; cursor:pointer; background:transparent; color:var(--text-secondary); transition:all 0.2s ease;">
-                <i class="fa-solid fa-layer-group"></i> All Plant Shifts
-              </button>
-            </div>
             <a href="/api/reports/template/csv" download="EMS_Standard_Column_Template.csv" class="btn btn-secondary btn-sm" style="padding:0.32rem 0.75rem; font-size:0.78rem;" title="Download standard CSV layout with correct column order">
               <i class="fa-solid fa-file-csv text-emerald"></i> Template CSV
             </a>
@@ -701,6 +690,43 @@
       </div>
     </section>
   </main>
+</div>
+
+<!-- PDF PREVIEW & EXPORT MODAL -->
+<div id="pdf-preview-modal" class="modal-overlay" style="display:none; z-index:9999;">
+  <div class="modal-dialog pdf-preview-dialog" style="max-width:1160px; width:95vw; max-height:92vh; display:flex; flex-direction:column; padding:0; border-radius:12px; overflow:hidden; background:var(--bg-card); box-shadow:0 25px 60px rgba(0,0,0,0.5); border:1px solid var(--border-subtle);">
+    <!-- Modal Header -->
+    <div class="modal-header" style="display:flex; justify-content:space-between; align-items:center; padding:0.85rem 1.4rem; border-bottom:1px solid var(--border-subtle); background:var(--bg-elevated);">
+      <div style="display:flex; align-items:center; gap:0.75rem;">
+        <div style="width:36px; height:36px; border-radius:8px; background:rgba(0,210,255,0.12); display:flex; align-items:center; justify-content:center; color:var(--accent-cyan); font-size:1.15rem;">
+          <i class="fa-solid fa-file-pdf"></i>
+        </div>
+        <div>
+          <h3 class="modal-title" style="margin:0; font-size:1.05rem; font-weight:800; color:var(--text-primary);">Audit PDF Preview</h3>
+          <span style="font-size:0.75rem; color:var(--text-muted);">Executive Landscape 15-Minute SCADA Telemetry &amp; Motor Health Report</span>
+        </div>
+      </div>
+      <div style="display:flex; align-items:center; gap:0.6rem;">
+        <button type="button" class="btn btn-secondary btn-sm" onclick="dashboard.printPreviewPDF()" style="font-weight:700;">
+          <i class="fa-solid fa-print"></i> Print / Save
+        </button>
+        <button type="button" id="btn-modal-download-pdf" class="btn btn-primary btn-sm" onclick="dashboard.generateAndSavePDF()" style="font-weight:800; padding:0.45rem 1.1rem; box-shadow:0 4px 14px rgba(0,210,255,0.3);">
+          <i class="fa-solid fa-download"></i> Download PDF
+        </button>
+        <button type="button" class="btn-icon" onclick="dashboard.closePDFPreview()" title="Close Preview" style="border:none; width:32px; height:32px; font-size:1.1rem;">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Modal Body: Scrollable Preview Sheet Container -->
+    <div class="pdf-preview-viewport" style="flex:1; overflow-y:auto; overflow-x:auto; padding:1.25rem; background:#334155; display:flex; justify-content:center;">
+      <!-- The Printable Document Container -->
+      <div id="pdf-preview-document-container" class="pdf-document-sheet" style="background:#ffffff; color:#0f172a; width:1080px; min-width:1080px; padding:28px 32px; box-shadow:0 8px 30px rgba(0,0,0,0.35); border-radius:4px; box-sizing:border-box;">
+        <!-- Populated dynamically by dashboard.openPDFPreviewModal() -->
+      </div>
+    </div>
+  </div>
 </div>
 
 <!-- Delete User Account Permanent Confirmation Modal (Admin Only) -->

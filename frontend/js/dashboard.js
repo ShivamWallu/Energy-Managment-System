@@ -1322,7 +1322,7 @@ const dashboard = {
   },
 
   // Telemetry Matrix & Upload Logs (Tab 2)
-  filterOnlyMyUploads: true,
+  filterOnlyMyUploads: false,
 
   toggleUploadLogsFilter(showOnlyMy) {
     this.filterOnlyMyUploads = showOnlyMy;
@@ -1554,13 +1554,15 @@ const dashboard = {
     });
   },
 
-  async downloadCurrentViewPDF() {
+  currentPDFMeta: null,
+
+  async openPDFPreviewModal() {
     try {
-      showToast('Preparing executive landscape PDF report...', 'info');
+      showToast('Preparing audit PDF preview...', 'info');
 
       // 1. Report Metadata
-      const sel = document.getElementById('report-selector');
-      const reportText = sel ? (sel.options[sel.selectedIndex]?.text || 'Active Report') : 'Active Report';
+      const sel = document.getElementById('shift-filter-select') || document.getElementById('report-selector');
+      const reportText = sel ? (sel.options[sel.selectedIndex]?.text || 'Active Plant Shift') : 'Active Plant Shift';
       const activeShift = document.querySelector('.shift-radio-label.active-day')
         ? 'Day Shift (07:00 AM – 07:00 PM)'
         : (document.querySelector('.shift-radio-label.active-night')
@@ -1584,6 +1586,25 @@ const dashboard = {
       // Check if Single Motor Focus view is active
       const singleFocusEl = document.getElementById('expeller-single-motor-focus');
       const isSingleFocus = singleFocusEl && singleFocusEl.style.display !== 'none';
+
+      // Helper to capture base64 from loaded logo image
+      const captureImgDataUrl = (selector) => {
+        const img = document.querySelector(selector);
+        if (!img) return '';
+        try {
+          const c = document.createElement('canvas');
+          c.width = img.naturalWidth || 64;
+          c.height = img.naturalHeight || 64;
+          const ctx = c.getContext('2d');
+          ctx.drawImage(img, 0, 0, c.width, c.height);
+          return c.toDataURL('image/png');
+        } catch (e) {
+          return img.src || '';
+        }
+      };
+
+      const kogmLogo = captureImgDataUrl('img[alt*="KOGM"]') || '/img/02_Left_Top_Side_Panel_KOGM.png';
+      const mashalLogo = captureImgDataUrl('img[alt*="Mashal"]') || '/img/03_Right_Top_Side_Panel_MASHAL.png';
 
       // Extract Motor Data & Canvas Snapshots
       let motorItems = [];
@@ -1610,6 +1631,7 @@ const dashboard = {
       } else {
         const motorCards = document.querySelectorAll('#expeller-motors-grid .motor-card');
         motorCards.forEach(card => {
+          if (card.style.display === 'none') return; // Skip filtered out cards
           const title = card.querySelector('.motor-title')?.innerText?.trim() || 'Motor';
           const hpTag = card.querySelector('.motor-hp-tag')?.innerText?.trim() || '';
           const colTag = card.querySelector('.motor-col-tag')?.innerText?.trim() || '';
@@ -1641,31 +1663,16 @@ const dashboard = {
         });
       }
 
-      // Generate HTML printable container (Landscape A4: 297mm x 210mm)
-      const printWrapper = document.createElement('div');
-      printWrapper.id = 'pdf-export-container';
-      printWrapper.style.cssText = `
-        position: fixed;
-        left: -9999px;
-        top: 0;
-        width: 1100px;
-        background: #ffffff;
-        color: #0f172a;
-        font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-        padding: 24px 30px;
-        box-sizing: border-box;
-      `;
-
       // Status pill color helper
       const getPillStyle = (status) => {
         const s = (status || '').toUpperCase();
-        if (s.includes('HEALTHY') || s.includes('OPTIMAL') || s.includes('GOOD')) {
+        if (s.includes('HEALTHY') || s.includes('OPTIMAL') || s.includes('TARGET') || s.includes('GOOD')) {
           return 'background:#d1fae5; color:#065f46; border:1px solid #a7f3d0;';
         }
         if (s.includes('LOW') || s.includes('IDLE')) {
           return 'background:#fef3c7; color:#92400e; border:1px solid #fde68a;';
         }
-        if (s.includes('OVERLOAD') || s.includes('HIGH')) {
+        if (s.includes('OVERLOAD') || s.includes('HIGH') || s.includes('CRITICAL')) {
           return 'background:#fee2e2; color:#991b1b; border:1px solid #fca5a5;';
         }
         return 'background:#f1f5f9; color:#475569; border:1px solid #cbd5e1;';
@@ -1681,25 +1688,25 @@ const dashboard = {
               <div style="border: 1px solid #cbd5e1; border-radius: 8px; background: #f8fafc; padding: 10px; display:flex; flex-direction:column; justify-content:space-between;">
                 <div>
                   <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px;">
-                    <strong style="font-size: 0.85rem; color:#0f172a;">${m.title}</strong>
+                    <strong style="font-size: 0.82rem; color:#0f172a;">${m.title}</strong>
                     <span style="font-size: 0.65rem; font-weight:700; padding: 2px 6px; border-radius: 4px; ${getPillStyle(m.badge)}">${m.badge}</span>
                   </div>
 
                   <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 4px; font-size: 0.68rem; margin-bottom: 6px;">
                     <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:4px; padding:3px 5px;">
-                      <span style="color:#64748b; display:block;">MIN:</span>
+                      <span style="color:#64748b; display:block; font-size:0.6rem;">MIN:</span>
                       <strong style="color:#0f172a;">${m.minVal}</strong>
                     </div>
                     <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:4px; padding:3px 5px;">
-                      <span style="color:#64748b; display:block;">MAX:</span>
+                      <span style="color:#64748b; display:block; font-size:0.6rem;">MAX:</span>
                       <strong style="color:#dc2626;">${m.maxVal}</strong>
                     </div>
                     <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:4px; padding:3px 5px;">
-                      <span style="color:#64748b; display:block;">AVG:</span>
+                      <span style="color:#64748b; display:block; font-size:0.6rem;">AVG:</span>
                       <strong style="color:#059669;">${m.avgVal}</strong>
                     </div>
                     <div style="background:#ffffff; border:1px solid #e2e8f0; border-radius:4px; padding:3px 5px;">
-                      <span style="color:#64748b; display:block;">SUM:</span>
+                      <span style="color:#64748b; display:block; font-size:0.6rem;">SUM:</span>
                       <strong style="color:#0284c7;">${m.sumVal}</strong>
                     </div>
                   </div>
@@ -1733,13 +1740,36 @@ const dashboard = {
         </tr>
       `).join('');
 
-      printWrapper.innerHTML = `
+      // Formatted IST generation date
+      const now = new Date();
+      const istDateStr = `${String(now.getDate()).padStart(2, '0')}/${String(now.getMonth()+1).padStart(2, '0')}/${now.getFullYear()}`;
+      let istHours = now.getHours();
+      const istMins = String(now.getMinutes()).padStart(2, '0');
+      const istAmpm = istHours >= 12 ? 'PM' : 'AM';
+      istHours = istHours % 12 || 12;
+      const istTimeStr = `${String(istHours).padStart(2, '0')}:${istMins} ${istAmpm}`;
+
+      // Clean filename
+      const cleanDate = (reportText || 'Report').replace(/[^a-zA-Z0-9]/g, '_');
+      const cleanShift = (activeShift || 'Shift').replace(/[^a-zA-Z0-9]/g, '_');
+      const filename = `EMS_Audit_Report_${cleanDate}_${cleanShift}.pdf`;
+
+      this.currentPDFMeta = {
+        filename,
+        reportText,
+        activeShift
+      };
+
+      const container = document.getElementById('pdf-preview-document-container');
+      if (!container) return;
+
+      container.innerHTML = `
         <!-- Header Banner -->
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #0284c7; padding-bottom: 12px; margin-bottom: 14px;">
           <div style="display:flex; align-items:center; gap: 14px;">
-            <div style="display:flex; gap: 6px;">
-              <img src="/Images/logos/02_Left_Top_Side_Panel_KOGM.png" style="height: 48px; border-radius: 6px; border: 1px solid #e2e8f0;" alt="KOGM">
-              <img src="/Images/logos/03_Right_Top_Side_Panel_MASHAL.png" style="height: 48px; border-radius: 6px; border: 1px solid #e2e8f0;" alt="Mashal">
+            <div style="display:flex; gap: 8px;">
+              <img src="${kogmLogo}" style="height: 48px; width: 48px; object-fit: cover; border-radius: 6px; border: 1px solid #e2e8f0;" alt="KOGM">
+              <img src="${mashalLogo}" style="height: 48px; width: 48px; object-fit: contain; border-radius: 6px; border: 1px solid #e2e8f0;" alt="Mashal">
             </div>
             <div>
               <div style="font-size: 1.15rem; font-weight: 800; color: #0f172a; letter-spacing: 0.3px;">MASHAL MUSTARD OIL PLANT • SCADA 415V BUS</div>
@@ -1751,7 +1781,7 @@ const dashboard = {
           <div style="text-align:right; font-size: 0.74rem; line-height: 1.45; border-left: 1px solid #e2e8f0; padding-left: 16px;">
             <div><span style="color:#64748b;">Report:</span> <strong style="color:#0f172a;">${reportText}</strong></div>
             <div><span style="color:#64748b;">Shift:</span> <strong style="color:#0284c7;">${activeShift}</strong></div>
-            <div><span style="color:#64748b;">Generated On:</span> <strong style="color:#0f172a;">${new Date().toLocaleDateString('en-GB')} ${new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} IST</strong></div>
+            <div><span style="color:#64748b;">Generated On:</span> <strong style="color:#0f172a;">${istDateStr} at ${istTimeStr} IST</strong></div>
             <div><span style="color:#64748b;">Auditor:</span> <strong style="color:#0f172a;">${auditorName} (${auditorRole})</strong></div>
           </div>
         </div>
@@ -1830,63 +1860,83 @@ const dashboard = {
         </div>
       `;
 
-      document.body.appendChild(printWrapper);
+      // Open Modal
+      const modal = document.getElementById('pdf-preview-modal');
+      if (modal) {
+        modal.style.display = 'flex';
+        modal.classList.add('active');
+      }
+      showToast('Audit report preview loaded. Click "Download PDF" to save file.', 'success');
+    } catch (err) {
+      console.error('PDF Preview Error:', err);
+      showToast(`PDF Preview error: ${err.message}`, 'error');
+    }
+  },
 
-      // Clean filename
-      const cleanDate = (reportText || 'Report').replace(/[^a-zA-Z0-9]/g, '_');
-      const cleanShift = (activeShift || 'Shift').replace(/[^a-zA-Z0-9]/g, '_');
-      const filename = `EMS_Audit_Report_${cleanDate}_${cleanShift}.pdf`;
+  async generateAndSavePDF() {
+    const btn = document.getElementById('btn-modal-download-pdf');
+    const originalText = btn ? btn.innerHTML : 'Download PDF';
+    try {
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Rendering PDF...';
+      }
+      showToast('Rendering high-resolution executive landscape PDF...', 'info');
 
-      // If html2pdf is available, download directly
+      const element = document.getElementById('pdf-preview-document-container');
+      if (!element) throw new Error('Preview container not found');
+
+      const filename = this.currentPDFMeta?.filename || `EMS_Audit_Report_${Date.now()}.pdf`;
+
       if (typeof window.html2pdf === 'function') {
         const opt = {
           margin: [6, 8, 6, 8],
           filename: filename,
           image: { type: 'jpeg', quality: 0.98 },
-          html2canvas: { scale: 2, useCORS: true, letterRendering: true, logging: false },
+          html2canvas: {
+            scale: 2,
+            useCORS: true,
+            letterRendering: true,
+            logging: false,
+            windowWidth: 1100,
+            scrollX: 0,
+            scrollY: 0
+          },
           jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
           pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
         };
 
-        await window.html2pdf().set(opt).from(printWrapper).save();
-        document.body.removeChild(printWrapper);
+        await window.html2pdf().set(opt).from(element).save();
         showToast('PDF downloaded successfully in executive landscape layout!', 'success');
       } else {
-        // Fallback: Landscape window print
-        const printWin = window.open('', '_blank');
-        if (printWin) {
-          printWin.document.write(`
-            <html>
-              <head>
-                <title>${filename}</title>
-                <style>
-                  @page { size: A4 landscape; margin: 8mm; }
-                  body { margin: 0; padding: 0; background: #fff; }
-                </style>
-              </head>
-              <body>
-                ${printWrapper.innerHTML}
-                <script>
-                  window.onload = function() {
-                    window.print();
-                    setTimeout(function() { window.close(); }, 1000);
-                  };
-                </script>
-              </body>
-            </html>
-          `);
-          printWin.document.close();
-          document.body.removeChild(printWrapper);
-          showToast('Print dialog opened in landscape layout.', 'info');
-        } else {
-          document.body.removeChild(printWrapper);
-          window.print();
-        }
+        window.print();
       }
     } catch (err) {
       console.error('PDF Export Error:', err);
-      showToast(`PDF Export note: ${err.message}`, 'error');
+      showToast(`PDF Export error: ${err.message}`, 'error');
+    } finally {
+      if (btn) {
+        btn.disabled = false;
+        btn.innerHTML = originalText;
+      }
     }
+  },
+
+  printPreviewPDF() {
+    window.print();
+  },
+
+  closePDFPreview() {
+    const modal = document.getElementById('pdf-preview-modal');
+    if (modal) {
+      modal.style.display = 'none';
+      modal.classList.remove('active');
+    }
+  },
+
+  // Backward compatibility alias
+  async downloadCurrentViewPDF() {
+    return this.openPDFPreviewModal();
   },
 
   initExpellerTabs() {
