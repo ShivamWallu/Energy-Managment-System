@@ -1896,25 +1896,17 @@ body {
   border: 1px solid transparent;
   white-space: nowrap;
 }
-.motor-status-pill.pill-optimal {
+.motor-status-pill.pill-optimal,
+.motor-status-pill.pill-normal {
   background: rgba(16, 185, 129, 0.12);
   color: #10b981;
   border-color: rgba(16, 185, 129, 0.4);
 }
-[data-theme="light"] .motor-status-pill.pill-optimal {
+[data-theme="light"] .motor-status-pill.pill-optimal,
+[data-theme="light"] .motor-status-pill.pill-normal {
   background: #ecfdf5;
   color: #059669;
   border-color: #a7f3d0;
-}
-.motor-status-pill.pill-normal {
-  background: rgba(2, 132, 199, 0.12);
-  color: var(--accent-cyan);
-  border-color: rgba(2, 132, 199, 0.35);
-}
-[data-theme="light"] .motor-status-pill.pill-normal {
-  background: #f0f9ff;
-  color: #0284c7;
-  border-color: #bae6fd;
 }
 .motor-status-pill.pill-low {
   background: rgba(245, 158, 11, 0.12);
@@ -2001,25 +1993,17 @@ body {
   color: #b91c1c;
   border-color: #fecaca;
 }
-.load-zone-tag.zone-healthy {
+.load-zone-tag.zone-healthy,
+.load-zone-tag.zone-normal {
   background: rgba(16, 185, 129, 0.12);
   color: #00f59b;
   border: 1px solid rgba(16, 185, 129, 0.4);
 }
-[data-theme="light"] .load-zone-tag.zone-healthy {
+[data-theme="light"] .load-zone-tag.zone-healthy,
+[data-theme="light"] .load-zone-tag.zone-normal {
   background: #ecfdf5;
   color: #047857;
   border-color: #a7f3d0;
-}
-.load-zone-tag.zone-normal {
-  background: rgba(2, 132, 199, 0.12);
-  color: #38bdf8;
-  border: 1px solid rgba(2, 132, 199, 0.35);
-}
-[data-theme="light"] .load-zone-tag.zone-normal {
-  background: #f0f9ff;
-  color: #0284c7;
-  border-color: #bae6fd;
 }
 .load-zone-tag.zone-idle {
   background: rgba(245, 158, 11, 0.12);
@@ -2058,11 +2042,9 @@ body {
 .load-gauge-fill.fill-overload {
   background: linear-gradient(90deg, #f59e0b, #ef4444);
 }
-.load-gauge-fill.fill-healthy {
-  background: linear-gradient(90deg, #10b981, #00f59b);
-}
+.load-gauge-fill.fill-healthy,
 .load-gauge-fill.fill-normal {
-  background: linear-gradient(90deg, #0284c7, #38bdf8);
+  background: linear-gradient(90deg, #10b981, #00f59b);
 }
 .load-gauge-fill.fill-idle {
   background: #f59e0b;

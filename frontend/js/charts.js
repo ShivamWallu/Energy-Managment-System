@@ -441,27 +441,17 @@ const charts = {
 
     const barColors = loadPcts.map((pct, idx) => {
       const st = statuses[idx] || '';
-      if (st === 'OVERLOAD' || st === 'ANOMALY') return tc.overloadBg;
-      if (st === 'HEALTHY') return tc.healthyBg;
-      if (st === 'NORMAL') return tc.isLight ? '#60a5fa' : '#38bdf8';
-      if (st === 'IDLE') return tc.idleBg;
-      if (st === 'STOPPED') return tc.stoppedSlice;
-      if (pct > overLimit) return tc.overloadBg;
-      if (pct >= 40.0) return tc.healthyBg;
-      if (pct >= 10.0) return tc.idleBg;
+      if (st === 'OVERLOAD' || st === 'ANOMALY' || pct > overLimit) return tc.overloadBg;
+      if (st === 'HEALTHY' || st === 'NORMAL' || pct >= 40.0) return tc.healthyBg;
+      if (st === 'IDLE' || pct >= 10.0) return tc.idleBg;
       return tc.stoppedSlice; // < 10%
     });
 
     const borderColors = loadPcts.map((pct, idx) => {
       const st = statuses[idx] || '';
-      if (st === 'OVERLOAD' || st === 'ANOMALY') return tc.overloadBorder;
-      if (st === 'HEALTHY') return tc.healthyBorder;
-      if (st === 'NORMAL') return tc.isLight ? '#2563eb' : '#0ea5e9';
-      if (st === 'IDLE') return tc.idleBorder;
-      if (st === 'STOPPED') return tc.stoppedSlice;
-      if (pct > overLimit) return tc.overloadBorder;
-      if (pct >= 40.0) return tc.healthyBorder;
-      if (pct >= 10.0) return tc.idleBorder;
+      if (st === 'OVERLOAD' || st === 'ANOMALY' || pct > overLimit) return tc.overloadBorder;
+      if (st === 'HEALTHY' || st === 'NORMAL' || pct >= 40.0) return tc.healthyBorder;
+      if (st === 'IDLE' || pct >= 10.0) return tc.idleBorder;
       return tc.stoppedSlice;
     });
 
@@ -560,10 +550,8 @@ const charts = {
                   desc = 'Telemetry anomaly; verify the meter reading';
                 } else if (pct > overThreshold) {
                   desc = '🚨 Overload Risk (>80%)';
-                } else if (pct >= 50.0) {
-                  desc = '🟢 Optimal (50%–80%)';
                 } else if (pct >= 40.0) {
-                  desc = '🔵 Normal (40%–50%)';
+                  desc = '🟢 Normal & Optimal (40%–80%)';
                 } else if (pct >= 10.0) {
                   desc = '🟡 Low Load (10%–40%)';
                 } else {
@@ -634,30 +622,20 @@ const charts = {
     const overLimit = 80.0;
     const overLabel = `80% Overload Danger Limit (${motor.overload_threshold_kwh || 0} kWh)`;
 
-    // Color mapping synchronized 1:1 with interval statuses & summary counts
+    // Color mapping synchronized 1:1 with interval statuses & summary counts (Normal & Optimal = Green)
     const barColors = loadPcts.map((pct, idx) => {
       const st = statuses[idx] || '';
-      if (st === 'OVERLOAD' || st === 'ANOMALY') return tc.overloadBg;
-      if (st === 'HEALTHY') return tc.healthyBg;
-      if (st === 'NORMAL') return tc.isLight ? '#60a5fa' : '#38bdf8';
-      if (st === 'IDLE') return tc.idleBg;
-      if (st === 'STOPPED') return tc.stoppedSlice;
-      if (pct > overLimit) return tc.overloadBg;
-      if (pct >= 40.0) return tc.healthyBg;
-      if (pct >= 10.0) return tc.idleBg;
+      if (st === 'OVERLOAD' || st === 'ANOMALY' || pct > overLimit) return tc.overloadBg;
+      if (st === 'HEALTHY' || st === 'NORMAL' || pct >= 40.0) return tc.healthyBg;
+      if (st === 'IDLE' || pct >= 10.0) return tc.idleBg;
       return tc.stoppedSlice;
     });
 
     const borderColors = loadPcts.map((pct, idx) => {
       const st = statuses[idx] || '';
-      if (st === 'OVERLOAD' || st === 'ANOMALY') return tc.overloadBorder;
-      if (st === 'HEALTHY') return tc.healthyBorder;
-      if (st === 'NORMAL') return tc.isLight ? '#2563eb' : '#0ea5e9';
-      if (st === 'IDLE') return tc.idleBorder;
-      if (st === 'STOPPED') return tc.stoppedSlice;
-      if (pct > overLimit) return tc.overloadBorder;
-      if (pct >= 40.0) return tc.healthyBorder;
-      if (pct >= 10.0) return tc.idleBorder;
+      if (st === 'OVERLOAD' || st === 'ANOMALY' || pct > overLimit) return tc.overloadBorder;
+      if (st === 'HEALTHY' || st === 'NORMAL' || pct >= 40.0) return tc.healthyBorder;
+      if (st === 'IDLE' || pct >= 10.0) return tc.idleBorder;
       return tc.stoppedSlice;
     });
 
@@ -758,10 +736,8 @@ const charts = {
                   labelText = 'SPIKE';
                 } else if (pct > overLimit) {
                   labelColor = tc.isLight ? '#dc2626' : '#ff2a55';
-                } else if (pct >= 50.0) {
-                  labelColor = tc.isLight ? '#059669' : '#00f59b';
                 } else if (pct >= 40.0) {
-                  labelColor = tc.isLight ? '#2563eb' : '#38bdf8';
+                  labelColor = tc.isLight ? '#059669' : '#00f59b';
                 } else if (pct >= 10.0) {
                   labelColor = tc.isLight ? '#d97706' : '#ffb703';
                 }
@@ -861,11 +837,9 @@ const charts = {
                   desc = 'Telemetry anomaly; verify the meter reading';
                 } else if (pct > overLimit) {
                   desc = '🚨 Overload (>80%)';
-                } else if (pct >= 50.0) {
-                  desc = '🟢 Optimal (50%–80%)';
-                } else if (pct >= 40.0 && pct < 50.0) {
-                  desc = '🔵 Normal (40%–50%)';
-                } else if (pct >= 10.0 && pct < 40.0) {
+                } else if (pct >= 40.0) {
+                  desc = '🟢 Normal & Optimal (40%–80%)';
+                } else if (pct >= 10.0) {
                   desc = '🟡 Low Load (10%–40%)';
                 } else {
                   desc = '⏹️ Offline / 0 kWh';
@@ -948,8 +922,7 @@ const charts = {
       const barColors = loadPcts.map((pct, idx) => {
         const st = statuses[idx] || '';
         if (st === 'OVERLOAD' || st === 'ANOMALY' || pct > overLimit) return '#ef4444';
-        if (st === 'NORMAL') return '#3b82f6';
-        if (st === 'HEALTHY' || pct >= 50.0) return '#10b981';
+        if (st === 'HEALTHY' || st === 'NORMAL' || pct >= 40.0) return '#10b981';
         if (st === 'IDLE' || pct >= 10.0) return '#f59e0b';
         return '#cbd5e1';
       });
@@ -957,8 +930,7 @@ const charts = {
       const borderColors = loadPcts.map((pct, idx) => {
         const st = statuses[idx] || '';
         if (st === 'OVERLOAD' || st === 'ANOMALY' || pct > overLimit) return '#dc2626';
-        if (st === 'NORMAL') return '#2563eb';
-        if (st === 'HEALTHY' || pct >= 50.0) return '#059669';
+        if (st === 'HEALTHY' || st === 'NORMAL' || pct >= 40.0) return '#059669';
         if (st === 'IDLE' || pct >= 10.0) return '#d97706';
         return '#94a3b8';
       });
@@ -1112,8 +1084,7 @@ const charts = {
       const barColors = loadPcts.map((pct, idx) => {
         const st = statuses[idx] || '';
         if (st === 'OVERLOAD' || st === 'ANOMALY' || pct > overLimit) return '#ef4444';
-        if (st === 'NORMAL') return '#3b82f6';
-        if (st === 'HEALTHY' || pct >= 50.0) return '#10b981';
+        if (st === 'HEALTHY' || st === 'NORMAL' || pct >= 40.0) return '#10b981';
         if (st === 'IDLE' || pct >= 10.0) return '#f59e0b';
         return '#94a3b8';
       });
@@ -1121,8 +1092,7 @@ const charts = {
       const borderColors = loadPcts.map((pct, idx) => {
         const st = statuses[idx] || '';
         if (st === 'OVERLOAD' || st === 'ANOMALY' || pct > overLimit) return '#dc2626';
-        if (st === 'NORMAL') return '#2563eb';
-        if (st === 'HEALTHY' || pct >= 50.0) return '#059669';
+        if (st === 'HEALTHY' || st === 'NORMAL' || pct >= 40.0) return '#059669';
         if (st === 'IDLE' || pct >= 10.0) return '#d97706';
         return '#64748b';
       });
