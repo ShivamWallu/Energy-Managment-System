@@ -2533,51 +2533,53 @@ body {
   display: none !important;
 }
 
-/* Executive Auth Showcase Container (Machine 1 & Machine 2 + Login Dialog) */
+/* Executive Unified Split-Card Showcase Container (Seamless Flush Integration) */
 .auth-showcase-container {
   display: flex;
   align-items: stretch;
   justify-content: center;
-  gap: 1.75rem;
-  max-width: 960px;
+  gap: 0 !important; /* Zero gap between images and login card */
+  max-width: 920px;
   width: 100%;
   margin: auto;
   z-index: 2;
   position: relative;
+  background: #080d1a !important;
+  border: 1.5px solid rgba(0, 210, 255, 0.5) !important;
+  border-radius: 18px !important;
+  overflow: hidden !important;
+  box-shadow: 
+    0 30px 90px rgba(0, 0, 0, 0.95), 
+    0 0 0 1px rgba(255, 255, 255, 0.1),
+    0 0 45px rgba(0, 210, 255, 0.3) !important;
 }
 
+/* Left Column: Two plant images joined together with ZERO space */
 .auth-machinery-showcase {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  gap: 1.15rem;
-  width: 440px;
+  width: 470px;
   flex-shrink: 0;
-}
-
-.machinery-card {
-  background: rgba(8, 13, 26, 0.92);
-  border: 1.5px solid rgba(0, 210, 255, 0.45);
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.85), 0 0 30px rgba(0, 210, 255, 0.2);
-  display: flex;
-  flex-direction: column;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.3s ease, box-shadow 0.3s ease;
-}
-
-.machinery-card:hover {
-  transform: translateY(-3px);
-  border-color: #00d2ff;
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.95), 0 0 40px rgba(0, 210, 255, 0.35);
-}
-
-.machinery-image-wrap {
-  position: relative;
-  width: 100%;
-  height: 180px;
-  overflow: hidden;
+  gap: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
   background: #020617;
+  border-right: 1.5px solid rgba(0, 210, 255, 0.35) !important;
+}
+
+.machinery-frame {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  height: 50%;
+  min-height: 250px;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.machinery-frame:first-child {
+  border-bottom: 1.5px solid rgba(0, 210, 255, 0.35); /* Seamless clean dividing line */
 }
 
 .machinery-img {
@@ -2588,102 +2590,42 @@ body {
   transition: transform 0.5s ease;
 }
 
-.machinery-card:hover .machinery-img {
-  transform: scale(1.05);
+.machinery-frame:hover .machinery-img {
+  transform: scale(1.03);
 }
 
-.machinery-badge {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  background: rgba(8, 13, 26, 0.9);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border: 1px solid rgba(0, 210, 255, 0.6);
-  border-radius: 6px;
-  padding: 4px 10px;
-  font-size: 0.68rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  color: #00d2ff;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.6);
-}
-
-.badge-dot-green {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #00f59b;
-  box-shadow: 0 0 8px #00f59b;
-  display: inline-block;
-}
-
-.badge-dot-cyan {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: #00d2ff;
-  box-shadow: 0 0 8px #00d2ff;
-  display: inline-block;
-}
-
-.machinery-caption {
-  padding: 0.85rem 1.15rem;
-  background: rgba(8, 13, 26, 0.95);
-  border-top: 1px solid rgba(0, 210, 255, 0.25);
-}
-
-.machinery-title {
-  font-size: 0.88rem;
-  font-weight: 800;
-  color: #ffffff;
-  margin-bottom: 3px;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.machinery-sub {
-  font-size: 0.74rem;
-  color: #94a3b8;
-  line-height: 1.4;
-}
-
-@media (max-width: 920px) {
+@media (max-width: 900px) {
   .auth-showcase-container {
     flex-direction: column;
     align-items: center;
     max-width: 440px;
+    border-radius: 18px !important;
   }
   .auth-machinery-showcase {
-    display: none; /* Prioritize clean, fast login on smaller mobile screens */
+    display: none !important; /* Prioritize clean, fast login on smaller mobile screens */
   }
 }
 
-/* Executive High-Focus Auth Dialog (Separates Card with Halo & High-Contrast Readability) */
+/* Executive High-Focus Auth Dialog (Seamlessly Joined inside Unified Card) */
 .auth-modal-dialog {
   position: relative;
   z-index: 2 !important;
-  max-width: 440px !important;
-  width: 100%;
+  max-width: 450px !important;
+  width: 100% !important;
+  flex: 1 !important;
   background: #080d1a !important;
-  border: 1.5px solid rgba(0, 210, 255, 0.5) !important;
-  box-shadow: 
-    0 30px 90px rgba(0, 0, 0, 0.95), 
-    0 0 0 1px rgba(255, 255, 255, 0.1),
-    0 0 40px rgba(0, 210, 255, 0.28) !important;
-  border-radius: 18px !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
   overflow: hidden;
-  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 [data-theme="light"] .auth-modal-dialog {
   background: #080d1a !important;
-  border: 1.5px solid rgba(0, 210, 255, 0.5) !important;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95) !important;
+  border: none !important;
+  box-shadow: none !important;
+  border-radius: 0 !important;
   color: #e2e8f0 !important;
 }
 
