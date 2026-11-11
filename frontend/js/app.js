@@ -15,25 +15,51 @@ window.escapeHtml = escapeHtml;
 
 let activeReportId = null;
 let currentTab = 'tab-overview';
+let appInitialized = false;
 
-document.addEventListener('DOMContentLoaded', async () => {
-  // 1. Initialize Auth and await session
-  await auth.init();
+async function initializeAuthenticatedApp() {
+  if (appInitialized) {
+    if (window.appRefreshReports) await window.appRefreshReports();
+    return;
+  }
+  appInitialized = true;
 
-  // 2. Theme Toggle Setup
-  initThemeToggle();
-
-  // 3. Navigation Tab Switching
+  // 1. Navigation Tab Switching
   initTabs();
 
-  // 4. File Upload Modal Setup
-  validation.initUploadHandler();
+  // 2. File Upload Modal Setup
+  if (window.validation && validation.initUploadHandler) {
+    validation.initUploadHandler();
+  }
 
-  // 5. Initial Report List & Dashboard Load
-  await window.appRefreshReports();
-
-  // 6. Bind Filters & Search Inputs
+  // 3. Bind Filters & Search Inputs
   bindGlobalEvents();
+
+  // 4. Initial Report List & Dashboard Load
+  await window.appRefreshReports();
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  // 1. Theme Toggle Setup
+  initThemeToggle();
+
+  // 2. Listen for login success to bootstrap dashboard cleanly
+  window.addEventListener('auth:login_success', async () => {
+    await initializeAuthenticatedApp();
+  });
+
+  // 3. Listen for logout to reset state
+  window.addEventListener('auth:logout', () => {
+    appInitialized = false;
+  });
+
+  // 4. Initialize Auth and check session validity
+  const isAuthenticated = await auth.init();
+
+  // If user is validly authenticated, load dashboard immediately
+  if (isAuthenticated) {
+    await initializeAuthenticatedApp();
+  }
 });
 
 function setCookie(name, value, days = 365) {

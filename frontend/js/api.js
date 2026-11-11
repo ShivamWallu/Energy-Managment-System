@@ -15,6 +15,21 @@ const api = {
       localStorage.removeItem('ems_jwt_token');
     }
   },
+  isTokenValid() {
+    const token = this.getToken();
+    if (!token) return false;
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) return false;
+      let b64 = parts[1].replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      const payload = JSON.parse(decodeURIComponent(escape(atob(b64))));
+      if (!payload.exp) return true;
+      return (payload.exp * 1000) > (Date.now() + 10000);
+    } catch (e) {
+      return false;
+    }
+  },
   getUser() {
     const u = localStorage.getItem('ems_user');
     return u ? JSON.parse(u) : null;
@@ -67,7 +82,7 @@ const api = {
             this.setToken(null);
             this.setUser(null);
             window.dispatchEvent(new CustomEvent('auth:expired'));
-            throw new Error('Session expired. Please log in again.');
+            throw new Error('Please sign in to continue.');
           }
           // Login form 401 is incorrect password - not an expired session
           const loginErr = new Error(detail || 'Incorrect password. Please verify credentials or use Forgot Password.');

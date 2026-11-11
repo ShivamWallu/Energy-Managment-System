@@ -1860,8 +1860,8 @@ const dashboard = {
         <div style="display:flex; justify-content:space-between; align-items:center; border-bottom: 2px solid #0284c7; padding-bottom: 10px; margin-bottom: 12px;">
           <div style="display:flex; align-items:center; gap: 12px;">
             <div style="display:flex; align-items:center; gap:6px; flex:0 0 auto;">
-              <img src="/img/3d_logo1.png?v=20261111_brand_v1" style="height:42px; width:88px; padding:2px; object-fit:contain; border:1px solid #f4b400; border-radius:6px; background:#fff;" alt="KOGM — Khandelia Oil &amp; General Mills">
-              <img src="/img/3d_logo2.png?v=20261111_brand_v1" style="height:42px; width:88px; padding:2px; object-fit:contain; border:1px solid #f4b400; border-radius:6px; background:#fff;" alt="Mashal Kachi Ghani Mustard Oil">
+              <img src="/img/3d_logo1.webp?v=20261112_logo_fast_v1" style="height:42px; width:88px; padding:2px; object-fit:contain; border:1px solid #f4b400; border-radius:6px; background:#fff;" alt="KOGM — Khandelia Oil &amp; General Mills">
+              <img src="/img/3d_logo2.webp?v=20261112_logo_fast_v1" style="height:42px; width:88px; padding:2px; object-fit:contain; border:1px solid #f4b400; border-radius:6px; background:#fff;" alt="Mashal Kachi Ghani Mustard Oil">
             </div>
             <div>
               <div style="font-size: 1.15rem; font-weight: 800; color: #0f172a; letter-spacing: 0.3px;">MASHAL MUSTARD OIL PLANT • SCADA 415V BUS</div>
@@ -2029,8 +2029,8 @@ const dashboard = {
           ${pageIndex === 0 ? `<header style="display:flex; justify-content:space-between; align-items:center; gap:12px; border-bottom:2px solid #0284c7; padding-bottom:7px; margin-bottom:9px;">
             <div style="display:flex; align-items:center; gap:10px; min-width:0;">
               <div style="display:flex; align-items:center; gap:4px; flex:0 0 auto;">
-                <img src="/img/3d_logo1.png?v=20261111_brand_v1" alt="KOGM" style="height:34px; width:70px; padding:2px; object-fit:contain; border:1px solid #f4b400; border-radius:5px; background:#fff;">
-                <img src="/img/3d_logo2.png?v=20261111_brand_v1" alt="Mashal" style="height:34px; width:70px; padding:2px; object-fit:contain; border:1px solid #f4b400; border-radius:5px; background:#fff;">
+                <img src="/img/3d_logo1.webp?v=20261112_logo_fast_v1" alt="KOGM" style="height:34px; width:70px; padding:2px; object-fit:contain; border:1px solid #f4b400; border-radius:5px; background:#fff;">
+                <img src="/img/3d_logo2.webp?v=20261112_logo_fast_v1" alt="Mashal" style="height:34px; width:70px; padding:2px; object-fit:contain; border:1px solid #f4b400; border-radius:5px; background:#fff;">
               </div>
               <div style="min-width:0;">
                 <div style="font-size:16px; font-weight:800; line-height:1.2;">${escapeHtml(sectionTitle)}</div>

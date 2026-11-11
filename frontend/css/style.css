@@ -2602,6 +2602,19 @@ body {
 }
 
 /* ==========================================================================
+   Zero-Flash Authentication State Enforcement (Guarantees Dashboard Never Shows When Unauthenticated)
+   ========================================================================== */
+html.not-authenticated .app-container {
+  display: none !important;
+}
+html.not-authenticated #login-modal {
+  display: flex !important;
+}
+html.is-authenticated #login-modal {
+  display: none !important;
+}
+
+/* ==========================================================================
    Login & Registration Backdrop - Single Land1 Background (2X Faster Load, Ultra-Crisp)
    ========================================================================== */
 #login-modal {

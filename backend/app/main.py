@@ -45,7 +45,9 @@ app.include_router(accounts_router.router, prefix=settings.API_V1_PREFIX)
 async def add_cache_headers_middleware(request: Request, call_next):
     response = await call_next(request)
     path = request.url.path
-    if any(path.startswith(prefix) for prefix in ["/img/", "/Images/", "/images/"]):
+    if path.startswith("/img/3d_logo") and request.query_params.get("v"):
+        response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+    elif any(path.startswith(prefix) for prefix in ["/img/", "/Images/", "/images/"]):
         response.headers["Cache-Control"] = "public, max-age=86400, stale-while-revalidate=43200"
     elif any(path.startswith(prefix) for prefix in ["/css/", "/js/"]):
         response.headers["Cache-Control"] = "no-cache, must-revalidate"

@@ -11,7 +11,7 @@ const auth = {
 
   async init() {
     this.bindEvents();
-    await this.checkSession();
+    return await this.checkSession();
   },
 
   async checkSession() {
@@ -19,18 +19,27 @@ const auth = {
     if (sessionStorage.getItem('ems_account_blocked') === 'true') {
       const reason = sessionStorage.getItem('ems_block_reason');
       this.handleAccountBlocked(reason);
-      return;
+      return false;
     }
 
     const token = api.getToken();
     const user = api.getUser();
+    const isValid = api.isTokenValid();
 
-    if (token && user) {
+    if (token && user && isValid) {
+      document.documentElement.classList.remove('not-authenticated');
+      document.documentElement.classList.add('is-authenticated');
       this.renderUserUI(user);
+      return true;
     } else {
-      // Show clean login modal with no auto-login so user logs in with their own credentials
+      // Clear any expired or invalid token quietly without warning banners
+      api.setToken(null);
+      api.setUser(null);
+      document.documentElement.classList.remove('is-authenticated');
+      document.documentElement.classList.add('not-authenticated');
       this.renderUserUI(null);
       this.showLoginModal('signin');
+      return false;
     }
   },
 
@@ -443,6 +452,7 @@ const auth = {
         await api.logout();
         this.renderUserUI(null);
         this.showLoginModal('signin');
+        window.dispatchEvent(new CustomEvent('auth:logout'));
         showToast('Logged out successfully.', 'info');
       });
     }
@@ -473,9 +483,11 @@ const auth = {
     }
 
     window.addEventListener('auth:expired', () => {
+      document.documentElement.classList.remove('is-authenticated');
+      document.documentElement.classList.add('not-authenticated');
       this.renderUserUI(null);
       this.showLoginModal('signin');
-      showToast('Session expired. Please sign in again.', 'warning');
+      showToast('Please sign in to continue.', 'info');
     });
 
     window.addEventListener('auth:blocked', (e) => {
@@ -600,6 +612,8 @@ const auth = {
   },
 
   showLoginModal(mode = 'signin') {
+    document.documentElement.classList.remove('is-authenticated');
+    document.documentElement.classList.add('not-authenticated');
     const modal = document.getElementById('login-modal');
     if (modal) {
       modal.classList.add('active');
@@ -615,6 +629,8 @@ const auth = {
   hideLoginModal() {
     const modal = document.getElementById('login-modal');
     if (modal) modal.classList.remove('active');
+    document.documentElement.classList.remove('not-authenticated');
+    document.documentElement.classList.add('is-authenticated');
   }
 };
 

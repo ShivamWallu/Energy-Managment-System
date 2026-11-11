@@ -50,7 +50,7 @@ def get_current_user(token: Optional[str] = Depends(oauth2_scheme), db: Session 
                 else:
                     raise HTTPException(
                         status_code=status.HTTP_401_UNAUTHORIZED,
-                        detail="User session invalid or user not found.",
+                        detail="User account not found. Please sign in again.",
                         headers={"WWW-Authenticate": "Bearer"}
                     )
         except HTTPException:
@@ -58,7 +58,7 @@ def get_current_user(token: Optional[str] = Depends(oauth2_scheme), db: Session 
         except jwt.PyJWTError:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Session token invalid or expired. Please sign in again.",
+                detail="Please sign in to continue.",
                 headers={"WWW-Authenticate": "Bearer"}
             )
         except Exception:
@@ -66,7 +66,7 @@ def get_current_user(token: Optional[str] = Depends(oauth2_scheme), db: Session 
 
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Authentication required. Please provide a valid bearer token.",
+        detail="Please sign in to continue.",
         headers={"WWW-Authenticate": "Bearer"},
     )
 
