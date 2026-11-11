@@ -48,12 +48,12 @@ function getCookie(name) {
 
 function initThemeToggle() {
   const toggleBtn = document.getElementById('theme-toggle-btn');
-  // Black Theme (dark) is default across the site
-  let storedTheme = getCookie('ems_theme') || localStorage.getItem('ems_theme') || 'dark';
+  // White Theme (light) is default across the site
+  let storedTheme = getCookie('ems_theme') || localStorage.getItem('ems_theme') || 'light';
   if (!localStorage.getItem('ems_theme_user_set')) {
-    storedTheme = 'dark';
-    setCookie('ems_theme', 'dark', 365);
-    localStorage.setItem('ems_theme', 'dark');
+    storedTheme = 'light';
+    setCookie('ems_theme', 'light', 365);
+    localStorage.setItem('ems_theme', 'light');
   }
   document.documentElement.setAttribute('data-theme', storedTheme);
 

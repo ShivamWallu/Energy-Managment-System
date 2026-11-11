@@ -28,13 +28,9 @@ const auth = {
     if (token && user) {
       this.renderUserUI(user);
     } else {
-      // Auto-authenticate as Admin on first local run for seamless plant experience
-      try {
-        const res = await api.login('admin', 'AdminPassword2026!');
-        this.renderUserUI(res.user);
-      } catch (e) {
-        this.showLoginModal('signin');
-      }
+      // Show clean login modal with no auto-login so user logs in with their own credentials
+      this.renderUserUI(null);
+      this.showLoginModal('signin');
     }
   },
 
@@ -608,6 +604,11 @@ const auth = {
     if (modal) {
       modal.classList.add('active');
       this.switchAuthMode(mode);
+      // Ensure input fields are completely blank without prefilled credentials
+      const userIn = document.getElementById('login-username');
+      const passIn = document.getElementById('login-password');
+      if (userIn && !userIn.value) userIn.value = '';
+      if (passIn && !passIn.value) passIn.value = '';
     }
   },
 

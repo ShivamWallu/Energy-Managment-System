@@ -31,12 +31,12 @@
         var match = document.cookie.match(new RegExp('(^|;\\s*)(' + name + ')=([^;]*)'));
         return match ? decodeURIComponent(match[3]) : null;
       }
-      var theme = getCookie('ems_theme') || localStorage.getItem('ems_theme') || 'dark';
-      // Enforce default black / dark theme across all visits unless user explicitly toggled
+      var theme = getCookie('ems_theme') || localStorage.getItem('ems_theme') || 'light';
+      // Default white / light theme across all visits unless user explicitly toggled
       if (!localStorage.getItem('ems_theme_user_set')) {
-        theme = 'dark';
-        document.cookie = "ems_theme=dark; path=/; max-age=31536000; SameSite=Lax";
-        localStorage.setItem('ems_theme', 'dark');
+        theme = 'light';
+        document.cookie = "ems_theme=light; path=/; max-age=31536000; SameSite=Lax";
+        localStorage.setItem('ems_theme', 'light');
       }
       document.documentElement.setAttribute('data-theme', theme);
     })();
@@ -189,8 +189,8 @@
 
       <!-- MACHINE DEEP-DIVE: 5 Expeller Units & Individual 15-Minute Motor Load Graphs (P1 to P5) -->
       <div class="chart-card" style="margin-bottom:1rem; border-color: rgba(0, 210, 255, 0.25);">
-        <div class="chart-header" style="flex-wrap: wrap; gap: 1rem; align-items: center;">
-          <div>
+        <div class="chart-header" style="flex-wrap: wrap; gap: 1rem; align-items: center; justify-content: space-between;">
+          <div style="flex: 1; min-width: 280px;">
             <div style="display:flex; align-items:center; gap:0.6rem; margin-bottom:0.25rem;">
               <span class="badge badge-info" id="section-main-badge" style="font-weight:700;"><i class="fa-solid fa-bolt"></i> SCADA Motors Telemetry</span>
               <h2 class="chart-title" id="section-main-title" style="margin:0;"><i class="fa-solid fa-industry text-cyan"></i> Production Machine Motors (5 Expellers &amp; 2 Kohlu Panels)</h2>
@@ -198,9 +198,18 @@
             <p class="chart-subtitle" id="section-main-subtitle">Select an Expeller or Kohlu panel below, or filter by motor rating (75 HP, 60 HP, 50 HP, Kohlu 30 HP). Status: <strong>Green = Good (50%–80%)</strong>, <strong>Yellow = Empty/Low (10%–40%)</strong>, <strong>Red = Overload (&gt;80%)</strong>.</p>
           </div>
 
-          <!-- Machine Panel Switcher (Separated into Expellers vs Kohlus) -->
-          <div style="display:flex; gap:0.65rem; align-items:center; flex-wrap:wrap;">
-            <!-- 5 Expeller Panels Group -->
+          <!-- Top-Right Actions: Professional Landscape PDF Download Button (Image 5) -->
+          <div style="display:flex; align-items:center; gap:0.6rem;">
+            <button id="btn-download-view-pdf" class="btn btn-primary" onclick="dashboard.downloadCurrentViewPDF()" title="Download current telemetry &amp; motor health view as an executive Landscape PDF" style="display:inline-flex; align-items:center; gap:0.5rem; padding:0.55rem 1.15rem; font-size:0.84rem; font-weight:700; border-radius:8px; box-shadow:0 4px 14px rgba(0,210,255,0.25);">
+              <i class="fa-solid fa-file-pdf" style="font-size:1rem; color:#fee300;"></i>
+              <span>Download PDF Report</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Machine Panel Switcher (Separated into Expellers vs Kohlus) -->
+        <div style="display:flex; gap:0.65rem; align-items:center; flex-wrap:wrap; margin-bottom:0.85rem;">
+          <!-- 5 Expeller Panels Group -->
             <div class="panel-switch-cluster cluster-expellers">
               <span class="cluster-label"><i class="fa-solid fa-industry text-cyan"></i> Expeller Panels:</span>
               <button class="expeller-tab-btn active" data-expeller="1">Expeller 1</button>
@@ -855,7 +864,43 @@
   </div>
 </div>
 <div id="login-modal" class="modal-overlay">
-  <div class="modal-dialog auth-modal-dialog" style="max-width:440px; padding:0; overflow:hidden;">
+  <div class="auth-showcase-container">
+    
+    <!-- Left Column: Plant Machinery Showcase (Machine 1 & Machine 2) -->
+    <div class="auth-machinery-showcase">
+      <!-- Machine 1 Card: Expeller Floor -->
+      <div class="machinery-card">
+        <div class="machinery-image-wrap">
+          <img src="/img/machine1.webp?v=2026" alt="Expeller Machine Motors (P1 to P5)" class="machinery-img" loading="eager" decoding="async">
+          <div class="machinery-badge">
+            <span class="badge-dot-green"></span>
+            <span>EXPELLER MOTORS • SCADA 415V BUS</span>
+          </div>
+        </div>
+        <div class="machinery-caption">
+          <div class="machinery-title">Expeller Machine Motors Floor (P1 – P5)</div>
+          <div class="machinery-sub">High-torque 75 HP &amp; 60 HP motors continuous load telemetry</div>
+        </div>
+      </div>
+
+      <!-- Machine 2 Card: Kohlu Extraction -->
+      <div class="machinery-card">
+        <div class="machinery-image-wrap">
+          <img src="/img/machine2.webp?v=2026" alt="Kohlu Cold-Press Extraction Plant" class="machinery-img" loading="eager" decoding="async">
+          <div class="machinery-badge">
+            <span class="badge-dot-cyan"></span>
+            <span>KOHLU EXTRACTION • 12 UNITS</span>
+          </div>
+        </div>
+        <div class="machinery-caption">
+          <div class="machinery-title">Kohlu Cold-Press Plant (Panels 1 &amp; 2)</div>
+          <div class="machinery-sub">Real-time 15-minute interval power balance &amp; load diagnostics</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right Column: The Login Dialog -->
+    <div class="modal-dialog auth-modal-dialog" style="max-width:440px; padding:0; overflow:hidden;">
     
     <!-- Header with latest official logos from Images/logos directory (Previous style: direct on card with yellow accent) -->
     <div class="modal-header" style="justify-content:center; flex-direction:column; gap:0.6rem; text-align:center; padding:1.35rem 1.5rem 1rem; border-bottom:1px solid var(--border-subtle);">
@@ -887,13 +932,13 @@
             <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.35rem;">
               <i class="fa-regular fa-user text-cyan"></i> Username or Email
             </label>
-            <input type="text" id="login-username" class="search-input" placeholder="admin" value="admin" required autofocus style="width:100%;">
+            <input type="text" id="login-username" class="search-input" placeholder="Username or email" value="" autocomplete="username" required autofocus style="width:100%;">
           </div>
           <div style="margin-bottom:1rem;">
             <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.35rem;">
               <i class="fa-solid fa-lock text-cyan"></i> Password
             </label>
-            <input type="password" id="login-password" class="search-input" placeholder="••••••••••••" value="AdminPassword2026!" required style="width:100%;">
+            <input type="password" id="login-password" class="search-input" placeholder="••••••••••••" value="" autocomplete="current-password" required style="width:100%;">
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.15rem; font-size:0.78rem;">
             <label style="display:inline-flex; align-items:center; gap:0.4rem; color:var(--text-secondary); cursor:pointer;">
@@ -1065,6 +1110,7 @@
 
     </div>
   </div>
+  </div>
 </div>
 
 <!-- Enterprise Account Blocked / Access Suspended Security Overlay Modal -->
@@ -1109,6 +1155,7 @@
 <div id="toast-container" class="toast-container"></div>
 
 <!-- JavaScript Modules -->
+<script src="/js/html2pdf.bundle.min.js"></script>
 <script src="/js/api.js"></script>
 <script src="/js/charts.js"></script>
 <script src="/js/dashboard.js"></script>
