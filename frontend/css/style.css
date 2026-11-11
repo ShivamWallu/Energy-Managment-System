@@ -2533,38 +2533,40 @@ body {
   display: none !important;
 }
 
-/* Executive Unified Split-Card Showcase Container (Seamless Flush Integration) */
+/* Executive Unified Split-Card Showcase Container (White Glassmorphic Look) */
 .auth-showcase-container {
   display: flex;
   align-items: stretch;
   justify-content: center;
   gap: 0 !important; /* Zero gap between images and login card */
-  max-width: 920px;
+  max-width: 930px;
   width: 100%;
   margin: auto;
   z-index: 2;
   position: relative;
-  background: #080d1a !important;
-  border: 1.5px solid rgba(0, 210, 255, 0.5) !important;
-  border-radius: 18px !important;
+  background: rgba(255, 255, 255, 0.9) !important;
+  backdrop-filter: blur(24px) saturate(180%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.75) !important;
+  border-radius: 20px !important;
   overflow: hidden !important;
   box-shadow: 
-    0 30px 90px rgba(0, 0, 0, 0.95), 
-    0 0 0 1px rgba(255, 255, 255, 0.1),
-    0 0 45px rgba(0, 210, 255, 0.3) !important;
+    0 25px 70px rgba(0, 0, 0, 0.4), 
+    0 0 0 1px rgba(255, 255, 255, 0.6),
+    0 0 40px rgba(2, 132, 199, 0.2) !important;
 }
 
 /* Left Column: Two plant images joined together with ZERO space */
 .auth-machinery-showcase {
   display: flex;
   flex-direction: column;
-  width: 470px;
+  width: 480px;
   flex-shrink: 0;
   gap: 0 !important;
   margin: 0 !important;
   padding: 0 !important;
   background: #020617;
-  border-right: 1.5px solid rgba(0, 210, 255, 0.35) !important;
+  border-right: 1.5px solid rgba(226, 232, 240, 0.8) !important;
 }
 
 .machinery-frame {
@@ -2573,13 +2575,13 @@ body {
   overflow: hidden;
   display: flex;
   height: 50%;
-  min-height: 250px;
+  min-height: 260px;
   margin: 0 !important;
   padding: 0 !important;
 }
 
 .machinery-frame:first-child {
-  border-bottom: 1.5px solid rgba(0, 210, 255, 0.35); /* Seamless clean dividing line */
+  border-bottom: 1.5px solid rgba(226, 232, 240, 0.8);
 }
 
 .machinery-img {
@@ -2599,134 +2601,201 @@ body {
     flex-direction: column;
     align-items: center;
     max-width: 440px;
-    border-radius: 18px !important;
+    border-radius: 20px !important;
   }
   .auth-machinery-showcase {
     display: none !important; /* Prioritize clean, fast login on smaller mobile screens */
   }
 }
 
-/* Executive High-Focus Auth Dialog (Seamlessly Joined inside Unified Card) */
+/* Executive High-Focus Auth Dialog (Frosted Glassy White Card) */
 .auth-modal-dialog {
   position: relative;
   z-index: 2 !important;
   max-width: 450px !important;
   width: 100% !important;
   flex: 1 !important;
-  background: #080d1a !important;
+  background: rgba(255, 255, 255, 0.92) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
   border: none !important;
   box-shadow: none !important;
   border-radius: 0 !important;
   margin: 0 !important;
   overflow: hidden;
+  color: #0f172a !important;
 }
 
 [data-theme="light"] .auth-modal-dialog {
-  background: #080d1a !important;
+  background: rgba(255, 255, 255, 0.92) !important;
   border: none !important;
   box-shadow: none !important;
   border-radius: 0 !important;
-  color: #e2e8f0 !important;
+  color: #0f172a !important;
 }
 
-/* Unified High-Contrast Input Fields with Autofill Harmonization */
-.auth-modal-dialog .search-input {
-  width: 100% !important;
-  background: #0f172a !important;
-  border: 1.5px solid rgba(0, 210, 255, 0.42) !important;
-  border-radius: var(--radius-md) !important;
-  padding: 0.65rem 0.9rem !important;
-  font-size: 0.88rem !important;
-  font-weight: 600 !important;
-  color: #ffffff !important;
-  box-shadow: none !important;
-  transition: all 0.25s ease !important;
-}
-.auth-modal-dialog .search-input:focus {
-  background: #141f38 !important;
-  border-color: #00d2ff !important;
-  box-shadow: none !important;
-  outline: none !important;
-}
-.auth-modal-dialog .search-input::placeholder {
-  color: #64748b !important;
-  font-weight: 400 !important;
+.auth-modal-dialog .modal-header {
+  background: rgba(255, 255, 255, 0.96) !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.9) !important;
 }
 
-/* Chrome/Edge Autofill Background Override so all inputs look unified */
-.auth-modal-dialog input:-webkit-autofill,
-.auth-modal-dialog input:-webkit-autofill:hover, 
-.auth-modal-dialog input:-webkit-autofill:focus,
-.auth-modal-dialog input:-webkit-autofill:active {
-  -webkit-text-fill-color: #ffffff !important;
-  -webkit-box-shadow: 0 0 0px 1000px #0f172a inset !important;
-  transition: background-color 5000s ease-in-out 0s !important;
-  border: 1.5px solid rgba(0, 210, 255, 0.5) !important;
-}
-
-[data-theme="light"] .auth-modal-dialog .search-input {
-  background: #0f172a !important;
-  border: 1.5px solid rgba(0, 210, 255, 0.42) !important;
-  color: #ffffff !important;
-  box-shadow: none !important;
-}
-[data-theme="light"] .auth-modal-dialog .search-input:focus {
-  background: #141f38 !important;
-  border-color: #00d2ff !important;
-  box-shadow: none !important;
-}
-[data-theme="light"] .auth-modal-dialog input:-webkit-autofill {
-  -webkit-text-fill-color: #ffffff !important;
-  -webkit-box-shadow: 0 0 0px 1000px #0f172a inset !important;
-  border: 1.5px solid rgba(0, 210, 255, 0.5) !important;
-}
-
-/* Clean Flat High-Focus CTA Buttons (Zero Drop Shadow) */
-.auth-modal-dialog .btn-primary {
-  background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%) !important;
-  border: 1px solid #38bdf8 !important;
-  box-shadow: none !important;
+.auth-modal-dialog .modal-title {
+  color: #0f172a !important;
   font-weight: 800 !important;
-  font-size: 0.92rem !important;
-  letter-spacing: 0.5px !important;
-  transition: all 0.2s ease !important;
-}
-.auth-modal-dialog .btn-primary:hover {
-  background: linear-gradient(135deg, #0369a1 0%, #0284c7 100%) !important;
-  box-shadow: none !important;
-  transform: none !important;
 }
 
+/* Auth Navigation Tabs (Sign In / Create Account) */
 .auth-tab-nav {
   display: flex;
-  background: rgba(0, 0, 0, 0.28);
-  border-bottom: 1px solid rgba(0, 210, 255, 0.18);
-  padding: 0.25rem 0.4rem 0;
+  background: rgba(241, 245, 249, 0.85) !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+  padding: 0.35rem 0.6rem 0 !important;
 }
+
 .auth-tab-btn {
   flex: 1;
   padding: 0.75rem 1rem;
   background: transparent;
   border: none;
-  color: var(--text-muted);
+  color: #64748b !important;
   font-weight: 700;
   font-size: 0.86rem;
   cursor: pointer;
   transition: all 0.2s ease;
-  border-bottom: 2px solid transparent;
+  border-radius: 8px 8px 0 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.48rem;
 }
+
 .auth-tab-btn:hover {
-  color: var(--text-primary);
+  color: #0f172a !important;
 }
+
 .auth-tab-btn.active {
-  color: var(--accent-cyan);
-  border-bottom: 2px solid var(--accent-cyan);
-  background: rgba(0, 210, 255, 0.08);
-  border-radius: 6px 6px 0 0;
+  color: #0284c7 !important;
+  background: #ffffff !important;
+  border-bottom: 2.5px solid #0284c7 !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  font-weight: 800;
+}
+
+/* Glassy White Input Fields */
+.auth-modal-dialog label {
+  color: #334155 !important;
+  font-weight: 700 !important;
+}
+
+.auth-modal-dialog label .text-cyan {
+  color: #0284c7 !important;
+}
+
+.auth-modal-dialog .search-input {
+  width: 100% !important;
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1.5px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  padding: 0.7rem 0.95rem !important;
+  font-size: 0.9rem !important;
+  font-weight: 600 !important;
+  color: #0f172a !important;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+  transition: all 0.25s ease !important;
+}
+
+.auth-modal-dialog .search-input:focus {
+  background: #ffffff !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18) !important;
+  outline: none !important;
+}
+
+.auth-modal-dialog .search-input::placeholder {
+  color: #94a3b8 !important;
+  font-weight: 400 !important;
+}
+
+/* Autofill Harmonization for White Theme */
+.auth-modal-dialog input:-webkit-autofill,
+.auth-modal-dialog input:-webkit-autofill:hover, 
+.auth-modal-dialog input:-webkit-autofill:focus,
+.auth-modal-dialog input:-webkit-autofill:active {
+  -webkit-text-fill-color: #0f172a !important;
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  transition: background-color 5000s ease-in-out 0s !important;
+  border: 1.5px solid #0284c7 !important;
+}
+
+[data-theme="light"] .auth-modal-dialog .search-input {
+  background: rgba(255, 255, 255, 0.95) !important;
+  border: 1.5px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+}
+
+[data-theme="light"] .auth-modal-dialog .search-input:focus {
+  background: #ffffff !important;
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18) !important;
+}
+
+[data-theme="light"] .auth-modal-dialog input:-webkit-autofill {
+  -webkit-text-fill-color: #0f172a !important;
+  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  border: 1.5px solid #0284c7 !important;
+}
+
+/* High-Contrast Executive CTA Button */
+.auth-modal-dialog .btn-primary {
+  background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important;
+  border: none !important;
+  border-radius: 10px !important;
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 0.92rem !important;
+  letter-spacing: 0.3px !important;
+  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.35) !important;
+  transition: all 0.25s ease !important;
+}
+
+.auth-modal-dialog .btn-primary:hover {
+  background: linear-gradient(135deg, #0369a1 0%, #1d4ed8 100%) !important;
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.45) !important;
+  transform: translateY(-1px) !important;
+}
+
+/* Checkbox & Footer Links */
+.auth-modal-dialog label span {
+  color: #475569 !important;
+  font-weight: 600 !important;
+}
+
+.auth-modal-dialog input[type="checkbox"] {
+  accent-color: #0284c7 !important;
+}
+
+.auth-modal-dialog span[onclick*="forgot"] {
+  color: #64748b !important;
+  transition: color 0.2s ease;
+}
+
+.auth-modal-dialog span[onclick*="forgot"]:hover {
+  color: #0f172a !important;
+  text-decoration: underline;
+}
+
+.auth-modal-dialog span[onclick*="register"],
+.auth-modal-dialog span[onclick*="signin"] {
+  color: #0284c7 !important;
+  font-weight: 700 !important;
+  transition: color 0.2s ease;
+}
+
+.auth-modal-dialog span[onclick*="register"]:hover,
+.auth-modal-dialog span[onclick*="signin"]:hover {
+  color: #0369a1 !important;
+  text-decoration: underline;
 }
 
 .btn-block-user {
