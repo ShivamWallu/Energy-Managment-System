@@ -2533,7 +2533,7 @@ body {
   display: none !important;
 }
 
-/* Executive Unified Split-Card Showcase Container (White Glassmorphic Look) */
+/* Executive Unified Split-Card Showcase Container (True Liquid Glassmorphism Look) */
 .auth-showcase-container {
   display: flex;
   align-items: stretch;
@@ -2544,16 +2544,16 @@ body {
   margin: auto;
   z-index: 2;
   position: relative;
-  background: rgba(255, 255, 255, 0.9) !important;
-  backdrop-filter: blur(24px) saturate(180%) !important;
-  -webkit-backdrop-filter: blur(24px) saturate(180%) !important;
-  border: 1.5px solid rgba(255, 255, 255, 0.75) !important;
+  background: rgba(255, 255, 255, 0.22) !important;
+  backdrop-filter: blur(28px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(200%) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.7) !important;
   border-radius: 20px !important;
   overflow: hidden !important;
   box-shadow: 
-    0 25px 70px rgba(0, 0, 0, 0.4), 
-    0 0 0 1px rgba(255, 255, 255, 0.6),
-    0 0 40px rgba(2, 132, 199, 0.2) !important;
+    0 25px 70px rgba(0, 0, 0, 0.35), 
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    0 0 35px rgba(255, 255, 255, 0.25) !important;
 }
 
 /* Left Column: Two plant images joined together with ZERO space */
@@ -2566,7 +2566,7 @@ body {
   margin: 0 !important;
   padding: 0 !important;
   background: #020617;
-  border-right: 1.5px solid rgba(226, 232, 240, 0.8) !important;
+  border-right: 1.5px solid rgba(255, 255, 255, 0.5) !important;
 }
 
 .machinery-frame {
@@ -2581,7 +2581,7 @@ body {
 }
 
 .machinery-frame:first-child {
-  border-bottom: 1.5px solid rgba(226, 232, 240, 0.8);
+  border-bottom: 1.5px solid rgba(255, 255, 255, 0.5);
 }
 
 .machinery-img {
@@ -2608,16 +2608,16 @@ body {
   }
 }
 
-/* Executive High-Focus Auth Dialog (Frosted Glassy White Card) */
+/* Executive High-Focus Auth Dialog (Translucent Frosted Glass Card) */
 .auth-modal-dialog {
   position: relative;
   z-index: 2 !important;
   max-width: 450px !important;
   width: 100% !important;
   flex: 1 !important;
-  background: rgba(255, 255, 255, 0.92) !important;
-  backdrop-filter: blur(20px) !important;
-  -webkit-backdrop-filter: blur(20px) !important;
+  background: rgba(255, 255, 255, 0.28) !important;
+  backdrop-filter: blur(24px) saturate(200%) !important;
+  -webkit-backdrop-filter: blur(24px) saturate(200%) !important;
   border: none !important;
   box-shadow: none !important;
   border-radius: 0 !important;
@@ -2627,7 +2627,7 @@ body {
 }
 
 [data-theme="light"] .auth-modal-dialog {
-  background: rgba(255, 255, 255, 0.92) !important;
+  background: rgba(255, 255, 255, 0.28) !important;
   border: none !important;
   box-shadow: none !important;
   border-radius: 0 !important;
@@ -2635,20 +2635,25 @@ body {
 }
 
 .auth-modal-dialog .modal-header {
-  background: rgba(255, 255, 255, 0.96) !important;
-  border-bottom: 1px solid rgba(226, 232, 240, 0.9) !important;
+  background: rgba(255, 255, 255, 0.25) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.45) !important;
+  backdrop-filter: blur(12px) !important;
+  -webkit-backdrop-filter: blur(12px) !important;
 }
 
 .auth-modal-dialog .modal-title {
   color: #0f172a !important;
   font-weight: 800 !important;
+  text-shadow: 0 1px 2px rgba(255, 255, 255, 0.8);
 }
 
 /* Auth Navigation Tabs (Sign In / Create Account) */
 .auth-tab-nav {
   display: flex;
-  background: rgba(241, 245, 249, 0.85) !important;
-  border-bottom: 1px solid #e2e8f0 !important;
+  background: rgba(255, 255, 255, 0.18) !important;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
   padding: 0.35rem 0.6rem 0 !important;
 }
 
@@ -2657,7 +2662,7 @@ body {
   padding: 0.75rem 1rem;
   background: transparent;
   border: none;
-  color: #64748b !important;
+  color: #1e293b !important;
   font-weight: 700;
   font-size: 0.86rem;
   cursor: pointer;
@@ -2670,21 +2675,25 @@ body {
 }
 
 .auth-tab-btn:hover {
-  color: #0f172a !important;
+  color: #0284c7 !important;
+  background: rgba(255, 255, 255, 0.3) !important;
 }
 
 .auth-tab-btn.active {
   color: #0284c7 !important;
-  background: #ffffff !important;
+  background: rgba(255, 255, 255, 0.65) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
   border-bottom: 2.5px solid #0284c7 !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06) !important;
   font-weight: 800;
 }
 
-/* Glassy White Input Fields */
+/* Translucent Frosted Glass Input Fields */
 .auth-modal-dialog label {
-  color: #334155 !important;
-  font-weight: 700 !important;
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  text-shadow: 0 1px 1px rgba(255, 255, 255, 0.8);
 }
 
 .auth-modal-dialog label .text-cyan {
@@ -2693,82 +2702,86 @@ body {
 
 .auth-modal-dialog .search-input {
   width: 100% !important;
-  background: rgba(255, 255, 255, 0.95) !important;
-  border: 1.5px solid #cbd5e1 !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+  backdrop-filter: blur(14px) !important;
+  -webkit-backdrop-filter: blur(14px) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.75) !important;
   border-radius: 10px !important;
   padding: 0.7rem 0.95rem !important;
   font-size: 0.9rem !important;
-  font-weight: 600 !important;
+  font-weight: 700 !important;
   color: #0f172a !important;
-  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(0, 0, 0, 0.02) !important;
   transition: all 0.25s ease !important;
 }
 
 .auth-modal-dialog .search-input:focus {
-  background: #ffffff !important;
+  background: rgba(255, 255, 255, 0.75) !important;
   border-color: #0284c7 !important;
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18) !important;
+  box-shadow: 0 0 0 3.5px rgba(2, 132, 199, 0.25), inset 0 1px 2px rgba(0,0,0,0.03) !important;
   outline: none !important;
 }
 
 .auth-modal-dialog .search-input::placeholder {
-  color: #94a3b8 !important;
-  font-weight: 400 !important;
+  color: #475569 !important;
+  font-weight: 500 !important;
 }
 
-/* Autofill Harmonization for White Theme */
+/* Autofill Harmonization for Glassy Theme */
 .auth-modal-dialog input:-webkit-autofill,
 .auth-modal-dialog input:-webkit-autofill:hover, 
 .auth-modal-dialog input:-webkit-autofill:focus,
 .auth-modal-dialog input:-webkit-autofill:active {
   -webkit-text-fill-color: #0f172a !important;
-  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.8) inset !important;
   transition: background-color 5000s ease-in-out 0s !important;
   border: 1.5px solid #0284c7 !important;
 }
 
 [data-theme="light"] .auth-modal-dialog .search-input {
-  background: rgba(255, 255, 255, 0.95) !important;
-  border: 1.5px solid #cbd5e1 !important;
+  background: rgba(255, 255, 255, 0.5) !important;
+  border: 1.5px solid rgba(255, 255, 255, 0.75) !important;
   color: #0f172a !important;
-  box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04) !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.04), 0 2px 6px rgba(0, 0, 0, 0.02) !important;
 }
 
 [data-theme="light"] .auth-modal-dialog .search-input:focus {
-  background: #ffffff !important;
+  background: rgba(255, 255, 255, 0.75) !important;
   border-color: #0284c7 !important;
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18) !important;
+  box-shadow: 0 0 0 3.5px rgba(2, 132, 199, 0.25) !important;
 }
 
 [data-theme="light"] .auth-modal-dialog input:-webkit-autofill {
   -webkit-text-fill-color: #0f172a !important;
-  -webkit-box-shadow: 0 0 0px 1000px #ffffff inset !important;
+  -webkit-box-shadow: 0 0 0px 1000px rgba(255, 255, 255, 0.8) inset !important;
   border: 1.5px solid #0284c7 !important;
 }
 
-/* High-Contrast Executive CTA Button */
+/* High-Contrast Executive Glass CTA Button */
 .auth-modal-dialog .btn-primary {
-  background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%) !important;
-  border: none !important;
+  background: linear-gradient(135deg, rgba(2, 132, 199, 0.95), rgba(37, 99, 235, 0.95)) !important;
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.4) !important;
   border-radius: 10px !important;
   color: #ffffff !important;
   font-weight: 800 !important;
   font-size: 0.92rem !important;
   letter-spacing: 0.3px !important;
-  box-shadow: 0 6px 18px rgba(2, 132, 199, 0.35) !important;
+  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.4) !important;
   transition: all 0.25s ease !important;
 }
 
 .auth-modal-dialog .btn-primary:hover {
   background: linear-gradient(135deg, #0369a1 0%, #1d4ed8 100%) !important;
-  box-shadow: 0 8px 24px rgba(2, 132, 199, 0.45) !important;
+  box-shadow: 0 10px 28px rgba(2, 132, 199, 0.52) !important;
   transform: translateY(-1px) !important;
 }
 
 /* Checkbox & Footer Links */
 .auth-modal-dialog label span {
-  color: #475569 !important;
-  font-weight: 600 !important;
+  color: #1e293b !important;
+  font-weight: 700 !important;
 }
 
 .auth-modal-dialog input[type="checkbox"] {
@@ -2776,7 +2789,8 @@ body {
 }
 
 .auth-modal-dialog span[onclick*="forgot"] {
-  color: #64748b !important;
+  color: #334155 !important;
+  font-weight: 700 !important;
   transition: color 0.2s ease;
 }
 
@@ -2788,7 +2802,7 @@ body {
 .auth-modal-dialog span[onclick*="register"],
 .auth-modal-dialog span[onclick*="signin"] {
   color: #0284c7 !important;
-  font-weight: 700 !important;
+  font-weight: 800 !important;
   transition: color 0.2s ease;
 }
 
