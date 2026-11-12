@@ -224,10 +224,16 @@ def _attempt_smtp_send(host: str, port: int, user: str, password: str, to_email:
     # Attach Rich HTML Part Second
     msg_alt.attach(MIMEText(html_content, "html", "utf-8"))
 
-    # Attach both 3D brand logos as inline CID parts, without separate attachment rows.
+    # Attach both 3D brand logos as lightweight inline CID parts (optimized to ~33KB to ensure instant delivery without SSL timeout)
     base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
-    for cid_name, rel_path in [("kogm_logo", "Images/logos/3d_logo1.png"), ("mashal_logo", "Images/logos/3d_logo2.png")]:
-        full_path = os.path.join(base_dir, rel_path)
+    for cid_name, opt_path, orig_path in [
+        ("kogm_logo", "Images/logos/email_logo1.png", "Images/logos/3d_logo1.png"),
+        ("mashal_logo", "Images/logos/email_logo2.png", "Images/logos/3d_logo2.png")
+    ]:
+        full_path = os.path.join(base_dir, opt_path)
+        if not os.path.exists(full_path):
+            full_path = os.path.join(base_dir, orig_path)
+            
         if os.path.exists(full_path):
             try:
                 with open(full_path, "rb") as img_f:
@@ -254,11 +260,11 @@ def _attempt_smtp_send(host: str, port: int, user: str, password: str, to_email:
     for p in ports_to_try:
         try:
             if p == 465:
-                with smtplib.SMTP_SSL(host, 465, timeout=12) as server:
+                with smtplib.SMTP_SSL(host, 465, timeout=25) as server:
                     server.login(user, password)
                     server.sendmail(user, to_email, msg.as_string())
             else:
-                with smtplib.SMTP(host, p, timeout=12) as server:
+                with smtplib.SMTP(host, p, timeout=25) as server:
                     server.ehlo()
                     server.starttls()
                     server.ehlo()
