@@ -1054,7 +1054,7 @@ const charts = {
     }
   },
 
-  createAuditFocusChart(motor, width = 1800, height = 520) {
+  createAuditFocusChart(motor, width = 1500, height = 480) {
     if (!motor || !motor.timeline) return '';
     try {
       const offCanvas = document.createElement('canvas');
@@ -1073,8 +1073,7 @@ const charts = {
       const statuses = timeline.statuses || [];
 
       const isKohlu = motor.panel_type === 'KOHLU' || (motor.code && motor.code.startsWith('K'));
-      // Cap only anomalous display values so one meter spike cannot flatten
-      // normal intervals. The raw value remains in the audit table and alert.
+      // Cap only anomalous display values so one meter spike cannot flatten normal intervals
       const graphLoadPcts = loadPcts.map((pct, idx) =>
         statuses[idx] === 'ANOMALY' && Number.isFinite(pct) ? Math.min(pct, 120) : pct
       );
@@ -1117,7 +1116,7 @@ const charts = {
               data: overloadLine,
               borderColor: '#dc2626',
               backgroundColor: '#dc2626',
-              borderWidth: 2.5,
+              borderWidth: 3,
               borderDash: [8, 5],
               pointRadius: 0,
               fill: false,
@@ -1130,7 +1129,7 @@ const charts = {
               data: healthyMinLine,
               borderColor: '#059669',
               backgroundColor: '#059669',
-              borderWidth: 2.5,
+              borderWidth: 3,
               borderDash: [8, 5],
               pointRadius: 0,
               fill: false,
@@ -1143,7 +1142,7 @@ const charts = {
               data: idleMaxLine,
               borderColor: '#d97706',
               backgroundColor: '#d97706',
-              borderWidth: 2.2,
+              borderWidth: 2.8,
               borderDash: [6, 4],
               pointRadius: 0,
               fill: false,
@@ -1156,7 +1155,7 @@ const charts = {
               data: graphLoadPcts,
               backgroundColor: barColors,
               borderColor: borderColors,
-              borderWidth: 1.5,
+              borderWidth: 1.8,
               borderRadius: 3,
               order: 1,
               yAxisID: 'y'
@@ -1197,18 +1196,21 @@ const charts = {
                 }
 
                 chartCtx.save();
-                chartCtx.font = 'bold 12px "JetBrains Mono", monospace';
+                // Large, bold, high-contrast font for crystal clear readability
+                chartCtx.font = 'bold 15px "JetBrains Mono", monospace';
                 chartCtx.textAlign = 'center';
                 chartCtx.textBaseline = 'middle';
 
-                const textW = chartCtx.measureText(labelText).width || 24;
-                const pillW = Math.max(textW + 8, 32);
-                const pillH = 18;
-                const yPos = Math.max(bar.y - 12, 14);
+                const textW = chartCtx.measureText(labelText).width || 30;
+                const pillW = Math.max(textW + 8, 34);
+                const pillH = 20;
+                // Alternating stagger avoids pill collisions between adjacent full-height bars
+                const stagger = (index % 2 === 1) ? 22 : 12;
+                const yPos = Math.max(bar.y - stagger, 14);
 
                 chartCtx.fillStyle = '#ffffff';
                 chartCtx.strokeStyle = labelColor;
-                chartCtx.lineWidth = 1.4;
+                chartCtx.lineWidth = 1.6;
 
                 chartCtx.beginPath();
                 if (typeof chartCtx.roundRect === 'function') {
@@ -1234,9 +1236,10 @@ const charts = {
               position: 'top',
               labels: {
                 color: '#0f172a',
-                font: { family: 'Outfit', size: 13, weight: 700 },
+                font: { family: 'Outfit', size: 16, weight: 800 },
                 usePointStyle: true,
-                padding: 16
+                pointStyleWidth: 16,
+                padding: 18
               }
             },
             tooltip: { enabled: false }
@@ -1246,20 +1249,20 @@ const charts = {
               grid: { display: false },
               ticks: {
                 color: '#0f172a',
-                font: { family: 'JetBrains Mono', size: 12, weight: 700 },
+                font: { family: 'JetBrains Mono', size: 15, weight: 800 },
                 maxRotation: 45,
                 minRotation: 35,
                 autoSkip: true,
                 maxTicksLimit: 25,
-                padding: 6
+                padding: 8
               }
             },
             y: {
               position: 'left',
-              grid: { color: '#e2e8f0', lineWidth: 1 },
+              grid: { color: '#e2e8f0', lineWidth: 1.2 },
               ticks: {
                 color: '#0f172a',
-                font: { family: 'JetBrains Mono', size: 12, weight: 800 },
+                font: { family: 'JetBrains Mono', size: 16, weight: 800 },
                 callback: (v) => `${v}%`,
                 padding: 10
               },
@@ -1267,8 +1270,8 @@ const charts = {
                 display: true,
                 text: 'Operating Load Percentage (% of Rated HP)',
                 color: '#0284c7',
-                font: { family: 'Outfit', size: 13, weight: 800 },
-                padding: { bottom: 6 }
+                font: { family: 'Outfit', size: 18, weight: 800 },
+                padding: { bottom: 8 }
               },
               suggestedMax: suggestedMaxPct,
               beginAtZero: true
@@ -1278,7 +1281,7 @@ const charts = {
               grid: { display: false },
               ticks: {
                 color: '#0f172a',
-                font: { family: 'JetBrains Mono', size: 12, weight: 700 },
+                font: { family: 'JetBrains Mono', size: 16, weight: 800 },
                 callback: (v) => {
                   const kwh = (v * (motor.rated_15m_kwh || 10) / 100).toFixed(1);
                   return `${kwh} kWh`;
@@ -1289,8 +1292,8 @@ const charts = {
                 display: true,
                 text: '15-Minute Energy (kWh)',
                 color: '#0284c7',
-                font: { family: 'Outfit', size: 13, weight: 800 },
-                padding: { bottom: 6 }
+                font: { family: 'Outfit', size: 18, weight: 800 },
+                padding: { bottom: 8 }
               },
               suggestedMax: suggestedMaxPct,
               beginAtZero: true
@@ -1298,6 +1301,15 @@ const charts = {
           }
         }
       });
+
+      const dataUrl = offCanvas.toDataURL('image/png');
+      chart.destroy();
+      return dataUrl;
+    } catch (e) {
+      console.warn('createAuditFocusChart error:', e);
+      return '';
+    }
+  }
 
       const dataUrl = offCanvas.toDataURL('image/png');
       chart.destroy();

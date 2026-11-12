@@ -2010,9 +2010,9 @@ const dashboard = {
 
       const toKwh = (value) => `${Number(value || 0).toFixed(2)} kWh`;
       const makeItem = (motor) => {
-        // Always generate full-resolution focus chart with all 48-interval percentages, benchmark lines, and time labels
+        // Always generate full-resolution focus chart with enlarged percentages, benchmark lines, and time labels
         const chartImg = (typeof charts !== 'undefined' && charts.createAuditFocusChart)
-          ? charts.createAuditFocusChart(motor, 1800, 520)
+          ? charts.createAuditFocusChart(motor, 1500, 480)
           : '';
         return {
           title: `${motor.panel_name ? `${motor.panel_name} · ` : ''}${motor.name || `${motor.code} (${motor.hp} HP)`}${motor.role ? ` · ${motor.role}` : ''}`,
@@ -2042,42 +2042,42 @@ const dashboard = {
           <header style="display:flex; justify-content:space-between; align-items:center; gap:12px; border-bottom:2px solid #0284c7; padding-bottom:8px; margin-bottom:12px;">
             <div style="display:flex; align-items:center; gap:10px; min-width:0;">
               <div style="display:flex; align-items:center; gap:5px; flex:0 0 auto;">
-                <img src="/img/3d_logo1.webp?v=20261112_logo_fast_v1" alt="KOGM" style="height:32px; width:65px; padding:2px; object-fit:contain; border:1px solid #f4b400; border-radius:5px; background:#fff;">
-                <img src="/img/3d_logo2.webp?v=20261112_logo_fast_v1" alt="Mashal" style="height:32px; width:65px; padding:2px; object-fit:contain; border:1px solid #f4b400; border-radius:5px; background:#fff;">
+                <img src="/img/3d_logo1.webp?v=20261112_logo_fast_v1" alt="KOGM" style="height:34px; width:70px; padding:2px; object-fit:contain; border:1px solid #f4b400; border-radius:5px; background:#fff;">
+                <img src="/img/3d_logo2.webp?v=20261112_logo_fast_v1" alt="Mashal" style="height:34px; width:70px; padding:2px; object-fit:contain; border:1px solid #f4b400; border-radius:5px; background:#fff;">
               </div>
               <div style="min-width:0;">
-                <div style="font-size:15px; font-weight:800; line-height:1.2; color:#0f172a;">${escapeHtml(sectionTitle)}</div>
-                <div style="font-size:10px; color:#475569; margin-top:2px; white-space:nowrap;">${escapeHtml(reportText)} · ${escapeHtml(activeShift)} · Generated ${escapeHtml(generatedAt)} IST</div>
+                <div style="font-size:16px; font-weight:800; line-height:1.2; color:#0f172a;">${escapeHtml(sectionTitle)}</div>
+                <div style="font-size:11px; color:#475569; margin-top:2px; white-space:nowrap;">${escapeHtml(reportText)} · ${escapeHtml(activeShift)} · Generated ${escapeHtml(generatedAt)} IST</div>
               </div>
             </div>
-            <div style="text-align:right; font-size:9px; color:#475569; flex:0 0 auto;">
+            <div style="text-align:right; font-size:10px; color:#475569; flex:0 0 auto;">
               <div>${escapeHtml(user.full_name || user.username || 'EMS User')}</div>
-              <div style="font-weight:700; color:#0284c7; margin-top:2px;">Page ${pageIndex + 1} of ${pages.length}</div>
+              <div style="font-weight:800; font-size:11px; color:#0284c7; margin-top:2px;">Page ${pageIndex + 1} of ${pages.length}</div>
             </div>
           </header>
           <div style="display:block;">
             ${pageItems.map(item => `
-              <article style="border:1px solid #cbd5e1; border-radius:8px; padding:10px 14px; background:#fff; break-inside:avoid; page-break-inside:avoid;">
-                <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:6px; margin-bottom:8px;">
+              <article style="border:1px solid #cbd5e1; border-radius:8px; padding:12px 16px; background:#fff; break-inside:avoid; page-break-inside:avoid;">
+                <div style="display:flex; justify-content:space-between; gap:12px; align-items:center; border-bottom:1px solid #e2e8f0; padding-bottom:8px; margin-bottom:10px;">
                   <div>
-                    <div style="font-size:15px; font-weight:800; color:#0f172a;">${escapeHtml(item.title)}</div>
-                    <div style="font-size:11px; color:#475569; margin-top:2px;">${escapeHtml(item.rating)} · ${escapeHtml(item.threshold)}</div>
+                    <div style="font-size:16px; font-weight:800; color:#0f172a;">${escapeHtml(item.title)}</div>
+                    <div style="font-size:12px; color:#475569; margin-top:3px;">${escapeHtml(item.rating)} · ${escapeHtml(item.threshold)}</div>
                   </div>
-                  <span style="font-size:11px; font-weight:700; color:#075985; background:#e0f2fe; padding:4px 10px; border-radius:6px; white-space:nowrap;">${escapeHtml(item.status)}</span>
+                  <span style="font-size:12px; font-weight:800; color:#075985; background:#e0f2fe; padding:5px 12px; border-radius:6px; white-space:nowrap;">${escapeHtml(item.status)}</span>
                 </div>
-                <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-bottom:8px;">
+                <div style="display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:10px;">
                   ${[['MIN', item.min], ['MAX', item.max], ['AVG', item.avg], ['SHIFT SUM', item.sum]].map(([label, value]) => `
-                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:6px 10px;">
-                      <div style="font-size:9px; font-weight:700; color:#64748b; letter-spacing:0.5px;">${label}</div>
-                      <div style="font-size:12px; font-weight:800; color:#0f172a; margin-top:2px;">${escapeHtml(value)}</div>
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:6px; padding:8px 12px;">
+                      <div style="font-size:10px; font-weight:800; color:#64748b; letter-spacing:0.5px;">${label}</div>
+                      <div style="font-size:14px; font-weight:800; color:#0f172a; margin-top:3px;">${escapeHtml(value)}</div>
                     </div>`).join('')}
                 </div>
-                ${item.chartImg ? `<img src="${item.chartImg}" alt="48 interval motor load graph" style="width:100%; height:360px; object-fit:contain; display:block; background:#fff; margin:4px 0;">` : '<div style="padding:24px;text-align:center;color:#64748b;">Graph could not be rendered.</div>'}
-                <div style="font-size:10px; line-height:1.4; color:#334155; border-left:3px solid #0284c7; background:#f8fafc; padding:6px 10px; margin-top:8px; border-radius:0 4px 4px 0;">${escapeHtml(item.note)}</div>
+                ${item.chartImg ? `<img src="${item.chartImg}" alt="48 interval motor load graph" style="width:100%; height:370px; object-fit:contain; display:block; background:#fff; margin:6px 0;">` : '<div style="padding:24px;text-align:center;color:#64748b;">Graph could not be rendered.</div>'}
+                <div style="font-size:11px; line-height:1.45; color:#1e293b; border-left:4px solid #0284c7; background:#f8fafc; padding:8px 12px; margin-top:10px; border-radius:0 5px 5px 0;">${escapeHtml(item.note)}</div>
               </article>`).join('')}
           </div>
-          <footer style="border-top:1px solid #cbd5e1; margin-top:12px; padding-top:8px; font-size:9.5px; color:#64748b; display:flex; justify-content:space-between; align-items:center;">
-            <span>SCADA readings shown for the selected report · 15-minute intervals</span>
+          <footer style="border-top:1px solid #cbd5e1; margin-top:12px; padding-top:8px; font-size:10.5px; color:#64748b; display:flex; justify-content:space-between; align-items:center;">
+            <span>SCADA telemetry readings shown for the selected report · 15-minute intervals</span>
             <span>Mashal EMS Intelligence</span>
           </footer>
         </section>`).join('');
