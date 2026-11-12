@@ -20,9 +20,9 @@ class Settings(BaseSettings):
 
     # Dual-Account Corporate Email & SMTP Configuration
     PRIMARY_SMTP_USER: str = os.getenv("PRIMARY_SMTP_USER", "noreplykogm@gmail.com")
-    PRIMARY_SMTP_PASSWORD: str = os.getenv("PRIMARY_SMTP_PASSWORD", "")
+    PRIMARY_SMTP_PASSWORD: str = os.getenv("PRIMARY_SMTP_PASSWORD", "eywx ymyd xntx mtrt")
     SECONDARY_SMTP_USER: str = os.getenv("SECONDARY_SMTP_USER", "chd.kogm@gmail.com")
-    SECONDARY_SMTP_PASSWORD: str = os.getenv("SECONDARY_SMTP_PASSWORD", "")
+    SECONDARY_SMTP_PASSWORD: str = os.getenv("SECONDARY_SMTP_PASSWORD", "piqv wcut yvxj mibn")
     SMTP_HOST: str = os.getenv("SMTP_HOST", "smtp.gmail.com")
     SMTP_PORT: int = int(os.getenv("SMTP_PORT", "587"))
     

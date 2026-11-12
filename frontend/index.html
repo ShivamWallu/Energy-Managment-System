@@ -21,7 +21,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <!-- Application CSS -->
-  <link rel="stylesheet" href="/css/style.css?v=20261112_solid_dropdown_clean_v25">
+  <link rel="stylesheet" href="/css/style.css?v=20261112_auth_visible_smtp_resilient_v26">
 
   <!-- Preload Optimized Background & Machinery Images for 5X Faster Loading -->
   <link rel="preload" as="image" href="/img/land1_background.webp?v=20261112_fast5x" type="image/webp" fetchpriority="high">
@@ -981,20 +981,20 @@
       <div id="auth-signin-pane">
         <form id="login-form">
           <div style="margin-bottom:1rem;">
-            <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.35rem;">
-              <i class="fa-regular fa-user text-cyan"></i> Username or Email
+            <label style="display:block; font-size:0.78rem; font-weight:700; color:#334155 !important; margin-bottom:0.35rem;">
+              <i class="fa-regular fa-user" style="color:#0284c7;"></i> Username or Email
             </label>
-            <input type="text" id="login-username" class="search-input" placeholder="Username or email" value="" autocomplete="username" required autofocus style="width:100%;">
+            <input type="text" id="login-username" class="search-input" placeholder="Username or email" value="" autocomplete="username" required autofocus style="width:100%; color:#0f172a !important; background:#ffffff !important; border:1px solid #cbd5e1 !important;">
           </div>
           <div style="margin-bottom:1rem;">
-            <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.35rem;">
-              <i class="fa-solid fa-lock text-cyan"></i> Password
+            <label style="display:block; font-size:0.78rem; font-weight:700; color:#334155 !important; margin-bottom:0.35rem;">
+              <i class="fa-solid fa-lock" style="color:#0284c7;"></i> Password
             </label>
-            <input type="password" id="login-password" class="search-input" placeholder="••••••••••••" value="" autocomplete="current-password" required style="width:100%;">
+            <input type="password" id="login-password" class="search-input" placeholder="••••••••••••" value="" autocomplete="current-password" required style="width:100%; color:#0f172a !important; background:#ffffff !important; border:1px solid #cbd5e1 !important;">
           </div>
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1.15rem; font-size:0.78rem;">
-            <label style="display:inline-flex; align-items:center; gap:0.4rem; color:var(--text-secondary); cursor:pointer;">
-              <input type="checkbox" id="chk-keep-logged" checked style="accent-color:var(--accent-cyan);">
+            <label style="display:inline-flex; align-items:center; gap:0.4rem; color:#334155 !important; font-weight:600; cursor:pointer;">
+              <input type="checkbox" id="chk-keep-logged" checked style="accent-color:#0284c7;">
               <span>Keep Me Logged In</span>
             </label>
           </div>
@@ -1002,50 +1002,50 @@
           <button type="submit" class="btn btn-primary" id="btn-signin-submit" style="width:100%; justify-content:center; padding:0.68rem 1rem; font-weight:700;">
             <i class="fa-solid fa-right-to-bracket"></i> Sign In to Dashboard
           </button>
-          <div style="display:flex; justify-content:space-between; font-size:0.74rem; font-weight:700; text-transform:uppercase; margin-top:1rem; color:var(--text-muted);">
-            <span style="cursor:pointer; color:var(--text-secondary);" onclick="auth.switchAuthMode('forgot')">Forgot Password?</span>
-            <span style="cursor:pointer; color:var(--accent-cyan);" onclick="auth.switchAuthMode('register')">New User? Register</span>
+          <div style="display:flex; justify-content:space-between; font-size:0.78rem; font-weight:700; text-transform:uppercase; margin-top:1rem;">
+            <span style="cursor:pointer; color:#475569 !important; font-weight:700;" onclick="auth.switchAuthMode('forgot')">Forgot Password?</span>
+            <span style="cursor:pointer; color:#0284c7 !important; font-weight:800;" onclick="auth.switchAuthMode('register')">New User? Register</span>
           </div>
         </form>
       </div>
 
       <!-- PANE 2: Registration Form (Name, Email, Password, Confirm Password) -->
       <div id="auth-register-pane" style="display:none;">
-        <p style="font-size:0.78rem; color:var(--text-secondary); margin-top:0; margin-bottom:1rem; line-height:1.45;">
+        <p style="font-size:0.84rem; color:#475569 !important; font-weight:500; margin-top:0; margin-bottom:1rem; line-height:1.45;">
           Register a new operator or staff account. An official 6-digit OTP code will be sent to your email with verified company credentials.
         </p>
         <form id="register-form">
           <div style="margin-bottom:0.85rem;">
-            <label style="display:block; font-size:0.76rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.3rem;">
-              <i class="fa-solid fa-id-card text-cyan"></i> Full Name
+            <label style="display:block; font-size:0.76rem; font-weight:700; color:#334155 !important; margin-bottom:0.3rem;">
+              <i class="fa-solid fa-id-card" style="color:#0284c7;"></i> Full Name
             </label>
-            <input type="text" id="reg-name" class="search-input" placeholder="e.g. Ramesh Kumar" required style="width:100%;">
+            <input type="text" id="reg-name" class="search-input" placeholder="e.g. Ramesh Kumar" required style="width:100%; color:#0f172a !important; background:#ffffff !important; border:1px solid #cbd5e1 !important;">
           </div>
           <div style="margin-bottom:0.85rem;">
-            <label style="display:block; font-size:0.76rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.3rem;">
-              <i class="fa-solid fa-envelope text-cyan"></i> Email ID
+            <label style="display:block; font-size:0.76rem; font-weight:700; color:#334155 !important; margin-bottom:0.3rem;">
+              <i class="fa-solid fa-envelope" style="color:#0284c7;"></i> Email ID
             </label>
-            <input type="email" id="reg-email" class="search-input" placeholder="e.g. ramesh@mashaloil.com" required style="width:100%;">
+            <input type="email" id="reg-email" class="search-input" placeholder="e.g. ramesh@mashaloil.com" required style="width:100%; color:#0f172a !important; background:#ffffff !important; border:1px solid #cbd5e1 !important;">
           </div>
           <div style="margin-bottom:0.85rem;">
-            <label style="display:block; font-size:0.76rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.3rem;">
-              <i class="fa-solid fa-lock text-cyan"></i> Password
+            <label style="display:block; font-size:0.76rem; font-weight:700; color:#334155 !important; margin-bottom:0.3rem;">
+              <i class="fa-solid fa-lock" style="color:#0284c7;"></i> Password
             </label>
-            <input type="password" id="reg-password" class="search-input" placeholder="At least 6 characters" minlength="6" required style="width:100%;">
+            <input type="password" id="reg-password" class="search-input" placeholder="At least 6 characters" minlength="6" required style="width:100%; color:#0f172a !important; background:#ffffff !important; border:1px solid #cbd5e1 !important;">
           </div>
           <!-- Confirm Password Column (Mandatory Image 3 Requirement) -->
           <div style="margin-bottom:1.15rem;">
-            <label style="display:block; font-size:0.76rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.3rem;">
-              <i class="fa-solid fa-shield-halved text-cyan"></i> Confirm Password
+            <label style="display:block; font-size:0.76rem; font-weight:700; color:#334155 !important; margin-bottom:0.3rem;">
+              <i class="fa-solid fa-shield-halved" style="color:#0284c7;"></i> Confirm Password
             </label>
-            <input type="password" id="reg-confirm-password" class="search-input" placeholder="Re-enter your password" minlength="6" required style="width:100%;">
+            <input type="password" id="reg-confirm-password" class="search-input" placeholder="Re-enter your password" minlength="6" required style="width:100%; color:#0f172a !important; background:#ffffff !important; border:1px solid #cbd5e1 !important;">
           </div>
           <div id="reg-error-msg" style="display:none; color:var(--accent-red); font-size:0.82rem; margin-bottom:1rem; padding:0.5rem 0.75rem; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:var(--radius-sm);"></div>
           <button type="submit" class="btn btn-primary" id="btn-request-otp" style="width:100%; justify-content:center; padding:0.68rem 1rem; font-weight:700;">
             <i class="fa-solid fa-paper-plane"></i> Send OTP Verification Code
           </button>
-          <div style="text-align:center; font-size:0.74rem; font-weight:700; text-transform:uppercase; margin-top:1rem; color:var(--text-muted);">
-            <span style="cursor:pointer; color:var(--accent-cyan);" onclick="auth.switchAuthMode('signin')">Already have an account? Sign In</span>
+          <div style="text-align:center; font-size:0.78rem; font-weight:700; text-transform:uppercase; margin-top:1rem;">
+            <span style="cursor:pointer; color:#0284c7 !important; font-weight:800;" onclick="auth.switchAuthMode('signin')">Already have an account? Sign In</span>
           </div>
         </form>
       </div>
@@ -1053,29 +1053,29 @@
       <!-- PANE 3: Registration OTP Verification Form -->
       <div id="auth-otp-pane" style="display:none;">
         <div style="text-align:center; margin-bottom:1.25rem;">
-          <div style="width:52px; height:52px; border-radius:50%; background:rgba(0,210,255,0.12); border:1px solid rgba(0,210,255,0.35); color:#00d2ff; display:flex; align-items:center; justify-content:center; margin:0 auto 0.75rem; font-size:1.4rem;">
+          <div style="width:52px; height:52px; border-radius:50%; background:rgba(2,132,199,0.12); border:1.5px solid rgba(2,132,199,0.3); color:#0284c7; display:flex; align-items:center; justify-content:center; margin:0 auto 0.75rem; font-size:1.4rem;">
             <i class="fa-solid fa-envelope-circle-check"></i>
           </div>
-          <h4 style="font-size:1rem; font-weight:700; color:var(--text-primary); margin:0 0 0.35rem;">Enter 6-Digit Verification Code</h4>
-          <p style="font-size:0.78rem; color:var(--text-secondary); margin:0;">
+          <h4 style="font-size:1.15rem; font-weight:800; color:#0f172a !important; margin:0 0 0.4rem; letter-spacing:-0.01em;">Enter 6-Digit Verification Code</h4>
+          <p style="font-size:0.84rem; color:#475569 !important; font-weight:500; margin:0; line-height:1.5;">
             A verification code was dispatched to: <br>
-            <strong id="otp-target-email" style="color:var(--accent-cyan); font-family:monospace;"></strong>
+            <strong id="otp-target-email" style="color:#0369a1 !important; font-family:monospace; font-weight:800; background:#e0f2fe; padding:3px 10px; border-radius:6px; border:1px solid #bae6fd; display:inline-block; margin-top:4px;"></strong>
           </p>
         </div>
 
         <form id="otp-form">
           <div style="margin-bottom:1.25rem;">
-            <input type="text" id="otp-input" class="search-input" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required style="width:100%; text-align:center; font-size:1.5rem; letter-spacing:0.4rem; font-family:monospace; font-weight:700; padding:0.65rem;">
+            <input type="text" id="otp-input" class="search-input" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required style="width:100%; text-align:center; font-size:1.6rem; letter-spacing:0.45rem; font-family:monospace; font-weight:800; padding:0.65rem; color:#0f172a !important; background:#ffffff !important; border:2px solid #94a3b8 !important;">
           </div>
           <div id="otp-error-msg" style="display:none; color:var(--accent-red); font-size:0.82rem; margin-bottom:1rem; padding:0.5rem 0.75rem; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:var(--radius-sm);"></div>
           <button type="submit" class="btn btn-primary" id="btn-verify-otp" style="width:100%; justify-content:center; padding:0.65rem 1rem; font-weight:700; margin-bottom:0.85rem;">
             <i class="fa-solid fa-check-double"></i> Verify OTP &amp; Activate Account
           </button>
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem;">
-            <button type="button" class="btn-link" style="background:none; border:none; color:var(--text-muted); cursor:pointer; padding:0;" onclick="auth.switchAuthMode('register')">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.82rem;">
+            <button type="button" class="btn-link" style="background:none; border:none; color:#475569 !important; font-weight:700; cursor:pointer; padding:0;" onclick="auth.switchAuthMode('register')">
               <i class="fa-solid fa-arrow-left"></i> Change Email
             </button>
-            <button type="button" class="btn-link" id="btn-resend-otp" style="background:none; border:none; color:var(--accent-cyan); cursor:pointer; padding:0;" onclick="auth.resendOtp()">
+            <button type="button" class="btn-link" id="btn-resend-otp" style="background:none; border:none; color:#0284c7 !important; font-weight:800; cursor:pointer; padding:0;" onclick="auth.resendOtp()">
               <i class="fa-solid fa-arrows-rotate"></i> Resend Code
             </button>
           </div>
@@ -1085,28 +1085,28 @@
       <!-- PANE 4: Forgot Password Request OTP Form -->
       <div id="auth-forgot-pane" style="display:none;">
         <div style="text-align:center; margin-bottom:1.15rem;">
-          <div style="width:46px; height:46px; border-radius:50%; background:rgba(245,158,11,0.12); color:#f59e0b; display:flex; align-items:center; justify-content:center; margin:0 auto 0.5rem; font-size:1.25rem;">
+          <div style="width:48px; height:48px; border-radius:50%; background:rgba(217,119,6,0.12); border:1.5px solid rgba(217,119,6,0.35); color:#b45309; display:flex; align-items:center; justify-content:center; margin:0 auto 0.6rem; font-size:1.3rem;">
             <i class="fa-solid fa-key"></i>
           </div>
-          <h4 style="font-size:1rem; font-weight:700; color:var(--text-primary); margin:0 0 0.35rem;">Reset Account Password</h4>
-          <p style="font-size:0.78rem; color:var(--text-secondary); margin:0; line-height:1.45;">
+          <h4 style="font-size:1.15rem; font-weight:800; color:#0f172a !important; margin:0 0 0.4rem; letter-spacing:-0.01em;">Reset Account Password</h4>
+          <p style="font-size:0.84rem; color:#475569 !important; font-weight:500; margin:0; line-height:1.45;">
             Enter your registered email address. We will dispatch an official 6-digit password reset OTP to verify your identity.
           </p>
         </div>
 
         <form id="forgot-form">
           <div style="margin-bottom:1.15rem;">
-            <label style="display:block; font-size:0.78rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.35rem;">
-              <i class="fa-solid fa-envelope text-cyan"></i> Registered Email Address
+            <label style="display:block; font-size:0.78rem; font-weight:700; color:#334155 !important; margin-bottom:0.35rem;">
+              <i class="fa-solid fa-envelope" style="color:#0284c7;"></i> Registered Email Address
             </label>
-            <input type="email" id="forgot-email" class="search-input" placeholder="e.g. operator@mashaloil.com" required style="width:100%;">
+            <input type="email" id="forgot-email" class="search-input" placeholder="e.g. operator@mashaloil.com" required style="width:100%; color:#0f172a !important; background:#ffffff !important; border:1px solid #cbd5e1 !important;">
           </div>
           <div id="forgot-error-msg" style="display:none; color:var(--accent-red); font-size:0.82rem; margin-bottom:1rem; padding:0.5rem 0.75rem; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:var(--radius-sm);"></div>
           <button type="submit" class="btn btn-primary" id="btn-forgot-submit" style="width:100%; justify-content:center; padding:0.68rem 1rem; font-weight:700;">
             <i class="fa-solid fa-paper-plane"></i> Send Password Reset Code
           </button>
-          <div style="text-align:center; font-size:0.74rem; font-weight:700; text-transform:uppercase; margin-top:1rem; color:var(--text-muted);">
-            <span style="cursor:pointer; color:var(--accent-cyan);" onclick="auth.switchAuthMode('signin')">
+          <div style="text-align:center; font-size:0.78rem; font-weight:700; text-transform:uppercase; margin-top:1rem;">
+            <span style="cursor:pointer; color:#0284c7 !important; font-weight:800;" onclick="auth.switchAuthMode('signin')">
               <i class="fa-solid fa-arrow-left"></i> Back to Sign In
             </span>
           </div>
@@ -1116,44 +1116,44 @@
       <!-- PANE 5: Password Reset Verification & New Password Form -->
       <div id="auth-reset-pane" style="display:none;">
         <div style="text-align:center; margin-bottom:1.15rem;">
-          <div style="width:46px; height:46px; border-radius:50%; background:rgba(0,210,255,0.12); color:var(--accent-cyan); display:flex; align-items:center; justify-content:center; margin:0 auto 0.5rem; font-size:1.25rem;">
+          <div style="width:48px; height:48px; border-radius:50%; background:rgba(2,132,199,0.12); border:1.5px solid rgba(2,132,199,0.35); color:#0284c7; display:flex; align-items:center; justify-content:center; margin:0 auto 0.6rem; font-size:1.3rem;">
             <i class="fa-solid fa-lock-open"></i>
           </div>
-          <h4 style="font-size:1rem; font-weight:700; color:var(--text-primary); margin:0 0 0.35rem;">Set New Password</h4>
-          <p style="font-size:0.78rem; color:var(--text-secondary); margin:0;">
-            Verification code sent to: <strong id="reset-target-email" style="color:var(--accent-cyan); font-family:monospace;"></strong>
+          <h4 style="font-size:1.15rem; font-weight:800; color:#0f172a !important; margin:0 0 0.4rem; letter-spacing:-0.01em;">Set New Password</h4>
+          <p style="font-size:0.84rem; color:#475569 !important; font-weight:500; margin:0;">
+            Verification code sent to: <strong id="reset-target-email" style="color:#0369a1 !important; font-family:monospace; font-weight:800; background:#e0f2fe; padding:3px 10px; border-radius:6px; border:1px solid #bae6fd; display:inline-block; margin-top:4px;"></strong>
           </p>
           <div id="reset-demo-hint" style="display:none; font-size:0.75rem; color:var(--accent-amber); background:rgba(245,158,11,0.1); border:1px dashed rgba(245,158,11,0.4); border-radius:4px; padding:0.35rem 0.6rem; margin-top:0.65rem;"></div>
         </div>
 
         <form id="reset-form">
           <div style="margin-bottom:0.85rem;">
-            <label style="display:block; font-size:0.76rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.3rem;">
-              <i class="fa-solid fa-shield-halved text-cyan"></i> 6-Digit Reset Code
+            <label style="display:block; font-size:0.76rem; font-weight:700; color:#334155 !important; margin-bottom:0.3rem;">
+              <i class="fa-solid fa-shield-halved" style="color:#0284c7;"></i> 6-Digit Reset Code
             </label>
-            <input type="text" id="reset-otp-input" class="search-input" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required style="width:100%; text-align:center; font-size:1.35rem; letter-spacing:0.35rem; font-family:monospace; font-weight:700; padding:0.45rem;">
+            <input type="text" id="reset-otp-input" class="search-input" placeholder="000000" maxlength="6" pattern="[0-9]{6}" required style="width:100%; text-align:center; font-size:1.45rem; letter-spacing:0.4rem; font-family:monospace; font-weight:800; padding:0.5rem; color:#0f172a !important; background:#ffffff !important; border:2px solid #94a3b8 !important;">
           </div>
           <div style="margin-bottom:0.85rem;">
-            <label style="display:block; font-size:0.76rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.3rem;">
-              <i class="fa-solid fa-lock text-cyan"></i> New Password
+            <label style="display:block; font-size:0.76rem; font-weight:700; color:#334155 !important; margin-bottom:0.3rem;">
+              <i class="fa-solid fa-lock" style="color:#0284c7;"></i> New Password
             </label>
-            <input type="password" id="reset-new-password" class="search-input" placeholder="At least 6 characters" minlength="6" required style="width:100%;">
+            <input type="password" id="reset-new-password" class="search-input" placeholder="At least 6 characters" minlength="6" required style="width:100%; color:#0f172a !important; background:#ffffff !important; border:1px solid #cbd5e1 !important;">
           </div>
           <div style="margin-bottom:1.15rem;">
-            <label style="display:block; font-size:0.76rem; font-weight:700; color:var(--text-secondary); margin-bottom:0.3rem;">
-              <i class="fa-solid fa-check-double text-cyan"></i> Confirm New Password
+            <label style="display:block; font-size:0.76rem; font-weight:700; color:#334155 !important; margin-bottom:0.3rem;">
+              <i class="fa-solid fa-check-double" style="color:#0284c7;"></i> Confirm New Password
             </label>
-            <input type="password" id="reset-confirm-password" class="search-input" placeholder="Re-enter new password" minlength="6" required style="width:100%;">
+            <input type="password" id="reset-confirm-password" class="search-input" placeholder="Re-enter new password" minlength="6" required style="width:100%; color:#0f172a !important; background:#ffffff !important; border:1px solid #cbd5e1 !important;">
           </div>
           <div id="reset-error-msg" style="display:none; color:var(--accent-red); font-size:0.82rem; margin-bottom:1rem; padding:0.5rem 0.75rem; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:var(--radius-sm);"></div>
           <button type="submit" class="btn btn-primary" id="btn-reset-submit" style="width:100%; justify-content:center; padding:0.68rem 1rem; font-weight:700;">
             <i class="fa-solid fa-circle-check"></i> Update Password &amp; Sign In
           </button>
-          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.78rem; margin-top:0.85rem;">
-            <button type="button" class="btn-link" style="background:none; border:none; color:var(--text-muted); cursor:pointer; padding:0;" onclick="auth.switchAuthMode('forgot')">
+          <div style="display:flex; justify-content:space-between; align-items:center; font-size:0.82rem; margin-top:0.85rem;">
+            <button type="button" class="btn-link" style="background:none; border:none; color:#475569 !important; font-weight:700; cursor:pointer; padding:0;" onclick="auth.switchAuthMode('forgot')">
               <i class="fa-solid fa-arrow-left"></i> Change Email
             </button>
-            <button type="button" class="btn-link" style="background:none; border:none; color:var(--accent-cyan); cursor:pointer; padding:0;" onclick="auth.switchAuthMode('signin')">
+            <button type="button" class="btn-link" style="background:none; border:none; color:#0284c7 !important; font-weight:800; cursor:pointer; padding:0;" onclick="auth.switchAuthMode('signin')">
               Return to Login
             </button>
           </div>

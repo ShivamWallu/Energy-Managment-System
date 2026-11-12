@@ -2915,6 +2915,76 @@ html.is-authenticated #login-modal {
   text-decoration: underline;
 }
 
+/* ==========================================================================
+   HIGH-CONTRAST AUTH MODAL VISIBILITY (ALWAYS LEGIBLE IN DARK & LIGHT THEMES)
+   ========================================================================== */
+.auth-modal-dialog h4 {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.01em !important;
+}
+
+.auth-modal-dialog p {
+  color: #334155 !important;
+  font-weight: 500 !important;
+}
+
+.auth-modal-dialog #otp-target-email,
+.auth-modal-dialog #reset-target-email {
+  color: #0369a1 !important;
+  font-weight: 800 !important;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace !important;
+  background: #e0f2fe !important;
+  padding: 3px 10px !important;
+  border-radius: 6px !important;
+  border: 1px solid #bae6fd !important;
+  display: inline-block !important;
+  margin-top: 4px !important;
+}
+
+.auth-modal-dialog .btn-link {
+  color: #475569 !important;
+  font-weight: 700 !important;
+  transition: all 0.2s ease !important;
+}
+
+.auth-modal-dialog .btn-link:hover {
+  color: #0284c7 !important;
+}
+
+.auth-modal-dialog #btn-resend-otp,
+.auth-modal-dialog #btn-resend-reset-otp {
+  color: #0284c7 !important;
+  font-weight: 800 !important;
+}
+
+.auth-modal-dialog #btn-resend-otp:hover,
+.auth-modal-dialog #btn-resend-reset-otp:hover {
+  color: #0369a1 !important;
+  text-decoration: underline !important;
+}
+
+.auth-modal-dialog label {
+  color: #1e293b !important;
+  font-weight: 700 !important;
+}
+
+.auth-modal-dialog #otp-input,
+.auth-modal-dialog #reset-otp-input {
+  color: #0f172a !important;
+  background: #ffffff !important;
+  border: 2px solid #94a3b8 !important;
+  border-radius: 10px !important;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06) !important;
+}
+
+.auth-modal-dialog #otp-input:focus,
+.auth-modal-dialog #reset-otp-input:focus {
+  border-color: #0284c7 !important;
+  box-shadow: 0 0 0 4px rgba(2, 132, 199, 0.18) !important;
+  outline: none !important;
+}
+
 @media (max-width: 1040px) {
   .auth-modal-dialog {
     max-width: 450px !important;

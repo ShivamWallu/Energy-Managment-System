@@ -244,11 +244,35 @@ def _attempt_smtp_send(host: str, port: int, user: str, password: str, to_email:
             except Exception as e:
                 print(f"[EmailService] Could not attach CID image {cid_name}: {e}")
 
-    with smtplib.SMTP(host, port, timeout=12) as server:
-        server.starttls()
-        server.login(user, password)
-        server.sendmail(user, to_email, msg.as_string())
-    return True
+    # Dual-port resilience: try configured port (587 STARTTLS or 465 SSL), and fallback to alternate port if blocked/timed out
+    ports_to_try = [port]
+    fallback_port = 465 if port != 465 else 587
+    if fallback_port not in ports_to_try:
+        ports_to_try.append(fallback_port)
+
+    last_err = None
+    for p in ports_to_try:
+        try:
+            if p == 465:
+                with smtplib.SMTP_SSL(host, 465, timeout=12) as server:
+                    server.login(user, password)
+                    server.sendmail(user, to_email, msg.as_string())
+            else:
+                with smtplib.SMTP(host, p, timeout=12) as server:
+                    server.ehlo()
+                    server.starttls()
+                    server.ehlo()
+                    server.login(user, password)
+                    server.sendmail(user, to_email, msg.as_string())
+            print(f"[EmailService] Delivered email via {host}:{p} using {user}")
+            return True
+        except Exception as e:
+            last_err = e
+            print(f"[EmailService] Port {p} failed on {host} for {user}: {e}")
+
+    if last_err:
+        raise last_err
+    return False
 
 def send_otp_email(to_email: str, recipient_name: str, otp_code: str, action: str = "REGISTRATION") -> Dict[str, Any]:
     """
