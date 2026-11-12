@@ -2619,7 +2619,7 @@ html.is-authenticated #login-modal {
   justify-content: center;
   overflow-y: auto;
   z-index: 1000;
-  background-image: linear-gradient(rgba(7, 16, 28, 0.22), rgba(7, 16, 28, 0.22)), url('/img/land1_background.webp?v=20261112_fast5x') !important;
+  background-image: linear-gradient(rgba(7, 16, 28, 0.22), rgba(7, 16, 28, 0.22)), url('/img/land1_background.webp?v=20261112_fast10x') !important;
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;
@@ -2634,7 +2634,7 @@ html.is-authenticated #login-modal {
 }
 
 [data-theme="light"] #login-modal {
-  background-image: linear-gradient(rgba(7, 16, 28, 0.22), rgba(7, 16, 28, 0.22)), url('/img/land1_background.webp?v=20261112_fast5x') !important;
+  background-image: linear-gradient(rgba(7, 16, 28, 0.22), rgba(7, 16, 28, 0.22)), url('/img/land1_background.webp?v=20261112_fast10x') !important;
   background-position: center;
   background-size: cover;
   background-repeat: no-repeat;

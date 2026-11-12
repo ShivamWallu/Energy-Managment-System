@@ -46,13 +46,16 @@ class ResetPasswordRequest(BaseModel):
 def login(credentials: LoginRequest, request: Request, db: Session = Depends(get_db)):
     ip = request.client.host if request.client else "127.0.0.1"
     clean_login = credentials.username.strip()
+    clean_uname = clean_login.lstrip("@").strip()
 
-    # Search by username, email, OR registered full name (case-insensitive)
+    # Search by Account Name (full_name), Username (with/without @), or Registered Email
     user = db.query(User).filter(
         or_(
-            User.username == clean_login,
-            User.email == clean_login.lower(),
-            func.lower(User.full_name) == clean_login.lower()
+            func.lower(User.username) == clean_login.lower(),
+            func.lower(User.username) == clean_uname.lower(),
+            func.lower(User.email) == clean_login.lower(),
+            func.trim(func.lower(User.full_name)) == clean_login.lower(),
+            func.trim(func.lower(User.full_name)) == clean_uname.lower()
         )
     ).first()
     
@@ -68,7 +71,7 @@ def login(credentials: LoginRequest, request: Request, db: Session = Depends(get
         )
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"No account found with '{clean_login}'. Please create an account to get started.",
+            detail=f"No account found matching '{clean_login}'. Please check your Account Name, Username, or Email.",
             headers={"X-User-Exists": "false"}
         )
 

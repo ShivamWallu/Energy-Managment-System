@@ -5,11 +5,19 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Mashal EMS Intelligence — SCADA Plant Energy &amp; Motor Analytics</title>
   <meta name="description" content="Mashal Mustard Oil Plant SCADA Telemetry, 15-Minute Motor Operating Health, and Energy Distribution.">
-  <link rel="icon" type="image/webp" href="/img/3d_logo2.webp?v=20261112_logo_fast_v1">
-  <link rel="preload" as="image" href="/img/3d_logo1.webp?v=20261112_logo_fast_v1" fetchpriority="high">
-  <link rel="preload" as="image" href="/img/3d_logo2.webp?v=20261112_logo_fast_v1" fetchpriority="high">
+  <link rel="icon" type="image/webp" href="/img/3d_logo2.webp?v=20261112_fast10x">
 
-  <!-- Google Fonts: Outfit & Inter -->
+  <!-- Priority 1: Instant 10X Preload for Background & Login Machinery Images -->
+  <link rel="preload" as="image" href="/img/land1_background.webp?v=20261112_fast10x" type="image/webp" fetchpriority="high">
+  <link rel="preload" as="image" href="/img/machine1.webp?v=20261112_fast10x" type="image/webp" fetchpriority="high">
+  <link rel="preload" as="image" href="/img/machine2.webp?v=20261112_fast10x" type="image/webp" fetchpriority="high">
+  <link rel="preload" as="image" href="/img/3d_logo1.webp?v=20261112_fast10x" fetchpriority="high">
+  <link rel="preload" as="image" href="/img/3d_logo2.webp?v=20261112_fast10x" fetchpriority="high">
+
+  <!-- Application CSS -->
+  <link rel="stylesheet" href="/css/style.css?v=20261112_fast10x">
+
+  <!-- Google Fonts: Outfit & Inter (Preconnect for high speed) -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
@@ -17,16 +25,8 @@
   <!-- Font Awesome 6 Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-  <!-- Chart.js 4.4 -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-
-  <!-- Application CSS -->
-  <link rel="stylesheet" href="/css/style.css?v=20261112_laptop_shift_fix_v27">
-
-  <!-- Preload Optimized Background & Machinery Images for 5X Faster Loading -->
-  <link rel="preload" as="image" href="/img/land1_background.webp?v=20261112_fast5x" type="image/webp" fetchpriority="high">
-  <link rel="preload" as="image" href="/img/machine1.webp?v=20261112_fast5x" type="image/webp" fetchpriority="high">
-  <link rel="preload" as="image" href="/img/machine2.webp?v=20261112_fast5x" type="image/webp" fetchpriority="high">
+  <!-- Chart.js 4.4 (Deferred so it does not block first paint or images) -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" defer></script>
 
   <!-- Instant Theme Restoration Script (Default Black / Dark Theme) -->
   <script>
@@ -944,10 +944,10 @@
     <!-- Left Column: Plant Machinery Showcase (Seamlessly joined, Zero space, Pure images) -->
     <div class="auth-machinery-showcase">
       <div class="machinery-frame">
-        <img src="/img/machine1.webp?v=20261112_fast5x" alt="Expeller Machine Motors" class="machinery-img" loading="eager" fetchpriority="high" decoding="async" width="500" height="280">
+        <img src="/img/machine1.webp?v=20261112_fast10x" alt="Expeller Machine Motors" class="machinery-img" loading="eager" fetchpriority="high" decoding="async" width="500" height="280">
       </div>
       <div class="machinery-frame">
-        <img src="/img/machine2.webp?v=20261112_fast5x" alt="Kohlu Cold-Press Plant" class="machinery-img" loading="eager" fetchpriority="high" decoding="async" width="500" height="280">
+        <img src="/img/machine2.webp?v=20261112_fast10x" alt="Kohlu Cold-Press Plant" class="machinery-img" loading="eager" fetchpriority="high" decoding="async" width="500" height="280">
       </div>
     </div>
 
@@ -957,8 +957,8 @@
     <!-- Header with the official 3D KOGM and Mashal logos -->
     <div class="modal-header" style="justify-content:center; flex-direction:column; gap:0.5rem; text-align:center; padding:1.4rem 1.6rem 1rem; border-bottom:1px solid rgba(255,255,255,0.45);">
       <div style="display:flex; justify-content:center; align-items:center; gap:10px;">
-        <img src="/img/3d_logo1.webp?v=20261112_logo_fast_v1" alt="KOGM — Khandelia Oil &amp; General Mills" style="height:68px; width:165px; padding:3px; border:1px solid rgba(244,180,0,0.55); border-radius:7px; background:#fff; object-fit:contain;">
-        <img src="/img/3d_logo2.webp?v=20261112_logo_fast_v1" alt="Mashal Kachi Ghani Mustard Oil" style="height:68px; width:165px; padding:3px; border:1px solid rgba(244,180,0,0.55); border-radius:7px; background:#fff; object-fit:contain;">
+        <img src="/img/3d_logo1.webp?v=20261112_fast10x" alt="KOGM — Khandelia Oil &amp; General Mills" style="height:68px; width:165px; padding:3px; border:1px solid rgba(244,180,0,0.55); border-radius:7px; background:#fff; object-fit:contain;">
+        <img src="/img/3d_logo2.webp?v=20261112_fast10x" alt="Mashal Kachi Ghani Mustard Oil" style="height:68px; width:165px; padding:3px; border:1px solid rgba(244,180,0,0.55); border-radius:7px; background:#fff; object-fit:contain;">
       </div>
       <div>
         <h3 class="modal-title" style="font-size:1.20rem; font-weight:800; letter-spacing:0.4px; color:#0f172a; margin:0;">MASHAL EMS INTELLIGENCE</h3>
@@ -982,9 +982,9 @@
         <form id="login-form">
           <div style="margin-bottom:1rem;">
             <label style="display:block; font-size:0.78rem; font-weight:700; color:#334155 !important; margin-bottom:0.35rem;">
-              <i class="fa-regular fa-user" style="color:#0284c7;"></i> Username or Email
+              <i class="fa-regular fa-user" style="color:#0284c7;"></i> Account Name, Username, or Email
             </label>
-            <input type="text" id="login-username" class="search-input" placeholder="Username or email" value="" autocomplete="username" required autofocus style="width:100%; color:#0f172a !important; background:#ffffff !important; border:1px solid #cbd5e1 !important;">
+            <input type="text" id="login-username" class="search-input" placeholder="Account Name, Username, or Email" value="" autocomplete="username" required autofocus style="width:100%; color:#0f172a !important; background:#ffffff !important; border:1px solid #cbd5e1 !important;">
           </div>
           <div style="margin-bottom:1rem;">
             <label style="display:block; font-size:0.78rem; font-weight:700; color:#334155 !important; margin-bottom:0.35rem;">

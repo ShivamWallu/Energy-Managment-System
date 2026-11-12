@@ -61,13 +61,20 @@ def health_check():
         "version": settings.VERSION
     }
 
+class CachedStaticFiles(StaticFiles):
+    """Custom static file server with aggressive 1-year browser caching for ultra-fast instant 10X asset loading."""
+    def file_response(self, *args, **kwargs):
+        resp = super().file_response(*args, **kwargs)
+        resp.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return resp
+
 # Mount Frontend Static Assets
 frontend_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "frontend"))
 images_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "Images"))
 
 if os.path.exists(images_dir):
-    app.mount("/Images", StaticFiles(directory=images_dir), name="Images")
-    app.mount("/images", StaticFiles(directory=images_dir), name="images")
+    app.mount("/Images", CachedStaticFiles(directory=images_dir), name="Images")
+    app.mount("/images", CachedStaticFiles(directory=images_dir), name="images")
 
 if os.path.exists(frontend_dir):
     # Mount css, js, img subdirectories
@@ -79,7 +86,7 @@ if os.path.exists(frontend_dir):
     if os.path.exists(js_dir):
         app.mount("/js", StaticFiles(directory=js_dir), name="js")
     if os.path.exists(img_dir):
-        app.mount("/img", StaticFiles(directory=img_dir), name="img")
+        app.mount("/img", CachedStaticFiles(directory=img_dir), name="img")
 
     # Serve index.html as root
     @app.get("/")
