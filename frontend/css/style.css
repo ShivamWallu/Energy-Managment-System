@@ -3093,13 +3093,19 @@ html.is-authenticated #login-modal {
   background: transparent !important;
 }
 
+/* Root-level @page definition: Suppresses browser default headers/footers (127.0.0.1, date, URL) across Chromium & WebKit */
+@page {
+  size: landscape;
+  margin: 0mm;
+}
+
 /* ==========================================================================
    Executive PDF Print & Landscape Isolation Styles
    ========================================================================== */
 @media print {
   @page {
-    size: A4 landscape;
-    margin: 0; /* Removes browser default headers/footers (127.0.0.1, date, URL, etc.) */
+    size: landscape;
+    margin: 0mm;
   }
 
   html, body {
