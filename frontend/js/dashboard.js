@@ -2038,8 +2038,8 @@ const dashboard = {
       const container = document.getElementById('pdf-preview-document-container');
       if (!container) throw new Error('PDF preview container not found.');
       container.innerHTML = pages.map((pageItems, pageIndex) => `
-        <section class="pdf-current-page" style="width:100%; box-sizing:border-box; padding:16px 20px 18px; background:#fff; color:#0f172a; margin-bottom:24px; border-radius:8px; box-shadow:0 4px 18px rgba(0,0,0,0.06); border:1px solid #e2e8f0;">
-          <header style="display:flex; justify-content:space-between; align-items:center; gap:12px; border-bottom:2px solid #0284c7; padding-bottom:8px; margin-bottom:10px;">
+        <section class="pdf-current-page" style="width:100%; box-sizing:border-box; padding:22px 26px 20px; background:#ffffff; color:#0f172a; border-radius:8px; box-shadow:0 12px 36px rgba(0,0,0,0.45); border:1px solid #cbd5e1;">
+          <header style="display:flex; justify-content:space-between; align-items:center; gap:12px; border-bottom:2px solid #0284c7; padding-bottom:8px; margin-bottom:12px;">
             <div style="display:flex; align-items:center; gap:10px; min-width:0;">
               <div style="display:flex; align-items:center; gap:5px; flex:0 0 auto;">
                 <img src="/img/3d_logo1.webp?v=20261112_logo_fast_v1" alt="KOGM" style="height:32px; width:65px; padding:2px; object-fit:contain; border:1px solid #f4b400; border-radius:5px; background:#fff;">
@@ -2072,11 +2072,11 @@ const dashboard = {
                       <div style="font-size:12px; font-weight:800; color:#0f172a; margin-top:2px;">${escapeHtml(value)}</div>
                     </div>`).join('')}
                 </div>
-                ${item.chartImg ? `<img src="${item.chartImg}" alt="48 interval motor load graph" style="width:100%; height:410px; object-fit:contain; display:block; background:#fff;">` : '<div style="padding:24px;text-align:center;color:#64748b;">Graph could not be rendered.</div>'}
+                ${item.chartImg ? `<img src="${item.chartImg}" alt="48 interval motor load graph" style="width:100%; height:360px; object-fit:contain; display:block; background:#fff; margin:4px 0;">` : '<div style="padding:24px;text-align:center;color:#64748b;">Graph could not be rendered.</div>'}
                 <div style="font-size:10px; line-height:1.4; color:#334155; border-left:3px solid #0284c7; background:#f8fafc; padding:6px 10px; margin-top:8px; border-radius:0 4px 4px 0;">${escapeHtml(item.note)}</div>
               </article>`).join('')}
           </div>
-          <footer style="border-top:1px solid #cbd5e1; margin-top:8px; padding-top:6px; font-size:9px; color:#64748b; display:flex; justify-content:space-between;">
+          <footer style="border-top:1px solid #cbd5e1; margin-top:12px; padding-top:8px; font-size:9.5px; color:#64748b; display:flex; justify-content:space-between; align-items:center;">
             <span>SCADA readings shown for the selected report · 15-minute intervals</span>
             <span>Mashal EMS Intelligence</span>
           </footer>

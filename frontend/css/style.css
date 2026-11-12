@@ -3088,8 +3088,9 @@ html.is-authenticated #login-modal {
 
 .pdf-document-sheet {
   font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
-  transition: transform 0.2s ease;
+  box-shadow: none !important;
+  border: none !important;
+  background: transparent !important;
 }
 
 /* ==========================================================================
@@ -3220,7 +3221,7 @@ html.is-authenticated #login-modal {
   }
 
   .pdf-current-page img[alt="48 interval motor load graph"] {
-    height: 410px !important;
+    height: 360px !important;
     width: 100% !important;
     object-fit: contain !important;
     display: block !important;
