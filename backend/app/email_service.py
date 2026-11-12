@@ -1,5 +1,6 @@
 
 import os
+import socket
 from html import escape as escape_html
 import smtplib
 from email.mime.multipart import MIMEMultipart
@@ -11,6 +12,19 @@ from typing import Dict, Any
 from backend.app.config import settings
 
 OFFICIAL_SENDER_NAME = "Mashal EMS Intelligence"
+
+class _ForceIPv4Socket:
+    """Context manager to force socket.getaddrinfo to resolve IPv4 addresses only.
+    Crucial on cloud instances (e.g. AWS EC2) where Ubuntu IPv6 stack is active but IPv6 routing is disabled."""
+    def __enter__(self):
+        self._orig_getaddrinfo = socket.getaddrinfo
+        def _getaddrinfo(host, port, family=0, socktype=0, proto=0, flags=0):
+            return self._orig_getaddrinfo(host, port, socket.AF_INET, socktype, proto, flags)
+        socket.getaddrinfo = _getaddrinfo
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        socket.getaddrinfo = self._orig_getaddrinfo
 
 def generate_otp_email_text(recipient_name: str, otp_code: str, sender_email: str, action: str = "REGISTRATION") -> str:
     """RFC-compliant plain text alternative body to prevent spam filtering."""
@@ -257,24 +271,25 @@ def _attempt_smtp_send(host: str, port: int, user: str, password: str, to_email:
         ports_to_try.append(fallback_port)
 
     last_err = None
-    for p in ports_to_try:
-        try:
-            if p == 465:
-                with smtplib.SMTP_SSL(host, 465, timeout=25) as server:
-                    server.login(user, password)
-                    server.sendmail(user, to_email, msg.as_string())
-            else:
-                with smtplib.SMTP(host, p, timeout=25) as server:
-                    server.ehlo()
-                    server.starttls()
-                    server.ehlo()
-                    server.login(user, password)
-                    server.sendmail(user, to_email, msg.as_string())
-            print(f"[EmailService] Delivered email via {host}:{p} using {user}")
-            return True
-        except Exception as e:
-            last_err = e
-            print(f"[EmailService] Port {p} failed on {host} for {user}: {e}")
+    with _ForceIPv4Socket():
+        for p in ports_to_try:
+            try:
+                if p == 465:
+                    with smtplib.SMTP_SSL(host, 465, timeout=25) as server:
+                        server.login(user, password)
+                        server.sendmail(user, to_email, msg.as_string())
+                else:
+                    with smtplib.SMTP(host, p, timeout=25) as server:
+                        server.ehlo()
+                        server.starttls()
+                        server.ehlo()
+                        server.login(user, password)
+                        server.sendmail(user, to_email, msg.as_string())
+                print(f"[EmailService] Delivered email via {host}:{p} (IPv4) using {user}")
+                return True
+            except Exception as e:
+                last_err = e
+                print(f"[EmailService] Port {p} failed on {host} for {user}: {e}")
 
     if last_err:
         raise last_err

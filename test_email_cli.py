@@ -82,6 +82,19 @@ def main():
         except Exception as e:
             print(f"  - IPv6 Port 587 FAILED: {type(e).__name__} - {e}")
 
+    # 5. Send Live Test OTP Email using our Application Stack
+    print(f"\n[Step 5] Sending Live OTP Verification Email to '{target}':")
+    try:
+        res = send_otp_email(target, "Plant Auditor", "998877", "REGISTRATION")
+        print(f"  - Dispatch Response: {res}")
+        if res.get("channel") in ["PRIMARY_SMTP", "SECONDARY_SMTP_FAILOVER"]:
+            print(f"\n[SUCCESS] 🚀 EMAIL SENT TO {target} VIA {res.get('channel')}!")
+            print("Please open your inbox now and refresh!")
+        else:
+            print(f"\n[NOTICE] Sent via fallback: {res.get('channel')}")
+    except Exception as e:
+        print(f"\n[ERROR] Exception during send_otp_email: {e}")
+
     print("\n" + "=" * 65)
 
 if __name__ == "__main__":
