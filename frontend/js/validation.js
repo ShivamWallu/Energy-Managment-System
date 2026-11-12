@@ -389,8 +389,13 @@ const validation = {
   },
 
   triggerSingleUpload(event) {
-    if (event && event.target && (event.target.closest('button') || event.target.closest('.btn-remove-chip'))) {
-      return;
+    if (event) {
+      if (typeof event.stopPropagation === 'function') {
+        event.stopPropagation();
+      }
+      if (event.target && event.target.closest('.btn-remove-chip')) {
+        return;
+      }
     }
     const inp = document.getElementById('file-upload-input');
     if (inp) {
@@ -436,7 +441,7 @@ const validation = {
           </div>
         </div>
         <div style="margin-top:0.75rem;">
-          <button type="button" class="btn-remove-chip" onclick="event.stopPropagation(); validation.removeSingleFile()" title="Remove this file and choose another" style="font-size:0.75rem; padding:0.25rem 0.65rem; color:#ef4444; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:5px; cursor:pointer;">
+          <button type="button" class="btn-remove-chip" onclick="validation.removeSingleFile(event)" title="Remove this file and choose another" style="font-size:0.75rem; padding:0.25rem 0.65rem; color:#ef4444; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:5px; cursor:pointer;">
             <i class="fa-solid fa-trash-can" style="font-size:0.75rem;"></i> Remove / Change File
           </button>
         </div>
@@ -458,7 +463,7 @@ const validation = {
         <i class="fa-solid fa-file-arrow-up" style="font-size:2.2rem; color:var(--accent-cyan); margin-bottom:0.45rem;"></i>
         <div style="font-weight:600; font-size:1.05rem; color:var(--text-primary); margin-bottom:0.25rem;">Drag &amp; Drop Shift Excel Report (.xlsx, .xls)</div>
         <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">Preserves original timestamps, readings, decimal precision, and motor health tags</div>
-        <button type="button" class="btn btn-secondary btn-sm" id="btn-browse-single" onclick="event.stopPropagation(); validation.triggerSingleUpload(event)">
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-browse-single" onclick="validation.triggerSingleUpload(event)">
           <i class="fa-solid fa-folder-open text-cyan"></i> Browse Local File
         </button>
       `;
@@ -470,7 +475,10 @@ const validation = {
     }
   },
 
-  removeSingleFile() {
+  removeSingleFile(event) {
+    if (event && typeof event.stopPropagation === 'function') {
+      event.stopPropagation();
+    }
     this.singleFile = null;
     const inp = document.getElementById('file-upload-input');
     if (inp) inp.value = '';
@@ -478,8 +486,13 @@ const validation = {
   },
 
   triggerDualUpload(slotNum, event) {
-    if (event && event.target && (event.target.closest('button') || event.target.closest('.btn-remove-chip'))) {
-      return;
+    if (event) {
+      if (typeof event.stopPropagation === 'function') {
+        event.stopPropagation();
+      }
+      if (event.target && event.target.closest('.btn-remove-chip')) {
+        return;
+      }
     }
     const inp = document.getElementById(`file-dual-input-${slotNum}`);
     if (inp) {
@@ -590,7 +603,7 @@ const validation = {
       }
       if (actionWrap) {
         actionWrap.innerHTML = `
-          <button type="button" class="btn-remove-chip" onclick="event.stopPropagation(); validation.removeDualFile(${slotNum})" title="Remove this file and choose another" style="font-size:0.74rem; padding:0.22rem 0.6rem; color:#ef4444; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:5px; cursor:pointer;">
+          <button type="button" class="btn-remove-chip" onclick="validation.removeDualFile(${slotNum}, event)" title="Remove this file and choose another" style="font-size:0.74rem; padding:0.22rem 0.6rem; color:#ef4444; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:5px; cursor:pointer;">
             <i class="fa-solid fa-trash-can" style="font-size:0.75rem;"></i> Remove File
           </button>
         `;
@@ -606,7 +619,7 @@ const validation = {
       if (actionWrap) {
         const shiftTitle = isSlot1 ? 'Day Shift' : 'Night Shift';
         actionWrap.innerHTML = `
-          <button type="button" class="btn btn-secondary btn-sm" id="btn-choose-dual-${slotNum}" onclick="event.stopPropagation(); validation.triggerDualUpload(${slotNum}, event)">Choose ${shiftTitle} File</button>
+          <button type="button" class="btn btn-secondary btn-sm" id="btn-choose-dual-${slotNum}" onclick="validation.triggerDualUpload(${slotNum}, event)">Choose ${shiftTitle} File</button>
         `;
       }
       if (dropzone) {
@@ -616,7 +629,10 @@ const validation = {
     }
   },
 
-  removeDualFile(slotNum) {
+  removeDualFile(slotNum, event) {
+    if (event && typeof event.stopPropagation === 'function') {
+      event.stopPropagation();
+    }
     if (slotNum === 1) {
       this.dualFile1 = null;
       const inp = document.getElementById('file-dual-input-1');
