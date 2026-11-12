@@ -2,70 +2,87 @@ import sys
 import os
 import smtplib
 import socket
+import ssl
 
-# Ensure virtual environment and project root is in sys.path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from backend.app.config import settings
-from backend.app.email_service import send_otp_email, send_welcome_registration_email
-
-def check_smtp_port(host: str, port: int, timeout: int = 5) -> bool:
-    try:
-        s = socket.create_connection((host, port), timeout=timeout)
-        s.close()
-        return True
-    except Exception as e:
-        return False
+from backend.app.email_service import send_otp_email
 
 def main():
     target = sys.argv[1] if len(sys.argv) > 1 else "itchd.kogm@gmail.com"
     print("=" * 65)
-    print("  MASHAL EMS INTELLIGENCE — LIVE SMTP DIAGNOSTIC SUITE")
+    print("  AWS EC2 ➔ GMAIL SMTP IN-DEPTH DIAGNOSTIC")
     print("=" * 65)
-    print(f"Target Recipient: {target}")
-    print(f"SMTP Host:        {settings.SMTP_HOST}")
-    print(f"Primary Account:  {settings.PRIMARY_SMTP_USER}")
-    print(f"Secondary User:   {settings.SECONDARY_SMTP_USER}")
-    print("-" * 65)
-
-    print("\n[1/3] Testing Network Port Connectivity from this Server:")
-    for port in [587, 465]:
-        open_status = check_smtp_port(settings.SMTP_HOST, port)
-        badge = "OPEN & REACHABLE" if open_status else "BLOCKED / TIMEOUT"
-        print(f"  - Port {port}: {badge}")
-
-    print("\n[2/3] Testing Direct Gmail SMTP Connection & Authentication:")
-    pwd = settings.PRIMARY_SMTP_PASSWORD.strip().strip('"\'').replace(" ", "").strip()
-    for port in [587, 465]:
-        try:
-            if port == 465:
-                with smtplib.SMTP_SSL(settings.SMTP_HOST, 465, timeout=10) as s:
-                    s.login(settings.PRIMARY_SMTP_USER, pwd)
-                    print(f"  - Port 465 (SSL): AUTHENTICATION SUCCESSFUL! [noreplykogm@gmail.com]")
-            else:
-                with smtplib.SMTP(settings.SMTP_HOST, 587, timeout=10) as s:
-                    s.ehlo()
-                    s.starttls()
-                    s.ehlo()
-                    s.login(settings.PRIMARY_SMTP_USER, pwd)
-                    print(f"  - Port 587 (STARTTLS): AUTHENTICATION SUCCESSFUL! [noreplykogm@gmail.com]")
-        except Exception as e:
-            print(f"  - Port {port}: FAILED ({type(e).__name__}: {e})")
-
-    print("\n[3/3] Sending Official Test OTP Email through Application Stack:")
+    
+    # 1. DNS Resolution
+    print("\n[Step 1] Resolving smtp.gmail.com IP Addresses:")
+    v4_ips = []
+    v6_ips = []
     try:
-        res = send_otp_email(target, "Plant Auditor", "123456", "REGISTRATION")
-        print(f"  - Result: {res}")
-        if res.get("channel") in ["PRIMARY_SMTP", "SECONDARY_SMTP_FAILOVER"]:
-            print(f"\n[SUCCESS] Email successfully dispatched via {res.get('channel')} to {target}!")
-            print("Please check your Inbox (or Spam/Promotions folder).")
-        else:
-            print(f"\n[NOTICE] Email fell back to {res.get('channel')}.")
+        infos = socket.getaddrinfo("smtp.gmail.com", 587, socket.AF_UNSPEC, socket.SOCK_STREAM)
+        for fam, _, _, _, addr in infos:
+            ip = addr[0]
+            if fam == socket.AF_INET and ip not in v4_ips:
+                v4_ips.append(ip)
+            elif fam == socket.AF_INET6 and ip not in v6_ips:
+                v6_ips.append(ip)
+        print(f"  - IPv4 Addresses found: {v4_ips}")
+        print(f"  - IPv6 Addresses found: {v6_ips}")
     except Exception as e:
-        print(f"\n[ERROR] Exception during send_otp_email: {e}")
+        print(f"  - DNS Resolution failed: {e}")
+        return
 
-    print("=" * 65)
+    # 2. Test IPv4 specifically on Port 587
+    print("\n[Step 2] Testing Force-IPv4 Connection on Port 587:")
+    if v4_ips:
+        target_ip = v4_ips[0]
+        try:
+            print(f"  - Connecting directly to IPv4 {target_ip}:587...")
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(6)
+            s.connect((target_ip, 587))
+            banner = s.recv(1024).decode("utf-8", errors="ignore").strip()
+            print(f"  - Server Banner Received: {banner}")
+            s.close()
+            print("  ==> Force-IPv4 Port 587: REACHABLE & BANNER RECEIVED!")
+        except Exception as e:
+            print(f"  - Force-IPv4 Port 587 FAILED: {type(e).__name__} - {e}")
+
+    # 3. Test IPv4 specifically on Port 465
+    print("\n[Step 3] Testing Force-IPv4 Connection on Port 465 (SSL):")
+    if v4_ips:
+        target_ip = v4_ips[0]
+        try:
+            print(f"  - Connecting directly to IPv4 {target_ip}:465 with SSL...")
+            context = ssl.create_default_context()
+            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            s.settimeout(6)
+            s.connect((target_ip, 465))
+            with context.wrap_socket(s, server_hostname="smtp.gmail.com") as ss:
+                banner = ss.recv(1024).decode("utf-8", errors="ignore").strip()
+                print(f"  - SSL Server Banner Received: {banner}")
+            print("  ==> Force-IPv4 Port 465: REACHABLE & SSL HANDSHAKE OK!")
+        except Exception as e:
+            print(f"  - Force-IPv4 Port 465 FAILED: {type(e).__name__} - {e}")
+
+    # 4. If IPv6 is present, test IPv6
+    if v6_ips:
+        print("\n[Step 4] Testing IPv6 Connection on Port 587:")
+        target_ip = v6_ips[0]
+        try:
+            print(f"  - Connecting to IPv6 [{target_ip}]:587...")
+            s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
+            s.settimeout(6)
+            s.connect((target_ip, 587))
+            banner = s.recv(1024).decode("utf-8", errors="ignore").strip()
+            print(f"  - IPv6 Banner Received: {banner}")
+            s.close()
+            print("  ==> IPv6 Port 587: SUCCESS!")
+        except Exception as e:
+            print(f"  - IPv6 Port 587 FAILED: {type(e).__name__} - {e}")
+
+    print("\n" + "=" * 65)
 
 if __name__ == "__main__":
     main()
-
