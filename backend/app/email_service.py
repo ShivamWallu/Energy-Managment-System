@@ -162,35 +162,35 @@ def generate_otp_email_html(recipient_name: str, otp_code: str, sender_email: st
     }}
   </style>
 </head>
-<body>
-  <div class="email-container">
-    <div class="email-header">
-      <div class="brand-logo-wrap">
+<body style="margin:0; padding:0; background-color:#fff7ed; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#1e293b;">
+  <div class="email-container" style="max-width:580px; margin:25px auto; background-color:#ffffff; border:1.5px solid #fed7aa; border-radius:14px; overflow:hidden; box-shadow:0 8px 24px rgba(15,23,42,0.08);">
+    <div class="email-header" style="background:linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%); padding:28px 20px 20px; text-align:center; border-bottom:3px solid #b91c1c;">
+      <div class="brand-logo-wrap" style="text-align:center; margin-bottom:12px;">
         <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr>
-          <td style="padding:0 5px;"><img src="{kogm_img_src}" alt="KOGM — Khandelia Oil &amp; General Mills" style="height:54px; width:108px; object-fit:contain; border-radius:6px; border:1px solid #f4b400; background:#fff; display:block;"></td>
-          <td style="padding:0 5px;"><img src="{mashal_img_src}" alt="Mashal Kachi Ghani Mustard Oil" style="height:54px; width:108px; object-fit:contain; border-radius:6px; border:1px solid #f4b400; background:#fff; display:block;"></td>
+          <td style="padding:0 6px;"><img src="{kogm_img_src}" alt="KOGM — Khandelia Oil &amp; General Mills" style="height:52px; width:108px; object-fit:contain; border-radius:6px; border:1px solid #f4b400; background:#ffffff; display:block;"></td>
+          <td style="padding:0 6px;"><img src="{mashal_img_src}" alt="Mashal Kachi Ghani Mustard Oil" style="height:52px; width:108px; object-fit:contain; border-radius:6px; border:1px solid #f4b400; background:#ffffff; display:block;"></td>
         </tr></table>
       </div>
-      <div class="company-title">MASHAL EMS INTELLIGENCE</div>
-      <div class="company-subtitle">Official Corporate Security &amp; Access Authority</div>
+      <div class="company-title" style="font-size:21px; font-weight:800; letter-spacing:0.8px; color:#b91c1c; margin-top:8px;">MASHAL EMS INTELLIGENCE</div>
+      <div class="company-subtitle" style="font-size:11px; color:#92400e; text-transform:uppercase; letter-spacing:1.5px; font-weight:700; margin-top:4px;">Official Corporate Security &amp; Access Authority</div>
     </div>
-    <div class="email-body">
-      <div class="greeting">Hello {recipient_name},</div>
-      <p class="message-text">
+    <div class="email-body" style="padding:30px 26px;">
+      <div class="greeting" style="font-size:16px; font-weight:700; color:#0f172a; margin-bottom:12px;">Hello {recipient_name},</div>
+      <p class="message-text" style="font-size:14px; line-height:1.6; color:#475569; margin-bottom:22px;">
         {body_intro}
       </p>
 
-      <div class="otp-card">
-        <div class="otp-label">{card_label}</div>
-        <div class="otp-digits">{otp_code}</div>
-        <div class="expiry-note">This secure code is valid for <strong>10 minutes</strong>.</div>
+      <div class="otp-card" style="background:#fffbeb; border:2px dashed #b91c1c; border-radius:10px; padding:20px 16px; text-align:center; margin:20px 0;">
+        <div class="otp-label" style="font-size:11px; color:#78350f; text-transform:uppercase; letter-spacing:1.8px; font-weight:800; margin-bottom:6px;">{card_label}</div>
+        <div class="otp-digits" style="font-family:'Courier New', Courier, monospace; font-size:38px; font-weight:900; color:#b91c1c; letter-spacing:8px; margin:8px 0;">{otp_code}</div>
+        <div class="expiry-note" style="font-size:12px; color:#475569; margin-top:6px;">This secure code is valid for <strong>10 minutes</strong>.</div>
       </div>
 
-      <div class="security-notice">
-        <strong>Security Notice:</strong> Mashal EMS plant administrators will never ask for your password or OTP. If you did not initiate this request, please disregard this email or notify the plant IT authority immediately.
+      <div class="security-notice" style="background:#fff7ed; border-left:4px solid #f59e0b; padding:12px 14px; border-radius:4px; font-size:12px; line-height:1.5; color:#78350f; margin-top:24px;">
+        <strong style="color:#92400e;">Security Notice:</strong> Mashal EMS plant administrators will never ask for your password or OTP. If you did not initiate this request, please disregard this email or notify the plant IT authority immediately.
       </div>
     </div>
-    <div class="email-footer">
+    <div class="email-footer" style="background:#fff7ed; padding:18px 24px; text-align:center; font-size:11px; color:#64748b; line-height:1.6; border-top:1px solid #fed7aa;">
       &copy; 2026 Mashal EMS Intelligence &bull; SCADA 415V Bus Energy Monitoring System<br>
       Khandelia Oil &amp; General Mills Pvt. Ltd. &bull; Official Dispatch: {sender_email}
     </div>
@@ -511,54 +511,54 @@ def generate_welcome_email_html(recipient_name: str, username: str, role: str, s
     }}
   </style>
 </head>
-<body>
-  <div class="email-container">
-    <div class="email-header">
-      <div class="brand-logo-wrap">
+<body style="margin:0; padding:0; background-color:#fff7ed; font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; color:#1e293b;">
+  <div class="email-container" style="max-width:580px; margin:25px auto; background-color:#ffffff; border:1.5px solid #fed7aa; border-radius:14px; overflow:hidden; box-shadow:0 8px 24px rgba(15,23,42,0.08);">
+    <div class="email-header" style="background:linear-gradient(135deg, #fffbeb 0%, #fff7ed 100%); padding:28px 20px 20px; text-align:center; border-bottom:3px solid #b91c1c;">
+      <div class="brand-logo-wrap" style="text-align:center; margin-bottom:12px;">
         <table align="center" border="0" cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr>
-          <td style="padding:0 5px;"><img src="{kogm_img_src}" alt="KOGM — Khandelia Oil &amp; General Mills" style="height:54px; width:108px; object-fit:contain; border-radius:6px; border:1px solid #f4b400; background:#fff; display:block;"></td>
-          <td style="padding:0 5px;"><img src="{mashal_img_src}" alt="Mashal Kachi Ghani Mustard Oil" style="height:54px; width:108px; object-fit:contain; border-radius:6px; border:1px solid #f4b400; background:#fff; display:block;"></td>
+          <td style="padding:0 6px;"><img src="{kogm_img_src}" alt="KOGM — Khandelia Oil &amp; General Mills" style="height:52px; width:108px; object-fit:contain; border-radius:6px; border:1px solid #f4b400; background:#ffffff; display:block;"></td>
+          <td style="padding:0 6px;"><img src="{mashal_img_src}" alt="Mashal Kachi Ghani Mustard Oil" style="height:52px; width:108px; object-fit:contain; border-radius:6px; border:1px solid #f4b400; background:#ffffff; display:block;"></td>
         </tr></table>
       </div>
-      <div class="company-title">MASHAL EMS INTELLIGENCE</div>
-      <div class="company-subtitle">SCADA Energy Monitoring &bull; 415V Bus Intelligence</div>
+      <div class="company-title" style="font-size:21px; font-weight:800; letter-spacing:0.8px; color:#b91c1c; margin-top:8px;">MASHAL EMS INTELLIGENCE</div>
+      <div class="company-subtitle" style="font-size:11px; color:#92400e; text-transform:uppercase; letter-spacing:1.5px; font-weight:700; margin-top:4px;">SCADA Energy Monitoring &bull; 415V Bus Intelligence</div>
     </div>
 
-    <div class="email-body">
-      <div class="greeting">Congratulations, {recipient_name}!</div>
-      <div style="background:#fff7df; border:1px solid #f4b400; border-left:4px solid #c62828; border-radius:7px; padding:11px 13px; margin:0 0 16px; color:#991b1b; font-size:13px; font-weight:800;">Your account has been verified and is ready to use.</div>
-      <div class="message-text">
+    <div class="email-body" style="padding:30px 26px;">
+      <div class="greeting" style="font-size:18px; font-weight:800; color:#0f172a; margin-bottom:12px;">Congratulations, {recipient_name}!</div>
+      <div style="background:#fff7df; border:1px solid #f4b400; border-left:4px solid #b91c1c; border-radius:7px; padding:12px 14px; margin:0 0 16px; color:#991b1b; font-size:13px; font-weight:800;">Your account has been verified and is ready to use.</div>
+      <div class="message-text" style="font-size:14px; line-height:1.6; color:#475569; margin-bottom:20px;">
         Your user profile has been successfully verified and activated in the <strong>Mashal Mustard Oil Plant Energy Management System</strong>. You are now authorized to access SCADA telemetry, 15-minute motor load benchmarks, and anomaly audits.
       </div>
 
-      <div class="info-card">
-        <div class="info-row">
-          <span class="info-label">Account Name:</span>
-          <span class="info-val">{recipient_name}</span>
+      <div class="info-card" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:18px 20px; margin:20px 0;">
+        <div class="info-row" style="padding:7px 0; border-bottom:1px solid #f1f5f9; display:flex;">
+          <span class="info-label" style="color:#64748b; font-weight:600; width:140px; display:inline-block;">Account Name:</span>
+          <span class="info-val" style="color:#0f172a; font-weight:700;">{recipient_name}</span>
         </div>
-        <div class="info-row">
-          <span class="info-label">Username:</span>
-          <span class="info-val">@{username}</span>
+        <div class="info-row" style="padding:7px 0; border-bottom:1px solid #f1f5f9; display:flex;">
+          <span class="info-label" style="color:#64748b; font-weight:600; width:140px; display:inline-block;">Username:</span>
+          <span class="info-val" style="color:#b91c1c; font-weight:700; font-family:monospace;">@{username}</span>
         </div>
-        <div class="info-row">
-          <span class="info-label">Assigned Role:</span>
-          <span class="info-val" style="color:#10b981;">{role.upper()}</span>
+        <div class="info-row" style="padding:7px 0; border-bottom:1px solid #f1f5f9; display:flex;">
+          <span class="info-label" style="color:#64748b; font-weight:600; width:140px; display:inline-block;">Assigned Role:</span>
+          <span class="info-val" style="color:#059669; font-weight:800;">{role.upper()}</span>
         </div>
-        <div class="info-row">
-          <span class="info-label">Account Status:</span>
-          <span class="info-val" style="color:#10b981;">Active &amp; Ready</span>
+        <div class="info-row" style="padding:7px 0; display:flex;">
+          <span class="info-label" style="color:#64748b; font-weight:600; width:140px; display:inline-block;">Account Status:</span>
+          <span class="info-val" style="color:#059669; font-weight:800;">Active &amp; Ready</span>
         </div>
       </div>
 
-      <div class="steps-card">
-        <strong>&bull; How to Begin:</strong><br>
+      <div class="steps-card" style="background:#fffbeb; border-left:4px solid #f59e0b; padding:16px 18px; border-radius:4px; font-size:13px; line-height:1.6; color:#78350f; margin-top:24px;">
+        <strong style="color:#92400e;">&bull; How to Begin:</strong><br>
         1. Open your dashboard and look for the blinking <strong>"Upload EMS Report"</strong> button.<br>
         2. Upload your plant's 12-hour SCADA shift report (.xlsx or .csv).<br>
         3. Real-time telemetry, Expeller (P1 to P5) health benchmarks, and Kohlu cold press graphs will instantly generate for your account.
       </div>
     </div>
 
-    <div class="email-footer">
+    <div class="email-footer" style="background:#fff7ed; padding:18px 24px; text-align:center; font-size:11px; color:#64748b; line-height:1.6; border-top:1px solid #fed7aa;">
       <strong>Khandelia Oil &amp; General Mills Pvt. Ltd.</strong><br>
       Mustard Oil Plant SCADA Automation &bull; Energy Monitoring Division<br>
       Automated dispatch sent to {to_email}. Please do not reply directly to this email.
