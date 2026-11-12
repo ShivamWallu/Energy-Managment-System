@@ -1310,13 +1310,4 @@ const charts = {
       return '';
     }
   }
-
-      const dataUrl = offCanvas.toDataURL('image/png');
-      chart.destroy();
-      return dataUrl;
-    } catch (e) {
-      console.warn('createAuditFocusChart error:', e);
-      return '';
-    }
-  }
 };
