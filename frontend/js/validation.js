@@ -338,6 +338,7 @@ const validation = {
 
   // Upload Management
   currentUploadMode: 'SINGLE',
+  singleFile: null,
   dualFile1: null,
   dualFile2: null,
 
@@ -353,6 +354,7 @@ const validation = {
       optDual?.classList.remove('active');
       if (secSingle) secSingle.style.display = 'block';
       if (secDual) secDual.style.display = 'none';
+      this.renderSingleFileSlot();
     } else {
       optDual?.classList.add('active');
       optSingle?.classList.remove('active');
@@ -363,8 +365,11 @@ const validation = {
   },
 
   resetUploadModal() {
+    this.singleFile = null;
     this.dualFile1 = null;
     this.dualFile2 = null;
+
+    this.renderSingleFileSlot();
     this.renderDualFileSlot(1);
     this.renderDualFileSlot(2);
     this.checkDualSubmitReady();
@@ -383,75 +388,159 @@ const validation = {
     if (errCallout) errCallout.style.display = 'none';
   },
 
+  renderSingleFileSlot() {
+    const contentEl = document.getElementById('single-dropzone-content');
+    const actionWrap = document.getElementById('single-upload-action');
+    const btnSubmit = document.getElementById('btn-submit-single-upload');
+    const dropzone = document.getElementById('upload-dropzone');
+
+    if (!contentEl) return;
+
+    if (this.singleFile) {
+      const file = this.singleFile;
+      const sizeKb = (file.size / 1024).toFixed(1);
+      contentEl.innerHTML = `
+        <div style="display:flex; align-items:center; justify-content:center; gap:0.75rem; padding:0.4rem 0;">
+          <i class="fa-solid fa-file-excel text-emerald" style="font-size:2.4rem;"></i>
+          <div style="text-align:left;">
+            <div style="font-weight:700; font-size:0.98rem; color:var(--text-primary); word-break:break-all;">${escapeHtml(file.name)}</div>
+            <div style="font-size:0.76rem; color:var(--text-muted); margin-top:2px;">${sizeKb} KB • SCADA Telemetry File Ready</div>
+          </div>
+        </div>
+        <div style="margin-top:0.75rem;">
+          <button type="button" class="btn-remove-chip" onclick="event.stopPropagation(); validation.removeSingleFile()" title="Remove this file and choose another">
+            <i class="fa-solid fa-trash-can" style="font-size:0.75rem;"></i> Remove / Change File
+          </button>
+        </div>
+      `;
+      if (dropzone) {
+        dropzone.style.borderColor = 'var(--accent-emerald)';
+        dropzone.style.background = 'rgba(16, 185, 129, 0.06)';
+      }
+      if (actionWrap) actionWrap.style.display = 'block';
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Upload Shift Telemetry Report (${escapeHtml(file.name)})`;
+        btnSubmit.classList.add('btn-ready-glow');
+        btnSubmit.style.opacity = '1';
+        btnSubmit.style.cursor = 'pointer';
+      }
+    } else {
+      contentEl.innerHTML = `
+        <i class="fa-solid fa-file-arrow-up" style="font-size:2.2rem; color:var(--accent-cyan); margin-bottom:0.45rem;"></i>
+        <div style="font-weight:600; font-size:1.05rem; color:var(--text-primary); margin-bottom:0.25rem;">Drag &amp; Drop Shift Excel Report (.xlsx, .xls)</div>
+        <div style="font-size:0.8rem; color:var(--text-muted); margin-bottom:1rem;">Preserves original timestamps, readings, decimal precision, and motor health tags</div>
+        <button type="button" class="btn btn-secondary btn-sm" id="btn-browse-single">
+          <i class="fa-solid fa-folder-open text-cyan"></i> Browse Local File
+        </button>
+      `;
+      document.getElementById('btn-browse-single')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.getElementById('file-upload-input')?.click();
+      });
+
+      if (dropzone) {
+        dropzone.style.borderColor = '';
+        dropzone.style.background = '';
+      }
+      if (actionWrap) actionWrap.style.display = 'none';
+    }
+  },
+
+  removeSingleFile() {
+    this.singleFile = null;
+    const inp = document.getElementById('file-upload-input');
+    if (inp) inp.value = '';
+    this.renderSingleFileSlot();
+  },
+
   initUploadHandler() {
     const dropzone = document.getElementById('upload-dropzone');
     const fileInput = document.getElementById('file-upload-input');
+    const btnBrowseSingle = document.getElementById('btn-browse-single');
+    const btnSubmitSingle = document.getElementById('btn-submit-single-upload');
 
-    if (dropzone && fileInput) {
-      // Clear value on click so re-selecting same file fires change event
-      fileInput.addEventListener('click', (e) => { e.target.value = null; });
+    // 1. Single Shift Setup
+    btnBrowseSingle?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      fileInput?.click();
+    });
 
-      // Clicking anywhere in the single dropzone box opens file dialog
-      dropzone.addEventListener('click', (e) => {
-        if (e.target.tagName !== 'BUTTON') {
-          fileInput.click();
+    dropzone?.addEventListener('click', (e) => {
+      if (e.target.closest('button') || e.target.closest('.btn-remove-chip')) {
+        return;
+      }
+      fileInput?.click();
+    });
+
+    ['dragenter', 'dragover'].forEach(name => {
+      dropzone?.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.add('dragover'); });
+    });
+    ['dragleave', 'drop'].forEach(name => {
+      dropzone?.addEventListener(name, (e) => { e.preventDefault(); dropzone.classList.remove('dragover'); });
+    });
+    dropzone?.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropzone.classList.remove('dragover');
+      if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+        this.singleFile = e.dataTransfer.files[0];
+        this.renderSingleFileSlot();
+      }
+    });
+
+    fileInput?.addEventListener('change', (e) => {
+      if (e.target.files && e.target.files.length) {
+        this.singleFile = e.target.files[0];
+        this.renderSingleFileSlot();
+      }
+    });
+
+    btnSubmitSingle?.addEventListener('click', async () => {
+      if (!this.singleFile) {
+        showToast('Please select a shift Excel file first.', 'warning');
+        return;
+      }
+      btnSubmitSingle.disabled = true;
+      btnSubmitSingle.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing &amp; Validating Upload...`;
+      try {
+        await this.handleUpload(this.singleFile);
+      } catch (err) {
+        console.error('Upload invocation error:', err);
+      } finally {
+        if (this.singleFile && btnSubmitSingle) {
+          btnSubmitSingle.disabled = false;
+          btnSubmitSingle.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Upload Shift Telemetry Report (${escapeHtml(this.singleFile.name)})`;
         }
-      });
+      }
+    });
 
-      ['dragenter', 'dragover'].forEach(eventName => {
-        dropzone.addEventListener(eventName, (e) => {
-          e.preventDefault();
-          dropzone.classList.add('dragover');
-        });
-      });
-
-      ['dragleave', 'drop'].forEach(eventName => {
-        dropzone.addEventListener(eventName, (e) => {
-          e.preventDefault();
-          dropzone.classList.remove('dragover');
-        });
-      });
-
-      dropzone.addEventListener('drop', (e) => {
-        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
-          fileInput.files = e.dataTransfer.files;
-          this.handleUpload(fileInput.files[0]);
-        }
-      });
-
-      fileInput.addEventListener('change', () => {
-        if (fileInput.files && fileInput.files.length) {
-          this.handleUpload(fileInput.files[0]);
-        }
-      });
-    }
-
-    // Dual Upload Setup
+    // 2. Dual Shift Setup
     const input1 = document.getElementById('file-dual-input-1');
     const input2 = document.getElementById('file-dual-input-2');
     const dropzone1 = document.getElementById('dual-dropzone-1');
     const dropzone2 = document.getElementById('dual-dropzone-2');
+    const btnChoose1 = document.getElementById('btn-choose-dual-1');
+    const btnChoose2 = document.getElementById('btn-choose-dual-2');
     const btnSubmitDual = document.getElementById('btn-submit-dual-upload');
 
-    // Clear value on click so choosing same file again fires change event
-    input1?.addEventListener('click', (e) => { e.target.value = null; });
-    input2?.addEventListener('click', (e) => { e.target.value = null; });
+    btnChoose1?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      input1?.click();
+    });
+    btnChoose2?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      input2?.click();
+    });
 
-    // Clicking anywhere in Day Shift box opens its file dialog
     dropzone1?.addEventListener('click', (e) => {
-      if (!e.target.closest('.btn-remove-chip') && e.target.tagName !== 'BUTTON') {
-        input1?.click();
-      }
+      if (e.target.closest('button') || e.target.closest('.btn-remove-chip')) return;
+      input1?.click();
     });
-
-    // Clicking anywhere in Night Shift box opens its file dialog
     dropzone2?.addEventListener('click', (e) => {
-      if (!e.target.closest('.btn-remove-chip') && e.target.tagName !== 'BUTTON') {
-        input2?.click();
-      }
+      if (e.target.closest('button') || e.target.closest('.btn-remove-chip')) return;
+      input2?.click();
     });
 
-    // Drag & Drop for Day Shift box
     if (dropzone1 && input1) {
       ['dragenter', 'dragover'].forEach(name => {
         dropzone1.addEventListener(name, (e) => { e.preventDefault(); dropzone1.classList.add('dragover'); });
@@ -470,7 +559,6 @@ const validation = {
       });
     }
 
-    // Drag & Drop for Night Shift box
     if (dropzone2 && input2) {
       ['dragenter', 'dragover'].forEach(name => {
         dropzone2.addEventListener(name, (e) => { e.preventDefault(); dropzone2.classList.add('dragover'); });
@@ -663,6 +751,11 @@ const validation = {
         if (modal) modal.classList.remove('active');
         if (progressWrap) progressWrap.style.display = 'none';
         
+        this.singleFile = null;
+        this.renderSingleFileSlot();
+        const inp = document.getElementById('file-upload-input');
+        if (inp) inp.value = '';
+
         await window.appRefreshReports();
         if (typeof dashboard !== 'undefined' && dashboard.loadTelemetryMatrixAndLogs) {
           dashboard.loadTelemetryMatrixAndLogs();
@@ -678,8 +771,11 @@ const validation = {
         errCallout.style.display = 'block';
       }
       showToast(err.message, 'error');
-      const singleInput = document.getElementById('file-upload-input');
-      if (singleInput) singleInput.value = '';
+      const btnSubmit = document.getElementById('btn-submit-single-upload');
+      if (btnSubmit) {
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = `<i class="fa-solid fa-rotate-right"></i> Retry Upload Shift Report`;
+      }
     }
   },
 
