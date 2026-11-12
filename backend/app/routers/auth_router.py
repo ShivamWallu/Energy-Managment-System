@@ -450,3 +450,51 @@ def get_me(current_user: User = Depends(get_current_user)):
         "role": current_user.role
     }
 
+class AuthenticatedChangePasswordRequest(BaseModel):
+    current_password: str
+    new_password: str
+    confirm_password: str
+
+@router.post("/change-password")
+def change_password(req: AuthenticatedChangePasswordRequest, request: Request, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    ip = request.client.host if request.client else "127.0.0.1"
+    if not verify_password(req.current_password, current_user.hashed_password):
+        log_activity(
+            db=db,
+            activity_type="PASSWORD_CHANGE_FAILED",
+            description=f"User '{current_user.full_name or current_user.username}' attempted password change with incorrect current password.",
+            user_id=current_user.id,
+            username=current_user.full_name or current_user.username,
+            email=current_user.email,
+            status="FAILED",
+            ip_address=ip
+        )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect."
+        )
+    if req.new_password != req.confirm_password:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password and confirmation password do not match."
+        )
+    if len(req.new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be at least 6 characters long."
+        )
+    current_user.hashed_password = get_password_hash(req.new_password)
+    db.commit()
+    log_activity(
+        db=db,
+        activity_type="PASSWORD_CHANGE_SUCCESS",
+        description=f"User '{current_user.full_name or current_user.username}' changed their password successfully.",
+        user_id=current_user.id,
+        username=current_user.full_name or current_user.username,
+        email=current_user.email,
+        status="SUCCESS",
+        ip_address=ip
+    )
+    return {"message": "Password changed successfully."}
+
+
