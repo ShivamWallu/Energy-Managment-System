@@ -3193,13 +3193,15 @@ html.is-authenticated #login-modal {
   .pdf-current-page {
     display: block !important;
     width: 100% !important;
-    padding: 4px 0 !important;
+    box-sizing: border-box !important;
+    padding: 6px 12px !important;
+    margin: 0 !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
-    break-before: page !important;
-    page-break-before: always !important;
     break-after: page !important;
     page-break-after: always !important;
+    box-shadow: none !important;
+    border: none !important;
   }
 
   .pdf-current-page:first-child {
@@ -3213,12 +3215,15 @@ html.is-authenticated #login-modal {
   }
 
   .pdf-current-page article {
-    padding: 8px !important;
+    padding: 8px 12px !important;
+    border: 1px solid #cbd5e1 !important;
   }
 
   .pdf-current-page img[alt="48 interval motor load graph"] {
-    height: 300px !important;
+    height: 410px !important;
     width: 100% !important;
+    object-fit: contain !important;
+    display: block !important;
   }
 }
 

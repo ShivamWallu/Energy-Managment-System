@@ -1054,7 +1054,7 @@ const charts = {
     }
   },
 
-  createAuditFocusChart(motor, width = 1080, height = 340) {
+  createAuditFocusChart(motor, width = 1800, height = 520) {
     if (!motor || !motor.timeline) return '';
     try {
       const offCanvas = document.createElement('canvas');
@@ -1079,14 +1079,16 @@ const charts = {
         statuses[idx] === 'ANOMALY' && Number.isFinite(pct) ? Math.min(pct, 120) : pct
       );
       const overLimit = 80.0;
-      const overLabel = `80% Overload Danger Limit (${motor.overload_threshold_kwh} kWh)`;
+      const overLabel = `80% Overload Danger Limit (${motor.overload_threshold_kwh || ''} kWh)`.replace('()', '').trim();
+      const healthyLabel = `50% Healthy Target (${motor.healthy_min_kwh || ''} kWh)`.replace('()', '').trim();
+      const idleLabel = `40% Low-Load Floor (${motor.idle_max_kwh || ''} kWh)`.replace('()', '').trim();
 
       const barColors = loadPcts.map((pct, idx) => {
         const st = statuses[idx] || '';
         if (st === 'OVERLOAD' || st === 'ANOMALY' || pct > overLimit) return '#ef4444';
         if (st === 'HEALTHY' || st === 'NORMAL' || pct >= 40.0) return '#10b981';
         if (st === 'IDLE' || pct >= 10.0) return '#f59e0b';
-        return '#94a3b8';
+        return '#cbd5e1';
       });
 
       const borderColors = loadPcts.map((pct, idx) => {
@@ -1094,7 +1096,7 @@ const charts = {
         if (st === 'OVERLOAD' || st === 'ANOMALY' || pct > overLimit) return '#dc2626';
         if (st === 'HEALTHY' || st === 'NORMAL' || pct >= 40.0) return '#059669';
         if (st === 'IDLE' || pct >= 10.0) return '#d97706';
-        return '#64748b';
+        return '#94a3b8';
       });
 
       const overloadLine = Array(loadPcts.length).fill(80);
@@ -1102,7 +1104,7 @@ const charts = {
       const idleMaxLine = Array(loadPcts.length).fill(40);
 
       const maxPct = Math.max(...graphLoadPcts.filter(Number.isFinite), 0);
-      const suggestedMaxPct = Math.max(120, Math.ceil(maxPct * 1.15));
+      const suggestedMaxPct = Math.max(120, Math.ceil(maxPct * 1.18));
 
       const chart = new Chart(ctx, {
         type: 'bar',
@@ -1124,7 +1126,7 @@ const charts = {
             },
             {
               type: 'line',
-              label: `50% Healthy Target (${motor.healthy_min_kwh} kWh)`,
+              label: healthyLabel,
               data: healthyMinLine,
               borderColor: '#059669',
               backgroundColor: '#059669',
@@ -1137,7 +1139,7 @@ const charts = {
             },
             {
               type: 'line',
-              label: `40% Low-Load Floor (${motor.idle_max_kwh} kWh)`,
+              label: idleLabel,
               data: idleMaxLine,
               borderColor: '#d97706',
               backgroundColor: '#d97706',
@@ -1167,15 +1169,15 @@ const charts = {
             afterDatasetsDraw(chartInstance) {
               const chartCtx = chartInstance.ctx;
               const barMeta = chartInstance.getDatasetMeta(3);
-              if (!barMeta || !barMeta.data) return;
+              if (!barMeta || !barMeta.data || !Array.isArray(barMeta.data)) return;
 
-              const occupiedLabelLanes = [];
               barMeta.data.forEach((bar, index) => {
+                if (!bar || typeof bar.x !== 'number' || typeof bar.y !== 'number' || isNaN(bar.x) || isNaN(bar.y)) return;
                 const pct = loadPcts[index];
-                if (pct === undefined || pct === null) return;
+                if (pct === undefined || pct === null || isNaN(pct) || pct <= 0) return;
 
-                let labelColor = '#0f172a';
-                let labelText = '';
+                let labelColor = '#059669';
+                let labelText = `${Math.round(pct)}%`;
 
                 if (statuses[index] === 'ANOMALY') {
                   labelColor = '#dc2626';
@@ -1183,38 +1185,33 @@ const charts = {
                 } else if (pct > overLimit) {
                   labelColor = '#dc2626';
                   labelText = `${Math.round(pct)}%`;
-                } else if (pct >= 50.0) {
+                } else if (pct >= 40.0) {
                   labelColor = '#059669';
                   labelText = `${Math.round(pct)}%`;
-                } else if (pct >= 10.0 && pct < 50.0) {
+                } else if (pct >= 10.0) {
                   labelColor = '#d97706';
                   labelText = `${Math.round(pct)}%`;
                 } else {
-                  labelColor = '#475569';
-                  labelText = 'OFF';
+                  labelColor = '#64748b';
+                  labelText = `${Math.round(pct)}%`;
                 }
 
                 chartCtx.save();
-                chartCtx.font = 'bold 11px "JetBrains Mono", monospace';
+                chartCtx.font = 'bold 12px "JetBrains Mono", monospace';
                 chartCtx.textAlign = 'center';
                 chartCtx.textBaseline = 'middle';
 
-                const textW = chartCtx.measureText(labelText).width;
-                const pillW = Math.max(textW + 8, 30);
-                const pillH = 17;
-                // Assign nearby bars different vertical lanes so all interval labels stay readable.
-                let lane = 0;
-                while (lane < 5 && (occupiedLabelLanes[lane] ?? -Infinity) > bar.x - pillW - 3) lane++;
-                lane = Math.min(lane, 4);
-                occupiedLabelLanes[lane] = bar.x + pillW + 3;
-                const yPos = Math.max(bar.y - 12 - lane * 18, 12);
+                const textW = chartCtx.measureText(labelText).width || 24;
+                const pillW = Math.max(textW + 8, 32);
+                const pillH = 18;
+                const yPos = Math.max(bar.y - 12, 14);
 
                 chartCtx.fillStyle = '#ffffff';
                 chartCtx.strokeStyle = labelColor;
-                chartCtx.lineWidth = 1.3;
+                chartCtx.lineWidth = 1.4;
 
                 chartCtx.beginPath();
-                if (chartCtx.roundRect) {
+                if (typeof chartCtx.roundRect === 'function') {
                   chartCtx.roundRect(bar.x - (pillW / 2), yPos - (pillH / 2), pillW, pillH, 4);
                 } else {
                   chartCtx.rect(bar.x - (pillW / 2), yPos - (pillH / 2), pillW, pillH);
@@ -1237,9 +1234,9 @@ const charts = {
               position: 'top',
               labels: {
                 color: '#0f172a',
-                font: { family: 'Outfit', size: 12, weight: 700 },
+                font: { family: 'Outfit', size: 13, weight: 700 },
                 usePointStyle: true,
-                padding: 14
+                padding: 16
               }
             },
             tooltip: { enabled: false }
@@ -1249,26 +1246,29 @@ const charts = {
               grid: { display: false },
               ticks: {
                 color: '#0f172a',
-                font: { family: 'JetBrains Mono', size: 11, weight: 700 },
+                font: { family: 'JetBrains Mono', size: 12, weight: 700 },
                 maxRotation: 45,
                 minRotation: 35,
                 autoSkip: true,
-                maxTicksLimit: 24
+                maxTicksLimit: 25,
+                padding: 6
               }
             },
             y: {
               position: 'left',
-              grid: { color: '#e2e8f0' },
+              grid: { color: '#e2e8f0', lineWidth: 1 },
               ticks: {
                 color: '#0f172a',
                 font: { family: 'JetBrains Mono', size: 12, weight: 800 },
-                callback: (v) => `${v}%`
+                callback: (v) => `${v}%`,
+                padding: 10
               },
               title: {
                 display: true,
                 text: 'Operating Load Percentage (% of Rated HP)',
                 color: '#0284c7',
-                font: { family: 'Outfit', size: 12, weight: 800 }
+                font: { family: 'Outfit', size: 13, weight: 800 },
+                padding: { bottom: 6 }
               },
               suggestedMax: suggestedMaxPct,
               beginAtZero: true
@@ -1278,17 +1278,19 @@ const charts = {
               grid: { display: false },
               ticks: {
                 color: '#0f172a',
-                font: { family: 'JetBrains Mono', size: 11, weight: 700 },
+                font: { family: 'JetBrains Mono', size: 12, weight: 700 },
                 callback: (v) => {
                   const kwh = (v * (motor.rated_15m_kwh || 10) / 100).toFixed(1);
                   return `${kwh} kWh`;
-                }
+                },
+                padding: 10
               },
               title: {
                 display: true,
                 text: '15-Minute Energy (kWh)',
                 color: '#0284c7',
-                font: { family: 'Outfit', size: 12, weight: 700 }
+                font: { family: 'Outfit', size: 13, weight: 800 },
+                padding: { bottom: 6 }
               },
               suggestedMax: suggestedMaxPct,
               beginAtZero: true
