@@ -771,6 +771,8 @@ const charts = {
               });
               if (curRun) offRuns.push(curRun);
 
+              const placedPills = [];
+
               if (baselineY > 0) {
                 offRuns.forEach(run => {
                   const count = run.end - run.start + 1;
@@ -781,16 +783,33 @@ const charts = {
                   const barW = startBar.width || 18;
                   const spanLeft = startBar.x - (barW / 2);
                   const spanRight = endBar.x + (barW / 2);
-                  const spanW = Math.max(spanRight - spanLeft, barW);
                   const centerX = (startBar.x + endBar.x) / 2;
-                  const markerH = 16;
-                  const yPos = baselineY - markerH - 2;
+
+                  const stubH = 7;
+                  const stubW = Math.max(barW * 0.82, 11);
 
                   chartCtx.save();
+                  // 1. Draw small grey buildings (mini-bars) at each 0-value slot so intervals are clearly visible
+                  chartCtx.fillStyle = tc.isLight ? '#cbd5e1' : '#334155';
+                  chartCtx.strokeStyle = tc.isLight ? '#94a3b8' : '#475569';
+                  chartCtx.lineWidth = 1;
+                  for (let i = run.start; i <= run.end; i++) {
+                    const b = barMeta.data[i];
+                    if (!b || typeof b.x !== 'number') continue;
+                    chartCtx.beginPath();
+                    if (typeof chartCtx.roundRect === 'function') {
+                      chartCtx.roundRect(b.x - stubW / 2, baselineY - stubH, stubW, stubH, [2, 2, 0, 0]);
+                    } else {
+                      chartCtx.rect(b.x - stubW / 2, baselineY - stubH, stubW, stubH);
+                    }
+                    chartCtx.fill();
+                    chartCtx.stroke();
+                  }
+
                   // Baseline dashed rail for contiguous off intervals
                   if (count > 1) {
                     chartCtx.strokeStyle = tc.isLight ? '#94a3b8' : '#475569';
-                    chartCtx.lineWidth = 1.8;
+                    chartCtx.lineWidth = 1.6;
                     chartCtx.setLineDash([4, 3]);
                     chartCtx.beginPath();
                     chartCtx.moveTo(spanLeft, baselineY - 1);
@@ -799,12 +818,13 @@ const charts = {
                     chartCtx.setLineDash([]);
                   }
 
-                  // Display status strictly as "OFF" instead of slot counts/hours (per requirement)
+                  // 2. Display "OFF" badge centered cleanly above the grey buildings
                   const badgeText = 'OFF';
-
                   chartCtx.font = 'bold 10px "JetBrains Mono", monospace';
                   const textW = chartCtx.measureText(badgeText).width || 22;
                   const pillW = Math.max(textW + 10, 30);
+                  const markerH = 16;
+                  const yPos = baselineY - stubH - markerH - 3;
 
                   chartCtx.fillStyle = tc.isLight ? '#f8fafc' : '#091328';
                   chartCtx.strokeStyle = tc.isLight ? '#94a3b8' : '#334155';
@@ -824,12 +844,12 @@ const charts = {
                   chartCtx.textBaseline = 'middle';
                   chartCtx.fillText(badgeText, centerX, yPos + (markerH / 2));
                   chartCtx.restore();
+
+                  placedPills.push({ x: centerX, y: yPos, w: pillW, h: markerH, index: -1 });
                 });
               }
 
               // 2. Render active percentage badges with adaptive anti-collision
-              const placedPills = [];
-
               barMeta.data.forEach((bar, index) => {
                 if (!bar || typeof bar.x !== 'number' || typeof bar.y !== 'number' || isNaN(bar.x) || isNaN(bar.y)) return;
                 const pct = loadPcts[index];
@@ -1340,6 +1360,8 @@ const charts = {
               });
               if (curRun) offRuns.push(curRun);
 
+              const placedPills = [];
+
               if (baselineY > 0) {
                 offRuns.forEach(run => {
                   const count = run.end - run.start + 1;
@@ -1350,17 +1372,34 @@ const charts = {
                   const barW = startBar.width || 20;
                   const spanLeft = startBar.x - (barW / 2);
                   const spanRight = endBar.x + (barW / 2);
-                  const spanW = Math.max(spanRight - spanLeft, barW);
                   const centerX = (startBar.x + endBar.x) / 2;
-                  const markerH = 18;
-                  const yPos = baselineY - markerH - 3;
+
+                  const stubH = 8;
+                  const stubW = Math.max(barW * 0.85, 13);
 
                   chartCtx.save();
+                  // 1. Draw small grey buildings (mini-bars) at each 0-value slot so intervals are clearly visible
+                  chartCtx.fillStyle = '#cbd5e1';
+                  chartCtx.strokeStyle = '#94a3b8';
+                  chartCtx.lineWidth = 1;
+                  for (let i = run.start; i <= run.end; i++) {
+                    const b = barMeta.data[i];
+                    if (!b || typeof b.x !== 'number') continue;
+                    chartCtx.beginPath();
+                    if (typeof chartCtx.roundRect === 'function') {
+                      chartCtx.roundRect(b.x - stubW / 2, baselineY - stubH, stubW, stubH, [2, 2, 0, 0]);
+                    } else {
+                      chartCtx.rect(b.x - stubW / 2, baselineY - stubH, stubW, stubH);
+                    }
+                    chartCtx.fill();
+                    chartCtx.stroke();
+                  }
+
                   // Baseline dashed rail for contiguous off intervals
                   if (count > 1) {
                     chartCtx.strokeStyle = '#94a3b8';
-                    chartCtx.lineWidth = 2.2;
-                    chartCtx.setLineDash([5, 4]);
+                    chartCtx.lineWidth = 1.8;
+                    chartCtx.setLineDash([4, 3]);
                     chartCtx.beginPath();
                     chartCtx.moveTo(spanLeft, baselineY - 1);
                     chartCtx.lineTo(spanRight, baselineY - 1);
@@ -1368,12 +1407,13 @@ const charts = {
                     chartCtx.setLineDash([]);
                   }
 
-                  // Display status strictly as "OFF" instead of slot counts/hours (per requirement)
+                  // 2. Display "OFF" badge centered cleanly right above the small grey buildings
                   const badgeText = 'OFF';
-
                   chartCtx.font = 'bold 12px "JetBrains Mono", monospace';
                   const textW = chartCtx.measureText(badgeText).width || 24;
                   const pillW = Math.max(textW + 12, 34);
+                  const markerH = 18;
+                  const yPos = baselineY - stubH - markerH - 3;
 
                   chartCtx.fillStyle = '#f8fafc';
                   chartCtx.strokeStyle = '#64748b';
@@ -1393,12 +1433,12 @@ const charts = {
                   chartCtx.textBaseline = 'middle';
                   chartCtx.fillText(badgeText, centerX, yPos + (markerH / 2));
                   chartCtx.restore();
+
+                  placedPills.push({ x: centerX, y: yPos, w: pillW, h: markerH, index: -1 });
                 });
               }
 
               // 2. Render active percentage badges with adaptive anti-collision
-              const placedPills = [];
-
               barMeta.data.forEach((bar, index) => {
                 if (!bar || typeof bar.x !== 'number' || typeof bar.y !== 'number' || isNaN(bar.x) || isNaN(bar.y)) return;
                 const pct = loadPcts[index];
