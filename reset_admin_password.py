@@ -1,6 +1,19 @@
 import sys
 import os
 
+# Auto-detect and switch to virtual environment Python if available
+candidate_venvs = [
+    os.path.join(os.path.dirname(__file__), "venv", "bin", "python"),
+    os.path.join(os.path.dirname(__file__), "venv", "bin", "python3"),
+    "/home/ubuntu/Energy-Managment-System/venv/bin/python",
+    "/home/ubuntu/Energy-Managment-System/venv/bin/python3",
+    "/var/www/ems/venv/bin/python",
+]
+
+for vpy in candidate_venvs:
+    if os.path.exists(vpy) and os.path.abspath(sys.executable) != os.path.abspath(vpy):
+        os.execv(vpy, [vpy] + sys.argv)
+
 # Add root directory to python path
 sys.path.insert(0, os.path.abspath(os.path.dirname(__file__)))
 
