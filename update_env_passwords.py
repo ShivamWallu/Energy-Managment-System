@@ -40,3 +40,4 @@ else:
         f.write('SMTP_HOST=smtp.gmail.com\n')
         f.write('SMTP_PORT=587\n')
     print("✅ New .env file created with working App Passwords!")
+
