@@ -601,11 +601,11 @@ const validation = {
               <div class="pro-file-badge-sm">
                 <i class="fa-solid fa-file-excel"></i>
               </div>
-              <div style="min-width:0; flex:1;">
+              <div class="pro-dual-file-info">
                 <div class="pro-dual-file-name" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</div>
                 <div class="pro-dual-file-meta">
-                  <span class="pro-pill pro-pill-success" style="padding:1px 6px; font-size:0.68rem;"><i class="fa-solid fa-circle-check"></i> Ready</span>
-                  <span class="pro-pill pro-pill-info" style="padding:1px 6px; font-size:0.68rem;">${sizeKb} KB</span>
+                  <span class="pro-pill pro-pill-success"><i class="fa-solid fa-circle-check"></i> Ready</span>
+                  <span class="pro-pill pro-pill-info">${sizeKb} KB</span>
                 </div>
               </div>
             </div>

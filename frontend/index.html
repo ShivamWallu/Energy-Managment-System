@@ -21,7 +21,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <!-- Application CSS -->
-  <link rel="stylesheet" href="/css/style.css?v=20261112_pro_ui_scroll_v24">
+  <link rel="stylesheet" href="/css/style.css?v=20261112_solid_dropdown_clean_v25">
 
   <!-- Preload Optimized Background & Machinery Images for 5X Faster Loading -->
   <link rel="preload" as="image" href="/img/land1_background.webp?v=20261112_fast5x" type="image/webp" fetchpriority="high">
@@ -880,17 +880,17 @@
         <input type="file" id="file-dual-input-1" accept=".xlsx,.xls,.XLSX,.XLS" onchange="validation.handleDualFileSelected(1, this.files ? this.files[0] : null)" style="display:none;">
         <input type="file" id="file-dual-input-2" accept=".xlsx,.xls,.XLSX,.XLS" onchange="validation.handleDualFileSelected(2, this.files ? this.files[0] : null)" style="display:none;">
         <div class="dual-dropzone-grid">
-          <div id="dual-dropzone-1" class="dropzone" style="padding:1.15rem 0.65rem; position:relative; cursor:pointer;" onclick="validation.triggerDualUpload(1, event)">
+          <div id="dual-dropzone-1" class="dropzone" style="padding:1.15rem 0.65rem; position:relative; cursor:pointer; min-width:0; overflow:hidden;" onclick="validation.triggerDualUpload(1, event)">
             <div class="dual-slot-badge dual-slot-day"><i class="fa-solid fa-sun text-amber" style="font-size:1.15rem;"></i> Day Shift (07:00 AM – 07:00 PM)</div>
-            <div id="dual-file-1-name" style="font-size:0.76rem; color:var(--text-muted); margin:0.35rem 0;">No file selected</div>
+            <div id="dual-file-1-name" style="font-size:0.76rem; color:var(--text-muted); margin:0.35rem 0; overflow:hidden;">No file selected</div>
             <div id="dual-action-wrap-1">
               <button type="button" class="btn btn-secondary btn-sm" id="btn-choose-dual-1" onclick="validation.triggerDualUpload(1, event)">Choose Day Shift File</button>
             </div>
           </div>
 
-          <div id="dual-dropzone-2" class="dropzone" style="padding:1.15rem 0.65rem; position:relative; cursor:pointer;" onclick="validation.triggerDualUpload(2, event)">
+          <div id="dual-dropzone-2" class="dropzone" style="padding:1.15rem 0.65rem; position:relative; cursor:pointer; min-width:0; overflow:hidden;" onclick="validation.triggerDualUpload(2, event)">
             <div class="dual-slot-badge dual-slot-night"><i class="fa-solid fa-moon text-purple" style="font-size:1.15rem;"></i> Night Shift (07:00 PM – 07:00 AM)</div>
-            <div id="dual-file-2-name" style="font-size:0.76rem; color:var(--text-muted); margin:0.35rem 0;">No file selected</div>
+            <div id="dual-file-2-name" style="font-size:0.76rem; color:var(--text-muted); margin:0.35rem 0; overflow:hidden;">No file selected</div>
             <div id="dual-action-wrap-2">
               <button type="button" class="btn btn-secondary btn-sm" id="btn-choose-dual-2" onclick="validation.triggerDualUpload(2, event)">Choose Night Shift File</button>
             </div>
@@ -1207,13 +1207,13 @@
 <div id="toast-container" class="toast-container"></div>
 
 <!-- Versioned JavaScript assets -->
-<script src="/js/api.js?v=20261112_pro_ui_scroll_v24"></script>
-<script src="/js/charts.js?v=20261112_pro_ui_scroll_v24"></script>
-<script src="/js/dashboard.js?v=20261112_pro_ui_scroll_v24"></script>
-<script src="/js/validation.js?v=20261112_pro_ui_scroll_v24"></script>
-<script src="/js/accounts.js?v=20261112_pro_ui_scroll_v24"></script>
-<script src="/js/auth.js?v=20261112_pro_ui_scroll_v24"></script>
-<script src="/js/app.js?v=20261112_pro_ui_scroll_v24"></script>
+<script src="/js/api.js?v=20261112_solid_dropdown_clean_v25"></script>
+<script src="/js/charts.js?v=20261112_solid_dropdown_clean_v25"></script>
+<script src="/js/dashboard.js?v=20261112_solid_dropdown_clean_v25"></script>
+<script src="/js/validation.js?v=20261112_solid_dropdown_clean_v25"></script>
+<script src="/js/accounts.js?v=20261112_solid_dropdown_clean_v25"></script>
+<script src="/js/auth.js?v=20261112_solid_dropdown_clean_v25"></script>
+<script src="/js/app.js?v=20261112_solid_dropdown_clean_v25"></script>
 
 </body>
 </html>
