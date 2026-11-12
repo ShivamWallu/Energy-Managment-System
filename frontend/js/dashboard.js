@@ -1518,6 +1518,9 @@ const dashboard = {
     if (window.syncShiftRadioButtons) {
       window.syncShiftRadioButtons();
     }
+    if (window.syncCustomReportUI) {
+      window.syncCustomReportUI(reportId);
+    }
     await this.load(reportId);
     await this.loadTelemetryMatrixAndLogs();
     showToast(`Switched active view to Report ID #${reportId}`, 'info');

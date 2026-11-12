@@ -431,24 +431,25 @@ const validation = {
       const file = this.singleFile;
       const sizeKb = (file.size / 1024).toFixed(1);
       contentEl.innerHTML = `
-        <div style="display:flex; align-items:center; justify-content:center; gap:0.75rem; padding:0.4rem 0;">
-          <i class="fa-solid fa-file-excel text-emerald" style="font-size:2.4rem; flex-shrink:0;"></i>
-          <div style="text-align:left; min-width:0;">
-            <div style="font-weight:700; font-size:0.96rem; color:var(--text-primary); word-break:break-all;">${escapeHtml(file.name)}</div>
-            <div style="font-size:0.76rem; color:#10b981; font-weight:600; margin-top:2px;">
-              <i class="fa-solid fa-circle-check"></i> ${sizeKb} KB • SCADA Telemetry File Ready
+        <div class="pro-file-attached-card">
+          <div class="pro-file-badge">
+            <i class="fa-solid fa-file-excel"></i>
+          </div>
+          <div class="pro-file-details">
+            <div class="pro-file-name" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</div>
+            <div class="pro-file-meta-row">
+              <span class="pro-pill pro-pill-success"><i class="fa-solid fa-circle-check"></i> SCADA Validated</span>
+              <span class="pro-pill pro-pill-info"><i class="fa-solid fa-database"></i> ${sizeKb} KB</span>
+              <span class="pro-pill pro-pill-neutral">Excel Telemetry</span>
             </div>
           </div>
-        </div>
-        <div style="margin-top:0.75rem;">
-          <button type="button" class="btn-remove-chip" onclick="validation.removeSingleFile(event)" title="Remove this file and choose another" style="font-size:0.75rem; padding:0.25rem 0.65rem; color:#ef4444; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:5px; cursor:pointer;">
-            <i class="fa-solid fa-trash-can" style="font-size:0.75rem;"></i> Remove / Change File
+          <button type="button" class="btn-remove-chip" onclick="validation.removeSingleFile(event)" title="Remove this file and select another">
+            <i class="fa-solid fa-trash-can"></i> Remove File
           </button>
         </div>
       `;
       if (dropzone) {
-        dropzone.style.borderColor = 'var(--accent-emerald)';
-        dropzone.style.background = 'rgba(16, 185, 129, 0.06)';
+        dropzone.classList.add('has-file');
       }
       if (actionWrap) actionWrap.style.display = 'block';
       if (btnSubmit) {
@@ -468,8 +469,7 @@ const validation = {
         </button>
       `;
       if (dropzone) {
-        dropzone.style.borderColor = '';
-        dropzone.style.background = '';
+        dropzone.classList.remove('has-file');
       }
       if (actionWrap) actionWrap.style.display = 'none';
     }
@@ -593,28 +593,38 @@ const validation = {
     const dropzone = document.getElementById(`dual-dropzone-${slotNum}`);
 
     if (file) {
+      const sizeKb = (file.size / 1024).toFixed(1);
       if (nameEl) {
         nameEl.innerHTML = `
-          <div class="selected-file-chip" title="${escapeHtml(file.name)}" style="background:rgba(16, 185, 129, 0.12); border:1px solid #10b981; border-radius:6px; padding:0.35rem 0.6rem; display:inline-flex; align-items:center; gap:0.4rem; max-width:100%;">
-            <i class="fa-solid fa-file-excel text-emerald" style="font-size:1.15rem; flex-shrink:0;"></i>
-            <span class="selected-file-name" style="font-weight:700; color:var(--text-primary); font-size:0.8rem; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${escapeHtml(file.name)}</span>
+          <div class="pro-dual-file-card">
+            <div class="pro-dual-file-body">
+              <div class="pro-file-badge-sm">
+                <i class="fa-solid fa-file-excel"></i>
+              </div>
+              <div style="min-width:0; flex:1;">
+                <div class="pro-dual-file-name" title="${escapeHtml(file.name)}">${escapeHtml(file.name)}</div>
+                <div class="pro-dual-file-meta">
+                  <span class="pro-pill pro-pill-success" style="padding:1px 6px; font-size:0.68rem;"><i class="fa-solid fa-circle-check"></i> Ready</span>
+                  <span class="pro-pill pro-pill-info" style="padding:1px 6px; font-size:0.68rem;">${sizeKb} KB</span>
+                </div>
+              </div>
+            </div>
           </div>
         `;
       }
       if (actionWrap) {
         actionWrap.innerHTML = `
-          <button type="button" class="btn-remove-chip" onclick="validation.removeDualFile(${slotNum}, event)" title="Remove this file and choose another" style="font-size:0.74rem; padding:0.22rem 0.6rem; color:#ef4444; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.3); border-radius:5px; cursor:pointer;">
-            <i class="fa-solid fa-trash-can" style="font-size:0.75rem;"></i> Remove File
+          <button type="button" class="btn-remove-chip" onclick="validation.removeDualFile(${slotNum}, event)" title="Remove this file and choose another">
+            <i class="fa-solid fa-trash-can"></i> Remove File
           </button>
         `;
       }
       if (dropzone) {
-        dropzone.style.borderColor = 'var(--accent-emerald)';
-        dropzone.style.background = 'rgba(16, 185, 129, 0.04)';
+        dropzone.classList.add('has-file');
       }
     } else {
       if (nameEl) {
-        nameEl.innerHTML = `<span style="font-size:0.76rem; color:var(--text-muted);">No file selected</span>`;
+        nameEl.innerHTML = `<span style="font-size:0.76rem; color:var(--text-muted); margin:0.35rem 0; display:block;">No file selected</span>`;
       }
       if (actionWrap) {
         const shiftTitle = isSlot1 ? 'Day Shift' : 'Night Shift';
@@ -623,8 +633,7 @@ const validation = {
         `;
       }
       if (dropzone) {
-        dropzone.style.borderColor = '';
-        dropzone.style.background = '';
+        dropzone.classList.remove('has-file');
       }
     }
   },

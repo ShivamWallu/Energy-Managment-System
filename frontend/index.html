@@ -21,7 +21,7 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 
   <!-- Application CSS -->
-  <link rel="stylesheet" href="/css/style.css?v=20261112_laptop_responsive_v20">
+  <link rel="stylesheet" href="/css/style.css?v=20261112_pro_ui_scroll_v24">
 
   <!-- Preload Optimized Background & Machinery Images for 5X Faster Loading -->
   <link rel="preload" as="image" href="/img/land1_background.webp?v=20261112_fast5x" type="image/webp" fetchpriority="high">
@@ -107,12 +107,23 @@
 
     <!-- Header Controls: Shift Selector, Upload, Theme, User -->
     <div class="header-controls">
-      <div class="shift-selector">
+      <div class="shift-selector" id="shift-selector-wrap">
         <i class="fa-solid fa-file-invoice text-cyan" style="font-size:0.85rem;"></i>
         <label for="shift-filter-select">Report:</label>
-        <select id="shift-filter-select">
+        <select id="shift-filter-select" style="display:none;">
           <option value="">Loading shifts...</option>
         </select>
+        <!-- Custom Scrollable Enterprise Report Dropdown (Image 3 fix) -->
+        <div class="custom-report-dropdown" id="custom-report-dropdown">
+          <button type="button" class="custom-report-trigger" id="custom-report-trigger" aria-haspopup="listbox" aria-expanded="false" title="Click to browse &amp; select shift reports">
+            <span class="custom-report-icon" id="custom-report-trigger-icon">☀️</span>
+            <span class="custom-report-trigger-label" id="custom-report-trigger-label">Loading shifts...</span>
+            <i class="fa-solid fa-chevron-down custom-report-arrow"></i>
+          </button>
+          <div class="custom-report-menu" id="custom-report-menu" role="listbox">
+            <!-- Dynamically populated with grouped reports & custom smooth scrollbar -->
+          </div>
+        </div>
       </div>
 
       <button id="btn-open-upload" class="btn btn-primary btn-sm">
@@ -869,19 +880,17 @@
         <input type="file" id="file-dual-input-1" accept=".xlsx,.xls,.XLSX,.XLS" onchange="validation.handleDualFileSelected(1, this.files ? this.files[0] : null)" style="display:none;">
         <input type="file" id="file-dual-input-2" accept=".xlsx,.xls,.XLSX,.XLS" onchange="validation.handleDualFileSelected(2, this.files ? this.files[0] : null)" style="display:none;">
         <div class="dual-dropzone-grid">
-          <div id="dual-dropzone-1" class="dropzone" style="padding:1.25rem 0.5rem; position:relative; cursor:pointer;" onclick="validation.triggerDualUpload(1, event)">
-            <i class="fa-solid fa-sun text-amber" style="font-size:1.85rem; margin-bottom:0.4rem;"></i>
-            <div style="font-weight:700; font-size:0.84rem; color:var(--text-primary); white-space:nowrap; letter-spacing:-0.2px;">Day Shift (07:00 AM – 07:00 PM)</div>
-            <div id="dual-file-1-name" style="font-size:0.76rem; color:var(--text-muted); margin:0.4rem 0;">No file selected</div>
+          <div id="dual-dropzone-1" class="dropzone" style="padding:1.15rem 0.65rem; position:relative; cursor:pointer;" onclick="validation.triggerDualUpload(1, event)">
+            <div class="dual-slot-badge dual-slot-day"><i class="fa-solid fa-sun text-amber" style="font-size:1.15rem;"></i> Day Shift (07:00 AM – 07:00 PM)</div>
+            <div id="dual-file-1-name" style="font-size:0.76rem; color:var(--text-muted); margin:0.35rem 0;">No file selected</div>
             <div id="dual-action-wrap-1">
               <button type="button" class="btn btn-secondary btn-sm" id="btn-choose-dual-1" onclick="validation.triggerDualUpload(1, event)">Choose Day Shift File</button>
             </div>
           </div>
 
-          <div id="dual-dropzone-2" class="dropzone" style="padding:1.25rem 0.5rem; position:relative; cursor:pointer;" onclick="validation.triggerDualUpload(2, event)">
-            <i class="fa-solid fa-moon text-purple" style="font-size:1.85rem; margin-bottom:0.4rem;"></i>
-            <div style="font-weight:700; font-size:0.84rem; color:var(--text-primary); white-space:nowrap; letter-spacing:-0.2px;">Night Shift (07:00 PM – 07:00 AM)</div>
-            <div id="dual-file-2-name" style="font-size:0.76rem; color:var(--text-muted); margin:0.4rem 0;">No file selected</div>
+          <div id="dual-dropzone-2" class="dropzone" style="padding:1.15rem 0.65rem; position:relative; cursor:pointer;" onclick="validation.triggerDualUpload(2, event)">
+            <div class="dual-slot-badge dual-slot-night"><i class="fa-solid fa-moon text-purple" style="font-size:1.15rem;"></i> Night Shift (07:00 PM – 07:00 AM)</div>
+            <div id="dual-file-2-name" style="font-size:0.76rem; color:var(--text-muted); margin:0.35rem 0;">No file selected</div>
             <div id="dual-action-wrap-2">
               <button type="button" class="btn btn-secondary btn-sm" id="btn-choose-dual-2" onclick="validation.triggerDualUpload(2, event)">Choose Night Shift File</button>
             </div>
@@ -1198,13 +1207,13 @@
 <div id="toast-container" class="toast-container"></div>
 
 <!-- Versioned JavaScript assets -->
-<script src="/js/api.js?v=20261112_btn_picker_fix_v23"></script>
-<script src="/js/charts.js?v=20261112_btn_picker_fix_v23"></script>
-<script src="/js/dashboard.js?v=20261112_btn_picker_fix_v23"></script>
-<script src="/js/validation.js?v=20261112_btn_picker_fix_v23"></script>
-<script src="/js/accounts.js?v=20261112_btn_picker_fix_v23"></script>
-<script src="/js/auth.js?v=20261112_btn_picker_fix_v23"></script>
-<script src="/js/app.js?v=20261112_btn_picker_fix_v23"></script>
+<script src="/js/api.js?v=20261112_pro_ui_scroll_v24"></script>
+<script src="/js/charts.js?v=20261112_pro_ui_scroll_v24"></script>
+<script src="/js/dashboard.js?v=20261112_pro_ui_scroll_v24"></script>
+<script src="/js/validation.js?v=20261112_pro_ui_scroll_v24"></script>
+<script src="/js/accounts.js?v=20261112_pro_ui_scroll_v24"></script>
+<script src="/js/auth.js?v=20261112_pro_ui_scroll_v24"></script>
+<script src="/js/app.js?v=20261112_pro_ui_scroll_v24"></script>
 
 </body>
 </html>

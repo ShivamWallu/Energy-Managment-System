@@ -162,6 +162,12 @@ window.appRefreshReports = async function() {
 
     if (!reports || reports.length === 0) {
       select.innerHTML = '<option value="">No Reports Uploaded (Upload to Begin)</option>';
+      const triggerLabel = document.getElementById('custom-report-trigger-label');
+      const triggerIcon = document.getElementById('custom-report-trigger-icon');
+      const menu = document.getElementById('custom-report-menu');
+      if (triggerLabel) triggerLabel.textContent = 'No Reports Uploaded (Upload to Begin)';
+      if (triggerIcon) triggerIcon.textContent = '📁';
+      if (menu) menu.innerHTML = '<div style="padding:0.75rem; text-align:center; color:var(--text-muted); font-size:0.8rem;">No shift reports available</div>';
       if (radioContainer) radioContainer.style.display = 'none';
       if (uploadBtn) {
         uploadBtn.classList.add('btn-pulse-attention');
@@ -192,6 +198,9 @@ window.appRefreshReports = async function() {
       window.activeReportId = repId;
       if (select) select.value = repId;
       syncRadioButtons();
+      if (typeof syncCustomReportUI === 'function') {
+        syncCustomReportUI(repId);
+      }
 
       // 1. Reload Executive Overview / Dashboard
       await dashboard.load(activeReportId);
@@ -329,6 +338,111 @@ window.appRefreshReports = async function() {
       select.appendChild(optGroup);
     });
 
+    // Helper: Synchronize Custom Dropdown UI (with professional scrolling, Image 3 fix)
+    const syncCustomReportUI = (selectedRepId) => {
+      const trigger = document.getElementById('custom-report-trigger');
+      const triggerIcon = document.getElementById('custom-report-trigger-icon');
+      const triggerLabel = document.getElementById('custom-report-trigger-label');
+      const menu = document.getElementById('custom-report-menu');
+      if (!trigger || !menu) return;
+
+      const activeRep = reports.find(r => r.id === selectedRepId);
+      if (activeRep) {
+        const isNight = (activeRep.shift_type === 'NIGHT') || (activeRep.shift_label && activeRep.shift_label.includes('Night'));
+        if (triggerIcon) triggerIcon.textContent = isNight ? '🌙' : '☀️';
+        const shiftTitle = isNight ? 'Night Shift' : 'Day Shift';
+        const fname = activeRep.filename ? ` • ${activeRep.filename}` : '';
+        const dateDisp = activeRep.shift_date_display || activeRep.shift_date || 'Plant Shift';
+        if (triggerLabel) {
+          triggerLabel.textContent = `${dateDisp} • ${shiftTitle}${fname}`;
+          triggerLabel.title = `${dateDisp} • ${shiftTitle}${fname}`;
+        }
+      } else {
+        if (triggerLabel) triggerLabel.textContent = 'No Report Selected';
+      }
+
+      // Build menu HTML grouped by date & upload session
+      let menuHtml = '';
+      groupMap.forEach((group) => {
+        const hasDay = group.reports.some(r => r.shift_type === 'DAY' || (r.shift_label && r.shift_label.includes('Day')));
+        const hasNight = group.reports.some(r => r.shift_type === 'NIGHT' || (r.shift_label && r.shift_label.includes('Night')));
+        const hasBoth = hasDay && hasNight;
+        const availabilityTag = hasBoth ? 'Dual Shifts: Day & Night' : (hasDay ? 'Day Shift Only' : 'Night Shift Only');
+        const timeTag = group.upload_time ? ` at ${group.upload_time}` : '';
+        const dateTag = group.upload_date ? ` • Uploaded: ${group.upload_date}${timeTag}` : '';
+
+        menuHtml += `
+          <div class="custom-report-group-header">
+            <i class="fa-regular fa-calendar-days text-cyan"></i>
+            <span>${escapeHtml(group.shift_date_display)} (${availabilityTag}${dateTag})</span>
+          </div>
+        `;
+
+        for (const r of group.reports) {
+          const isNight = (r.shift_type === 'NIGHT') || (r.shift_label && r.shift_label.includes('Night'));
+          const icon = isNight ? '🌙' : '☀️';
+          const shiftTitle = isNight ? 'Night Shift' : 'Day Shift';
+          const fname = r.filename ? escapeHtml(r.filename) : '';
+          const isCur = r.id === selectedRepId;
+
+          menuHtml += `
+            <div class="custom-report-item ${isCur ? 'active' : ''}" data-report-id="${r.id}" onclick="window.onSelectCustomReport(${r.id})">
+              <span class="custom-report-item-icon">${icon}</span>
+              <div class="custom-report-item-text">
+                <span style="font-weight:700;">${escapeHtml(group.shift_date_display)}</span>
+                <span style="opacity:0.5;">•</span>
+                <span style="color:${isNight ? '#c084fc' : '#fbbf24'}; font-weight:600;">${shiftTitle}</span>
+                ${fname ? `<span style="opacity:0.5;">•</span><span class="custom-report-item-file" title="${fname}">${fname}</span>` : ''}
+              </div>
+              ${isCur ? '<i class="fa-solid fa-check text-cyan custom-report-check"></i>' : ''}
+            </div>
+          `;
+        }
+      });
+
+      menu.innerHTML = menuHtml;
+    };
+    window.syncCustomReportUI = syncCustomReportUI;
+
+    window.onSelectCustomReport = async (repId) => {
+      const dropdown = document.getElementById('custom-report-dropdown');
+      if (dropdown) dropdown.classList.remove('open');
+      if (activeReportId !== repId) {
+        await reloadAllPagesForReport(repId);
+        const rep = reports.find(r => r.id === repId);
+        if (rep) {
+          showToast(`Loaded ${rep.shift_label || 'Report'} (${rep.shift_date_display || rep.shift_date})`, 'info');
+        }
+      }
+    };
+
+    // Toggle dropdown open/close
+    const dropdownWrap = document.getElementById('custom-report-dropdown');
+    const triggerBtn = document.getElementById('custom-report-trigger');
+    if (triggerBtn && !triggerBtn.dataset.bound) {
+      triggerBtn.dataset.bound = 'true';
+      triggerBtn.onclick = (e) => {
+        e.stopPropagation();
+        dropdownWrap?.classList.toggle('open');
+      };
+    }
+
+    if (!window.customReportDropdownGlobalBound) {
+      window.customReportDropdownGlobalBound = true;
+      document.addEventListener('click', (e) => {
+        const dd = document.getElementById('custom-report-dropdown');
+        if (dd && !dd.contains(e.target)) {
+          dd.classList.remove('open');
+        }
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          const dd = document.getElementById('custom-report-dropdown');
+          if (dd) dd.classList.remove('open');
+        }
+      });
+    }
+
     // Determine initial active report (preserve existing active report if still valid; else default to latest Day Shift)
     let chosenReport = null;
     if (activeReportId) {
@@ -343,9 +457,11 @@ window.appRefreshReports = async function() {
       activeReportId = chosenReport.id;
       window.activeReportId = chosenReport.id;
       select.value = chosenReport.id;
+      syncCustomReportUI(chosenReport.id);
     } else {
       activeReportId = null;
       window.activeReportId = null;
+      syncCustomReportUI(null);
     }
 
     // 1-Click Day Shift Radio Button handler

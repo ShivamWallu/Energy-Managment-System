@@ -3565,6 +3565,470 @@ html.is-authenticated #login-modal {
   }
 }
 
+/* ==========================================================================
+   CUSTOM REPORT DROPDOWN (SCROLLABLE & ENTERPRISE GRADE - IMAGE 3 FIX)
+   ========================================================================== */
+.custom-report-dropdown {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.custom-report-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: 0.84rem;
+  font-weight: 600;
+  padding: 0.3rem 0.55rem;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-fast);
+  max-width: 440px;
+  outline: none;
+}
+.custom-report-trigger:hover,
+.custom-report-dropdown.open .custom-report-trigger {
+  background: rgba(0, 210, 255, 0.08);
+  border-color: rgba(0, 210, 255, 0.25);
+}
+[data-theme="light"] .custom-report-trigger:hover,
+[data-theme="light"] .custom-report-dropdown.open .custom-report-trigger {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+}
+
+.custom-report-icon {
+  font-size: 0.95rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.custom-report-trigger-label {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 380px;
+  text-align: left;
+  line-height: 1.25;
+}
+
+.custom-report-arrow {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+  margin-left: 0.25rem;
+  flex-shrink: 0;
+}
+.custom-report-dropdown.open .custom-report-arrow {
+  transform: rotate(180deg);
+  color: var(--accent-cyan);
+}
+
+.custom-report-menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 480px;
+  max-width: 580px;
+  max-height: 280px; /* Constrained height with professional smooth scrolling */
+  overflow-y: auto;
+  overflow-x: hidden;
+  background: var(--bg-card);
+  border: 1px solid var(--border-accent);
+  border-radius: var(--radius-md);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.5), 0 0 18px rgba(0, 210, 255, 0.15);
+  z-index: 1050;
+  padding: 0.45rem;
+  animation: dropdownFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+[data-theme="light"] .custom-report-menu {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.15), 0 4px 10px rgba(15, 23, 42, 0.05);
+}
+.custom-report-dropdown.open .custom-report-menu {
+  display: block;
+}
+
+/* Professional custom scrollbar for reports dropdown */
+.custom-report-menu::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-report-menu::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 4px;
+}
+.custom-report-menu::-webkit-scrollbar-thumb {
+  background: var(--accent-cyan);
+  border-radius: 4px;
+}
+.custom-report-menu::-webkit-scrollbar-thumb:hover {
+  background: #38bdf8;
+}
+[data-theme="light"] .custom-report-menu::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+[data-theme="light"] .custom-report-menu::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+}
+
+.custom-report-group-header {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--accent-cyan);
+  padding: 0.45rem 0.65rem 0.3rem 0.65rem;
+  border-bottom: 1px solid var(--border-subtle);
+  margin-top: 0.35rem;
+  margin-bottom: 0.25rem;
+  background: rgba(0, 210, 255, 0.06);
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.custom-report-group-header:first-child {
+  margin-top: 0;
+}
+[data-theme="light"] .custom-report-group-header {
+  color: #0369a1;
+  background: #f1f5f9;
+  border-bottom-color: #e2e8f0;
+}
+
+.custom-report-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-size: 0.81rem;
+  color: var(--text-primary);
+  margin-bottom: 2px;
+  border: 1px solid transparent;
+}
+.custom-report-item:hover {
+  background: rgba(0, 210, 255, 0.1);
+  border-color: rgba(0, 210, 255, 0.25);
+}
+[data-theme="light"] .custom-report-item:hover {
+  background: #f0f9ff;
+  border-color: #bae6fd;
+}
+.custom-report-item.active {
+  background: rgba(0, 210, 255, 0.16);
+  border-color: rgba(0, 210, 255, 0.4);
+  font-weight: 700;
+}
+[data-theme="light"] .custom-report-item.active {
+  background: #e0f2fe;
+  border-color: #7dd3fc;
+  color: #0369a1;
+}
+
+.custom-report-item-icon {
+  font-size: 0.95rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+.custom-report-item-text {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+.custom-report-item-file {
+  color: var(--text-muted);
+  font-size: 0.74rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.custom-report-check {
+  margin-left: auto;
+  font-size: 0.8rem;
+  flex-shrink: 0;
+}
+
+/* ==========================================================================
+   ENTERPRISE INGESTION CARDS (IMAGE 1 & IMAGE 2 FIX)
+   ========================================================================== */
+.dropzone.has-file {
+  border-style: solid !important;
+  border-width: 1.5px !important;
+  border-color: rgba(16, 185, 129, 0.5) !important;
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.08) 0%, rgba(15, 23, 42, 0.5) 100%) !important;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.1) !important;
+}
+[data-theme="light"] .dropzone.has-file {
+  border-color: #86efac !important;
+  background: linear-gradient(180deg, #f0fdf4 0%, #ffffff 100%) !important;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.08) !important;
+}
+
+/* Single Shift File Attached Card (Image 2) */
+.pro-file-attached-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  width: 100%;
+  padding: 0.35rem 0.25rem;
+}
+.pro-file-badge {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+}
+.pro-file-details {
+  flex: 1;
+  min-width: 0;
+  text-align: left;
+}
+.pro-file-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 360px;
+}
+.pro-file-meta-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+  flex-wrap: wrap;
+}
+.pro-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+}
+.pro-pill-success {
+  background: rgba(16, 185, 129, 0.15);
+  color: #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+.pro-pill-info {
+  background: rgba(0, 210, 255, 0.12);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(0, 210, 255, 0.28);
+  font-family: var(--font-mono);
+}
+.pro-pill-neutral {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+}
+
+/* Dual Shift Slots (Image 1) */
+.dual-slot-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-weight: 700;
+  font-size: 0.84rem;
+  color: var(--text-primary);
+  white-space: nowrap;
+  letter-spacing: -0.2px;
+  margin-bottom: 0.4rem;
+}
+.dual-slot-day {
+  color: #fbbf24;
+}
+.dual-slot-night {
+  color: #c084fc;
+}
+
+.pro-dual-file-card {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 8px;
+  padding: 0.45rem 0.6rem;
+  margin: 0.4rem 0;
+  text-align: left;
+}
+[data-theme="light"] .pro-dual-file-card {
+  background: #f0fdf4;
+  border-color: #bbf7d0;
+}
+.pro-dual-file-body {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-width: 0;
+}
+.pro-file-badge-sm {
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+.pro-dual-file-name {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  min-width: 0;
+}
+.pro-dual-file-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+  font-size: 0.7rem;
+}
+
+/* Button Remove Chip */
+.btn-remove-chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  border-radius: 6px;
+  padding: 0.35rem 0.75rem;
+  font-size: 0.74rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  white-space: nowrap;
+}
+.btn-remove-chip:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: #ef4444;
+  color: #ef4444;
+  transform: translateY(-1px);
+}
+[data-theme="light"] .btn-remove-chip {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
+}
+[data-theme="light"] .btn-remove-chip:hover {
+  background: #fee2e2;
+  border-color: #f87171;
+  color: #b91c1c;
+}
+
+/* ==========================================================================
+   UPLOAD MODAL LAPTOP & DESKTOP RESPONSIVENESS
+   ========================================================================== */
+#upload-modal .modal-dialog {
+  max-width: 680px;
+  width: 95%;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+#upload-modal .modal-body {
+  overflow-y: auto;
+  max-height: calc(90vh - 120px);
+  padding: 1.25rem 1.5rem;
+}
+#upload-modal .modal-body::-webkit-scrollbar {
+  width: 6px;
+}
+#upload-modal .modal-body::-webkit-scrollbar-thumb {
+  background: var(--border-accent);
+  border-radius: 4px;
+}
+
+@media (max-height: 800px) {
+  #upload-modal .modal-dialog {
+    max-height: 94vh;
+  }
+  #upload-modal .modal-header {
+    padding: 0.75rem 1.25rem;
+  }
+  #upload-modal .modal-body {
+    padding: 0.85rem 1.25rem;
+    max-height: calc(94vh - 90px);
+  }
+  #upload-dropzone {
+    padding: 1rem 0.85rem !important;
+  }
+  .dual-dropzone-grid .dropzone {
+    padding: 0.85rem 0.5rem !important;
+  }
+}
+
+@media (max-width: 1366px) {
+  .custom-report-trigger {
+    max-width: 320px;
+  }
+  .custom-report-trigger-label {
+    max-width: 250px;
+  }
+  .custom-report-menu {
+    min-width: 420px;
+    max-width: 500px;
+    max-height: 260px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .custom-report-trigger {
+    max-width: 240px;
+  }
+  .custom-report-trigger-label {
+    max-width: 170px;
+  }
+  .custom-report-menu {
+    min-width: 340px;
+    max-width: 420px;
+    max-height: 240px;
+  }
+}
+
+@media (max-width: 650px) {
+  .pro-file-attached-card {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .pro-file-name {
+    max-width: 240px;
+  }
+}
+
+
 
 
 
