@@ -1,101 +1,36 @@
 import sys
 import os
-import smtplib
-import socket
-import ssl
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 from backend.app.config import settings
-from backend.app.email_service import send_otp_email
+from backend.app.email_service import send_otp_email, send_welcome_registration_email
 
 def main():
     target = sys.argv[1] if len(sys.argv) > 1 else "itchd.kogm@gmail.com"
     print("=" * 65)
-    print("  AWS EC2 ➔ GMAIL SMTP IN-DEPTH DIAGNOSTIC")
+    print("  MASHAL EMS INTELLIGENCE — LIVE IPv4 SNI SMTP DISPATCH TEST")
     print("=" * 65)
-    
-    # 1. DNS Resolution
-    print("\n[Step 1] Resolving smtp.gmail.com IP Addresses:")
-    v4_ips = []
-    v6_ips = []
+    print(f"Target Recipient: {target}")
+    print(f"SMTP Host:        {settings.SMTP_HOST}")
+    print(f"Primary Sender:   {settings.PRIMARY_SMTP_USER}")
+    print("-" * 65)
+
+    print(f"\n[1/1] Dispatching Official OTP Verification Email to {target}...")
     try:
-        infos = socket.getaddrinfo("smtp.gmail.com", 587, socket.AF_UNSPEC, socket.SOCK_STREAM)
-        for fam, _, _, _, addr in infos:
-            ip = addr[0]
-            if fam == socket.AF_INET and ip not in v4_ips:
-                v4_ips.append(ip)
-            elif fam == socket.AF_INET6 and ip not in v6_ips:
-                v6_ips.append(ip)
-        print(f"  - IPv4 Addresses found: {v4_ips}")
-        print(f"  - IPv6 Addresses found: {v6_ips}")
-    except Exception as e:
-        print(f"  - DNS Resolution failed: {e}")
-        return
-
-    # 2. Test IPv4 specifically on Port 587
-    print("\n[Step 2] Testing Force-IPv4 Connection on Port 587:")
-    if v4_ips:
-        target_ip = v4_ips[0]
-        try:
-            print(f"  - Connecting directly to IPv4 {target_ip}:587...")
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(6)
-            s.connect((target_ip, 587))
-            banner = s.recv(1024).decode("utf-8", errors="ignore").strip()
-            print(f"  - Server Banner Received: {banner}")
-            s.close()
-            print("  ==> Force-IPv4 Port 587: REACHABLE & BANNER RECEIVED!")
-        except Exception as e:
-            print(f"  - Force-IPv4 Port 587 FAILED: {type(e).__name__} - {e}")
-
-    # 3. Test IPv4 specifically on Port 465
-    print("\n[Step 3] Testing Force-IPv4 Connection on Port 465 (SSL):")
-    if v4_ips:
-        target_ip = v4_ips[0]
-        try:
-            print(f"  - Connecting directly to IPv4 {target_ip}:465 with SSL...")
-            context = ssl.create_default_context()
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(6)
-            s.connect((target_ip, 465))
-            with context.wrap_socket(s, server_hostname="smtp.gmail.com") as ss:
-                banner = ss.recv(1024).decode("utf-8", errors="ignore").strip()
-                print(f"  - SSL Server Banner Received: {banner}")
-            print("  ==> Force-IPv4 Port 465: REACHABLE & SSL HANDSHAKE OK!")
-        except Exception as e:
-            print(f"  - Force-IPv4 Port 465 FAILED: {type(e).__name__} - {e}")
-
-    # 4. If IPv6 is present, test IPv6
-    if v6_ips:
-        print("\n[Step 4] Testing IPv6 Connection on Port 587:")
-        target_ip = v6_ips[0]
-        try:
-            print(f"  - Connecting to IPv6 [{target_ip}]:587...")
-            s = socket.socket(socket.AF_INET6, socket.SOCK_STREAM)
-            s.settimeout(6)
-            s.connect((target_ip, 587))
-            banner = s.recv(1024).decode("utf-8", errors="ignore").strip()
-            print(f"  - IPv6 Banner Received: {banner}")
-            s.close()
-            print("  ==> IPv6 Port 587: SUCCESS!")
-        except Exception as e:
-            print(f"  - IPv6 Port 587 FAILED: {type(e).__name__} - {e}")
-
-    # 5. Send Live Test OTP Email using our Application Stack
-    print(f"\n[Step 5] Sending Live OTP Verification Email to '{target}':")
-    try:
-        res = send_otp_email(target, "Plant Auditor", "998877", "REGISTRATION")
-        print(f"  - Dispatch Response: {res}")
+        res = send_otp_email(target, "Plant Auditor", "458920", "REGISTRATION")
+        print(f"\n[Result] Response: {res}")
         if res.get("channel") in ["PRIMARY_SMTP", "SECONDARY_SMTP_FAILOVER"]:
-            print(f"\n[SUCCESS] 🚀 EMAIL SENT TO {target} VIA {res.get('channel')}!")
-            print("Please open your inbox now and refresh!")
+            print("\n" + "=" * 65)
+            print(f"  🎉 SUCCESS! OTP EMAIL DELIVERED TO {target}!")
+            print(f"  Sender Account: {res.get('sender')}")
+            print(f"  Delivery Route: {res.get('channel')}")
+            print("  Check your Gmail inbox now (or Spam folder)!")
+            print("=" * 65)
         else:
-            print(f"\n[NOTICE] Sent via fallback: {res.get('channel')}")
+            print(f"\n[NOTICE] Fell back to: {res.get('channel')}")
     except Exception as e:
-        print(f"\n[ERROR] Exception during send_otp_email: {e}")
-
-    print("\n" + "=" * 65)
+        print(f"\n[ERROR] Failed to send: {e}")
 
 if __name__ == "__main__":
     main()
