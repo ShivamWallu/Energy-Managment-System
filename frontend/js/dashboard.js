@@ -1685,7 +1685,7 @@ const dashboard = {
 
         let chartImg = '';
         if (typeof charts !== 'undefined' && charts.createAuditFocusChart && focusMotorObj) {
-          chartImg = charts.createAuditFocusChart(focusMotorObj, 1100, 340);
+          chartImg = charts.createAuditFocusChart(focusMotorObj, 1800, 520);
         }
         if (!chartImg) {
           const focusCanvas = document.getElementById('chart-single-motor-focus');
@@ -2012,7 +2012,7 @@ const dashboard = {
       const makeItem = (motor) => {
         // Always generate full-resolution focus chart with enlarged percentages, benchmark lines, and time labels
         const chartImg = (typeof charts !== 'undefined' && charts.createAuditFocusChart)
-          ? charts.createAuditFocusChart(motor, 1500, 480)
+          ? charts.createAuditFocusChart(motor, 1800, 520)
           : '';
         return {
           title: `${motor.panel_name ? `${motor.panel_name} · ` : ''}${motor.name || `${motor.code} (${motor.hp} HP)`}${motor.role ? ` · ${motor.role}` : ''}`,

@@ -754,41 +754,94 @@ const charts = {
               if (!barMeta || !barMeta.data || !Array.isArray(barMeta.data) || !yScale) return;
               const baselineY = yScale.getPixelForValue(0);
 
+              // 1. Identify contiguous OFF runs and render single unified span + centered badge
+              const offRuns = [];
+              let curRun = null;
+              loadPcts.forEach((pct, idx) => {
+                const isOff = (pct === undefined || pct === null || isNaN(pct) || pct <= 0);
+                if (isOff) {
+                  if (!curRun) curRun = { start: idx, end: idx };
+                  else curRun.end = idx;
+                } else {
+                  if (curRun) {
+                    offRuns.push(curRun);
+                    curRun = null;
+                  }
+                }
+              });
+              if (curRun) offRuns.push(curRun);
+
+              if (baselineY > 0) {
+                offRuns.forEach(run => {
+                  const count = run.end - run.start + 1;
+                  const startBar = barMeta.data[run.start];
+                  const endBar = barMeta.data[run.end];
+                  if (!startBar || !endBar || typeof startBar.x !== 'number' || typeof endBar.x !== 'number') return;
+
+                  const barW = startBar.width || 18;
+                  const spanLeft = startBar.x - (barW / 2);
+                  const spanRight = endBar.x + (barW / 2);
+                  const spanW = Math.max(spanRight - spanLeft, barW);
+                  const centerX = (startBar.x + endBar.x) / 2;
+                  const markerH = 16;
+                  const yPos = baselineY - markerH - 2;
+
+                  chartCtx.save();
+                  // Baseline dashed rail for contiguous off intervals
+                  if (count > 1) {
+                    chartCtx.strokeStyle = tc.isLight ? '#94a3b8' : '#475569';
+                    chartCtx.lineWidth = 1.8;
+                    chartCtx.setLineDash([4, 3]);
+                    chartCtx.beginPath();
+                    chartCtx.moveTo(spanLeft, baselineY - 1);
+                    chartCtx.lineTo(spanRight, baselineY - 1);
+                    chartCtx.stroke();
+                    chartCtx.setLineDash([]);
+                  }
+
+                  let badgeText = 'OFF';
+                  if (spanW >= 130) {
+                    const hours = (count * 15) / 60;
+                    const hText = Number.isInteger(hours) ? `${hours}h` : `${hours.toFixed(1)}h`;
+                    badgeText = `OFF (${count} slots · ${hText})`;
+                  } else if (spanW >= 75) {
+                    badgeText = `OFF (${count} slots)`;
+                  } else {
+                    badgeText = count > 1 ? `OFF (${count})` : 'OFF';
+                  }
+
+                  chartCtx.font = 'bold 10px "JetBrains Mono", monospace';
+                  const textW = chartCtx.measureText(badgeText).width || 24;
+                  const pillW = Math.max(textW + 10, 28);
+
+                  chartCtx.fillStyle = tc.isLight ? '#f8fafc' : '#091328';
+                  chartCtx.strokeStyle = tc.isLight ? '#94a3b8' : '#334155';
+                  chartCtx.lineWidth = 1.2;
+
+                  chartCtx.beginPath();
+                  if (typeof chartCtx.roundRect === 'function') {
+                    chartCtx.roundRect(centerX - (pillW / 2), yPos, pillW, markerH, 3);
+                  } else {
+                    chartCtx.rect(centerX - (pillW / 2), yPos, pillW, markerH);
+                  }
+                  chartCtx.fill();
+                  chartCtx.stroke();
+
+                  chartCtx.fillStyle = tc.isLight ? '#475569' : '#94a3b8';
+                  chartCtx.textAlign = 'center';
+                  chartCtx.textBaseline = 'middle';
+                  chartCtx.fillText(badgeText, centerX, yPos + (markerH / 2));
+                  chartCtx.restore();
+                });
+              }
+
+              // 2. Render active percentage badges with adaptive anti-collision
+              const placedPills = [];
+
               barMeta.data.forEach((bar, index) => {
                 if (!bar || typeof bar.x !== 'number' || typeof bar.y !== 'number' || isNaN(bar.x) || isNaN(bar.y)) return;
                 const pct = loadPcts[index];
-
-                // If motor is OFF / Standby (0% or no reading) -> Draw professional "OFF" badge at baseline
-                if (pct === undefined || pct === null || isNaN(pct) || pct <= 0) {
-                  if (baselineY > 0) {
-                    chartCtx.save();
-                    const markerW = Math.min(Math.max((bar.width || 18) * 0.9, 24), 28);
-                    const markerH = 15;
-                    const yPos = baselineY - markerH - 2;
-
-                    chartCtx.fillStyle = tc.isLight ? '#f1f5f9' : '#091328';
-                    chartCtx.strokeStyle = tc.isLight ? '#94a3b8' : '#334155';
-                    chartCtx.lineWidth = 1.2;
-
-                    chartCtx.beginPath();
-                    if (typeof chartCtx.roundRect === 'function') {
-                      chartCtx.roundRect(bar.x - markerW / 2, yPos, markerW, markerH, 3);
-                    } else {
-                      chartCtx.rect(bar.x - markerW / 2, yPos, markerW, markerH);
-                    }
-                    chartCtx.fill();
-                    chartCtx.stroke();
-
-                    // Text: OFF
-                    chartCtx.font = 'bold 9.5px "JetBrains Mono", monospace';
-                    chartCtx.fillStyle = tc.isLight ? '#64748b' : '#94a3b8';
-                    chartCtx.textAlign = 'center';
-                    chartCtx.textBaseline = 'middle';
-                    chartCtx.fillText('OFF', bar.x, yPos + (markerH / 2));
-                    chartCtx.restore();
-                  }
-                  return;
-                }
+                if (pct === undefined || pct === null || isNaN(pct) || pct <= 0) return;
 
                 let labelColor = tc.legendColor;
                 let labelText = `${Math.round(pct)}%`;
@@ -810,9 +863,50 @@ const charts = {
                 chartCtx.textBaseline = 'middle';
 
                 const textW = chartCtx.measureText(labelText).width || 20;
-                const pillW = Math.max(textW + 8, 28);
-                const pillH = 16;
-                const yPos = Math.max(bar.y - 10, 12);
+                const pillW = Math.max(textW + 6, 26);
+                const pillH = 15;
+                const minDx = pillW + 4;
+                const minDy = pillH + 3;
+
+                // Candidate vertical positions (closest to bar top preferred)
+                const candidates = [
+                  bar.y - (index % 2 === 1 ? 28 : 12),
+                  bar.y - (index % 2 === 1 ? 12 : 28),
+                  bar.y - 44,
+                  bar.y - 60
+                ];
+
+                let chosenY = null;
+                for (const cand of candidates) {
+                  if (cand < 12) continue;
+                  let collides = false;
+                  for (let p = placedPills.length - 1; p >= 0 && p >= placedPills.length - 4; p--) {
+                    const prev = placedPills[p];
+                    if (Math.abs(bar.x - prev.x) < minDx && Math.abs(cand - prev.y) < minDy) {
+                      collides = true;
+                      break;
+                    }
+                  }
+                  if (!collides) {
+                    chosenY = cand;
+                    break;
+                  }
+                }
+                if (chosenY === null) {
+                  chosenY = Math.max(candidates[0], 12);
+                }
+
+                // If elevated significantly above bar, draw subtle guide line
+                if (bar.y - (chosenY + (pillH / 2)) > 10) {
+                  chartCtx.strokeStyle = labelColor;
+                  chartCtx.lineWidth = 1;
+                  chartCtx.setLineDash([2, 2]);
+                  chartCtx.beginPath();
+                  chartCtx.moveTo(bar.x, chosenY + (pillH / 2));
+                  chartCtx.lineTo(bar.x, bar.y - 1);
+                  chartCtx.stroke();
+                  chartCtx.setLineDash([]);
+                }
 
                 chartCtx.fillStyle = tc.isLight ? '#ffffff' : '#070e20';
                 chartCtx.strokeStyle = labelColor;
@@ -820,16 +914,18 @@ const charts = {
 
                 chartCtx.beginPath();
                 if (typeof chartCtx.roundRect === 'function') {
-                  chartCtx.roundRect(bar.x - (pillW / 2), yPos - (pillH / 2), pillW, pillH, 4);
+                  chartCtx.roundRect(bar.x - (pillW / 2), chosenY - (pillH / 2), pillW, pillH, 3);
                 } else {
-                  chartCtx.rect(bar.x - (pillW / 2), yPos - (pillH / 2), pillW, pillH);
+                  chartCtx.rect(bar.x - (pillW / 2), chosenY - (pillH / 2), pillW, pillH);
                 }
                 chartCtx.fill();
                 chartCtx.stroke();
 
                 chartCtx.fillStyle = labelColor;
-                chartCtx.fillText(labelText, bar.x, yPos);
+                chartCtx.fillText(labelText, bar.x, chosenY);
                 chartCtx.restore();
+
+                placedPills.push({ x: bar.x, y: chosenY, w: pillW, h: pillH, index });
               });
             } catch (pluginErr) {
               console.warn('Error in barPercentageLabels plugin:', pluginErr);
@@ -1117,7 +1213,7 @@ const charts = {
     }
   },
 
-  createAuditFocusChart(motor, width = 1500, height = 480) {
+  createAuditFocusChart(motor, width = 1800, height = 520) {
     if (!motor || !motor.timeline) return '';
     try {
       const offCanvas = document.createElement('canvas');
@@ -1235,41 +1331,94 @@ const charts = {
               if (!barMeta || !barMeta.data || !Array.isArray(barMeta.data) || !yScale) return;
               const baselineY = yScale.getPixelForValue(0);
 
+              // 1. Identify contiguous OFF runs and render single unified span + centered badge
+              const offRuns = [];
+              let curRun = null;
+              loadPcts.forEach((pct, idx) => {
+                const isOff = (pct === undefined || pct === null || isNaN(pct) || pct <= 0);
+                if (isOff) {
+                  if (!curRun) curRun = { start: idx, end: idx };
+                  else curRun.end = idx;
+                } else {
+                  if (curRun) {
+                    offRuns.push(curRun);
+                    curRun = null;
+                  }
+                }
+              });
+              if (curRun) offRuns.push(curRun);
+
+              if (baselineY > 0) {
+                offRuns.forEach(run => {
+                  const count = run.end - run.start + 1;
+                  const startBar = barMeta.data[run.start];
+                  const endBar = barMeta.data[run.end];
+                  if (!startBar || !endBar || typeof startBar.x !== 'number' || typeof endBar.x !== 'number') return;
+
+                  const barW = startBar.width || 20;
+                  const spanLeft = startBar.x - (barW / 2);
+                  const spanRight = endBar.x + (barW / 2);
+                  const spanW = Math.max(spanRight - spanLeft, barW);
+                  const centerX = (startBar.x + endBar.x) / 2;
+                  const markerH = 18;
+                  const yPos = baselineY - markerH - 3;
+
+                  chartCtx.save();
+                  // Baseline dashed rail for contiguous off intervals
+                  if (count > 1) {
+                    chartCtx.strokeStyle = '#94a3b8';
+                    chartCtx.lineWidth = 2.2;
+                    chartCtx.setLineDash([5, 4]);
+                    chartCtx.beginPath();
+                    chartCtx.moveTo(spanLeft, baselineY - 1);
+                    chartCtx.lineTo(spanRight, baselineY - 1);
+                    chartCtx.stroke();
+                    chartCtx.setLineDash([]);
+                  }
+
+                  let badgeText = 'OFF';
+                  if (spanW >= 150) {
+                    const hours = (count * 15) / 60;
+                    const hText = Number.isInteger(hours) ? `${hours}h` : `${hours.toFixed(1)}h`;
+                    badgeText = `OFF (${count} slots · ${hText})`;
+                  } else if (spanW >= 85) {
+                    badgeText = `OFF (${count} slots)`;
+                  } else {
+                    badgeText = count > 1 ? `OFF (${count})` : 'OFF';
+                  }
+
+                  chartCtx.font = 'bold 12px "JetBrains Mono", monospace';
+                  const textW = chartCtx.measureText(badgeText).width || 26;
+                  const pillW = Math.max(textW + 12, 34);
+
+                  chartCtx.fillStyle = '#f8fafc';
+                  chartCtx.strokeStyle = '#64748b';
+                  chartCtx.lineWidth = 1.3;
+
+                  chartCtx.beginPath();
+                  if (typeof chartCtx.roundRect === 'function') {
+                    chartCtx.roundRect(centerX - (pillW / 2), yPos, pillW, markerH, 4);
+                  } else {
+                    chartCtx.rect(centerX - (pillW / 2), yPos, pillW, markerH);
+                  }
+                  chartCtx.fill();
+                  chartCtx.stroke();
+
+                  chartCtx.fillStyle = '#475569';
+                  chartCtx.textAlign = 'center';
+                  chartCtx.textBaseline = 'middle';
+                  chartCtx.fillText(badgeText, centerX, yPos + (markerH / 2));
+                  chartCtx.restore();
+                });
+              }
+
+              // 2. Render active percentage badges with adaptive anti-collision
+              const placedPills = [];
+
               barMeta.data.forEach((bar, index) => {
                 if (!bar || typeof bar.x !== 'number' || typeof bar.y !== 'number' || isNaN(bar.x) || isNaN(bar.y)) return;
                 const pct = loadPcts[index];
-
-                // If motor is OFF / Standby (0% or no reading) -> Draw professional "OFF" badge at baseline
-                if (pct === undefined || pct === null || isNaN(pct) || pct <= 0) {
-                  if (baselineY > 0) {
-                    chartCtx.save();
-                    const markerW = Math.min(Math.max((bar.width || 22) * 0.9, 26), 32);
-                    const markerH = 17;
-                    const yPos = baselineY - markerH - 2;
-
-                    chartCtx.fillStyle = '#f1f5f9';
-                    chartCtx.strokeStyle = '#94a3b8';
-                    chartCtx.lineWidth = 1.3;
-
-                    chartCtx.beginPath();
-                    if (typeof chartCtx.roundRect === 'function') {
-                      chartCtx.roundRect(bar.x - markerW / 2, yPos, markerW, markerH, 3);
-                    } else {
-                      chartCtx.rect(bar.x - markerW / 2, yPos, markerW, markerH);
-                    }
-                    chartCtx.fill();
-                    chartCtx.stroke();
-
-                    // Text: OFF
-                    chartCtx.font = 'bold 11px "JetBrains Mono", monospace';
-                    chartCtx.fillStyle = '#64748b';
-                    chartCtx.textAlign = 'center';
-                    chartCtx.textBaseline = 'middle';
-                    chartCtx.fillText('OFF', bar.x, yPos + (markerH / 2));
-                    chartCtx.restore();
-                  }
-                  return;
-                }
+                if (pct === undefined || pct === null || isNaN(pct) || pct <= 0) return;
 
                 let labelColor = '#059669';
                 let labelText = `${Math.round(pct)}%`;
@@ -1292,34 +1441,75 @@ const charts = {
                 }
 
                 chartCtx.save();
-                // Large, bold, high-contrast font for crystal clear readability
-                chartCtx.font = 'bold 15px "JetBrains Mono", monospace';
+                chartCtx.font = 'bold 12px "JetBrains Mono", monospace';
                 chartCtx.textAlign = 'center';
                 chartCtx.textBaseline = 'middle';
 
-                const textW = chartCtx.measureText(labelText).width || 30;
-                const pillW = Math.max(textW + 8, 34);
-                const pillH = 20;
-                // Alternating stagger avoids pill collisions between adjacent full-height bars
-                const stagger = (index % 2 === 1) ? 22 : 12;
-                const yPos = Math.max(bar.y - stagger, 14);
+                const textW = chartCtx.measureText(labelText).width || 22;
+                const pillW = Math.max(textW + 6, 28);
+                const pillH = 17;
+                const minDx = pillW + 4;
+                const minDy = pillH + 3;
 
+                // Candidate vertical positions (closest to bar top preferred)
+                const candidates = [
+                  bar.y - (index % 2 === 1 ? 30 : 12),
+                  bar.y - (index % 2 === 1 ? 12 : 30),
+                  bar.y - 48,
+                  bar.y - 66
+                ];
+
+                let chosenY = null;
+                for (const cand of candidates) {
+                  if (cand < 14) continue;
+                  let collides = false;
+                  for (let p = placedPills.length - 1; p >= 0 && p >= placedPills.length - 4; p--) {
+                    const prev = placedPills[p];
+                    if (Math.abs(bar.x - prev.x) < minDx && Math.abs(cand - prev.y) < minDy) {
+                      collides = true;
+                      break;
+                    }
+                  }
+                  if (!collides) {
+                    chosenY = cand;
+                    break;
+                  }
+                }
+                if (chosenY === null) {
+                  chosenY = Math.max(candidates[0], 14);
+                }
+
+                // If elevated significantly above bar, draw subtle guide line
+                if (bar.y - (chosenY + (pillH / 2)) > 10) {
+                  chartCtx.strokeStyle = labelColor;
+                  chartCtx.lineWidth = 1;
+                  chartCtx.setLineDash([2, 2]);
+                  chartCtx.beginPath();
+                  chartCtx.moveTo(bar.x, chosenY + (pillH / 2));
+                  chartCtx.lineTo(bar.x, bar.y - 1);
+                  chartCtx.stroke();
+                  chartCtx.setLineDash([]);
+                }
+
+                // Draw pill
                 chartCtx.fillStyle = '#ffffff';
                 chartCtx.strokeStyle = labelColor;
-                chartCtx.lineWidth = 1.6;
+                chartCtx.lineWidth = 1.4;
 
                 chartCtx.beginPath();
                 if (typeof chartCtx.roundRect === 'function') {
-                  chartCtx.roundRect(bar.x - (pillW / 2), yPos - (pillH / 2), pillW, pillH, 4);
+                  chartCtx.roundRect(bar.x - (pillW / 2), chosenY - (pillH / 2), pillW, pillH, 3.5);
                 } else {
-                  chartCtx.rect(bar.x - (pillW / 2), yPos - (pillH / 2), pillW, pillH);
+                  chartCtx.rect(bar.x - (pillW / 2), chosenY - (pillH / 2), pillW, pillH);
                 }
                 chartCtx.fill();
                 chartCtx.stroke();
 
                 chartCtx.fillStyle = labelColor;
-                chartCtx.fillText(labelText, bar.x, yPos);
+                chartCtx.fillText(labelText, bar.x, chosenY);
                 chartCtx.restore();
+
+                placedPills.push({ x: bar.x, y: chosenY, w: pillW, h: pillH, index });
               });
             }
           }
