@@ -49,3 +49,4 @@ if __name__ == "__main__":
     else:
         pwd = "Admin@Mashal2026!"
     change_admin_password(pwd)
+
