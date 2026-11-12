@@ -512,6 +512,35 @@ const charts = {
           }
         ]
       },
+      plugins: [
+        {
+          id: 'cardOffMarkers',
+          afterDatasetsDraw(chart) {
+            try {
+              const chartCtx = chart.ctx;
+              const barMeta = chart.getDatasetMeta(3);
+              const yScale = chart.scales.y;
+              if (!barMeta || !barMeta.data || !yScale) return;
+              const baselineY = yScale.getPixelForValue(0);
+              chartCtx.save();
+              barMeta.data.forEach((bar, index) => {
+                const val = values[index];
+                if (val !== null && val !== undefined && val > 0) return;
+                const markerW = Math.max((bar.width || 8) * 0.8, 5);
+                const markerH = 5;
+                chartCtx.fillStyle = tc.isLight ? '#cbd5e1' : '#334155';
+                chartCtx.strokeStyle = tc.isLight ? '#94a3b8' : '#475569';
+                chartCtx.lineWidth = 1;
+                chartCtx.beginPath();
+                chartCtx.rect(bar.x - markerW / 2, baselineY - markerH, markerW, markerH);
+                chartCtx.fill();
+                chartCtx.stroke();
+              });
+              chartCtx.restore();
+            } catch (e) {}
+          }
+        }
+      ],
       options: {
         responsive: true,
         maintainAspectRatio: false,
@@ -729,23 +758,33 @@ const charts = {
                 if (!bar || typeof bar.x !== 'number' || typeof bar.y !== 'number' || isNaN(bar.x) || isNaN(bar.y)) return;
                 const pct = loadPcts[index];
 
-                // If motor is OFF / Standby (0% or no reading) -> Draw clean subtle baseline marker
+                // If motor is OFF / Standby (0% or no reading) -> Draw professional "OFF" badge at baseline
                 if (pct === undefined || pct === null || isNaN(pct) || pct <= 0) {
                   if (baselineY > 0) {
                     chartCtx.save();
-                    const markerW = Math.max((bar.width || 12) * 0.75, 7);
-                    const markerH = 6;
-                    chartCtx.fillStyle = tc.isLight ? '#cbd5e1' : '#334155';
-                    chartCtx.strokeStyle = tc.isLight ? '#94a3b8' : '#475569';
-                    chartCtx.lineWidth = 1;
+                    const markerW = Math.min(Math.max((bar.width || 18) * 0.9, 24), 28);
+                    const markerH = 15;
+                    const yPos = baselineY - markerH - 2;
+
+                    chartCtx.fillStyle = tc.isLight ? '#f1f5f9' : '#091328';
+                    chartCtx.strokeStyle = tc.isLight ? '#94a3b8' : '#334155';
+                    chartCtx.lineWidth = 1.2;
+
                     chartCtx.beginPath();
                     if (typeof chartCtx.roundRect === 'function') {
-                      chartCtx.roundRect(bar.x - markerW / 2, baselineY - markerH, markerW, markerH, 2);
+                      chartCtx.roundRect(bar.x - markerW / 2, yPos, markerW, markerH, 3);
                     } else {
-                      chartCtx.rect(bar.x - markerW / 2, baselineY - markerH, markerW, markerH);
+                      chartCtx.rect(bar.x - markerW / 2, yPos, markerW, markerH);
                     }
                     chartCtx.fill();
                     chartCtx.stroke();
+
+                    // Text: OFF
+                    chartCtx.font = 'bold 9.5px "JetBrains Mono", monospace';
+                    chartCtx.fillStyle = tc.isLight ? '#64748b' : '#94a3b8';
+                    chartCtx.textAlign = 'center';
+                    chartCtx.textBaseline = 'middle';
+                    chartCtx.fillText('OFF', bar.x, yPos + (markerH / 2));
                     chartCtx.restore();
                   }
                   return;
@@ -1200,23 +1239,33 @@ const charts = {
                 if (!bar || typeof bar.x !== 'number' || typeof bar.y !== 'number' || isNaN(bar.x) || isNaN(bar.y)) return;
                 const pct = loadPcts[index];
 
-                // If motor is OFF / Standby (0% or no reading) -> Draw clean subtle baseline marker
+                // If motor is OFF / Standby (0% or no reading) -> Draw professional "OFF" badge at baseline
                 if (pct === undefined || pct === null || isNaN(pct) || pct <= 0) {
                   if (baselineY > 0) {
                     chartCtx.save();
-                    const markerW = Math.max((bar.width || 16) * 0.75, 8);
-                    const markerH = 6;
-                    chartCtx.fillStyle = '#e2e8f0';
+                    const markerW = Math.min(Math.max((bar.width || 22) * 0.9, 26), 32);
+                    const markerH = 17;
+                    const yPos = baselineY - markerH - 2;
+
+                    chartCtx.fillStyle = '#f1f5f9';
                     chartCtx.strokeStyle = '#94a3b8';
-                    chartCtx.lineWidth = 1;
+                    chartCtx.lineWidth = 1.3;
+
                     chartCtx.beginPath();
                     if (typeof chartCtx.roundRect === 'function') {
-                      chartCtx.roundRect(bar.x - markerW / 2, baselineY - markerH, markerW, markerH, 2);
+                      chartCtx.roundRect(bar.x - markerW / 2, yPos, markerW, markerH, 3);
                     } else {
-                      chartCtx.rect(bar.x - markerW / 2, baselineY - markerH, markerW, markerH);
+                      chartCtx.rect(bar.x - markerW / 2, yPos, markerW, markerH);
                     }
                     chartCtx.fill();
                     chartCtx.stroke();
+
+                    // Text: OFF
+                    chartCtx.font = 'bold 11px "JetBrains Mono", monospace';
+                    chartCtx.fillStyle = '#64748b';
+                    chartCtx.textAlign = 'center';
+                    chartCtx.textBaseline = 'middle';
+                    chartCtx.fillText('OFF', bar.x, yPos + (markerH / 2));
                     chartCtx.restore();
                   }
                   return;
