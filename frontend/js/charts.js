@@ -799,20 +799,12 @@ const charts = {
                     chartCtx.setLineDash([]);
                   }
 
-                  let badgeText = 'OFF';
-                  if (spanW >= 130) {
-                    const hours = (count * 15) / 60;
-                    const hText = Number.isInteger(hours) ? `${hours}h` : `${hours.toFixed(1)}h`;
-                    badgeText = `OFF (${count} slots · ${hText})`;
-                  } else if (spanW >= 75) {
-                    badgeText = `OFF (${count} slots)`;
-                  } else {
-                    badgeText = count > 1 ? `OFF (${count})` : 'OFF';
-                  }
+                  // Display status strictly as "OFF" instead of slot counts/hours (per requirement)
+                  const badgeText = 'OFF';
 
                   chartCtx.font = 'bold 10px "JetBrains Mono", monospace';
-                  const textW = chartCtx.measureText(badgeText).width || 24;
-                  const pillW = Math.max(textW + 10, 28);
+                  const textW = chartCtx.measureText(badgeText).width || 22;
+                  const pillW = Math.max(textW + 10, 30);
 
                   chartCtx.fillStyle = tc.isLight ? '#f8fafc' : '#091328';
                   chartCtx.strokeStyle = tc.isLight ? '#94a3b8' : '#334155';
@@ -1376,19 +1368,11 @@ const charts = {
                     chartCtx.setLineDash([]);
                   }
 
-                  let badgeText = 'OFF';
-                  if (spanW >= 150) {
-                    const hours = (count * 15) / 60;
-                    const hText = Number.isInteger(hours) ? `${hours}h` : `${hours.toFixed(1)}h`;
-                    badgeText = `OFF (${count} slots · ${hText})`;
-                  } else if (spanW >= 85) {
-                    badgeText = `OFF (${count} slots)`;
-                  } else {
-                    badgeText = count > 1 ? `OFF (${count})` : 'OFF';
-                  }
+                  // Display status strictly as "OFF" instead of slot counts/hours (per requirement)
+                  const badgeText = 'OFF';
 
                   chartCtx.font = 'bold 12px "JetBrains Mono", monospace';
-                  const textW = chartCtx.measureText(badgeText).width || 26;
+                  const textW = chartCtx.measureText(badgeText).width || 24;
                   const pillW = Math.max(textW + 12, 34);
 
                   chartCtx.fillStyle = '#f8fafc';
