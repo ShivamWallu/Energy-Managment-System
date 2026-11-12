@@ -3098,7 +3098,7 @@ html.is-authenticated #login-modal {
 @media print {
   @page {
     size: A4 landscape;
-    margin: 2mm;
+    margin: 0; /* Removes browser default headers/footers (127.0.0.1, date, URL, etc.) */
   }
 
   html, body {
@@ -3194,7 +3194,7 @@ html.is-authenticated #login-modal {
     display: block !important;
     width: 100% !important;
     box-sizing: border-box !important;
-    padding: 6px 12px !important;
+    padding: 8mm 12mm !important;
     margin: 0 !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
