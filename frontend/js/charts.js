@@ -721,12 +721,35 @@ const charts = {
             try {
               const chartCtx = chart.ctx;
               const barMeta = chart.getDatasetMeta(3);
-              if (!barMeta || !barMeta.data || !Array.isArray(barMeta.data)) return;
+              const yScale = chart.scales.y;
+              if (!barMeta || !barMeta.data || !Array.isArray(barMeta.data) || !yScale) return;
+              const baselineY = yScale.getPixelForValue(0);
 
               barMeta.data.forEach((bar, index) => {
                 if (!bar || typeof bar.x !== 'number' || typeof bar.y !== 'number' || isNaN(bar.x) || isNaN(bar.y)) return;
                 const pct = loadPcts[index];
-                if (pct === undefined || pct === null || isNaN(pct) || pct <= 0) return;
+
+                // If motor is OFF / Standby (0% or no reading) -> Draw clean subtle baseline marker
+                if (pct === undefined || pct === null || isNaN(pct) || pct <= 0) {
+                  if (baselineY > 0) {
+                    chartCtx.save();
+                    const markerW = Math.max((bar.width || 12) * 0.75, 7);
+                    const markerH = 6;
+                    chartCtx.fillStyle = tc.isLight ? '#cbd5e1' : '#334155';
+                    chartCtx.strokeStyle = tc.isLight ? '#94a3b8' : '#475569';
+                    chartCtx.lineWidth = 1;
+                    chartCtx.beginPath();
+                    if (typeof chartCtx.roundRect === 'function') {
+                      chartCtx.roundRect(bar.x - markerW / 2, baselineY - markerH, markerW, markerH, 2);
+                    } else {
+                      chartCtx.rect(bar.x - markerW / 2, baselineY - markerH, markerW, markerH);
+                    }
+                    chartCtx.fill();
+                    chartCtx.stroke();
+                    chartCtx.restore();
+                  }
+                  return;
+                }
 
                 let labelColor = tc.legendColor;
                 let labelText = `${Math.round(pct)}%`;
@@ -794,16 +817,12 @@ const charts = {
               padding: 16,
               generateLabels(chart) {
                 const defaultLabels = Chart.defaults.plugins.legend.labels.generateLabels(chart);
-                defaultLabels.forEach(lbl => {
-                  if (lbl.datasetIndex === 3) {
-                    lbl.fillStyle = tc.isLight ? '#0284c7' : '#00d2ff';
-                    lbl.strokeStyle = tc.isLight ? '#0284c7' : '#00d2ff';
-                    lbl.pointStyle = 'rectRounded';
-                  } else {
-                    lbl.pointStyle = 'line';
-                  }
+                // Keep ONLY the 3 benchmark lines (Red Overload, Green Healthy, Amber Low-Load)
+                // Filter out light blue "Actual Operating Load"
+                return defaultLabels.filter(lbl => lbl.datasetIndex !== 3).map(lbl => {
+                  lbl.pointStyle = 'line';
+                  return lbl;
                 });
-                return defaultLabels;
               }
             }
           },
@@ -830,7 +849,12 @@ const charts = {
                 const val = rawValues[idx] || 0;
                 const pct = loadPcts[idx];
 
-                if (pct === null || pct === undefined) return ['No SCADA reading recorded for this interval.'];
+                if (pct === null || pct === undefined || pct <= 0) {
+                  return [
+                    ` Load: 0.0% (⏹️ Motor OFF / Standby)`,
+                    ` Consumed: 0.00 kWh / ${motor.rated_15m_kwh || 0} kWh max`
+                  ];
+                }
 
                 let desc = '';
                 if (statuses[idx] === 'ANOMALY') {
@@ -1168,12 +1192,35 @@ const charts = {
             afterDatasetsDraw(chartInstance) {
               const chartCtx = chartInstance.ctx;
               const barMeta = chartInstance.getDatasetMeta(3);
-              if (!barMeta || !barMeta.data || !Array.isArray(barMeta.data)) return;
+              const yScale = chartInstance.scales.y;
+              if (!barMeta || !barMeta.data || !Array.isArray(barMeta.data) || !yScale) return;
+              const baselineY = yScale.getPixelForValue(0);
 
               barMeta.data.forEach((bar, index) => {
                 if (!bar || typeof bar.x !== 'number' || typeof bar.y !== 'number' || isNaN(bar.x) || isNaN(bar.y)) return;
                 const pct = loadPcts[index];
-                if (pct === undefined || pct === null || isNaN(pct) || pct <= 0) return;
+
+                // If motor is OFF / Standby (0% or no reading) -> Draw clean subtle baseline marker
+                if (pct === undefined || pct === null || isNaN(pct) || pct <= 0) {
+                  if (baselineY > 0) {
+                    chartCtx.save();
+                    const markerW = Math.max((bar.width || 16) * 0.75, 8);
+                    const markerH = 6;
+                    chartCtx.fillStyle = '#e2e8f0';
+                    chartCtx.strokeStyle = '#94a3b8';
+                    chartCtx.lineWidth = 1;
+                    chartCtx.beginPath();
+                    if (typeof chartCtx.roundRect === 'function') {
+                      chartCtx.roundRect(bar.x - markerW / 2, baselineY - markerH, markerW, markerH, 2);
+                    } else {
+                      chartCtx.rect(bar.x - markerW / 2, baselineY - markerH, markerW, markerH);
+                    }
+                    chartCtx.fill();
+                    chartCtx.stroke();
+                    chartCtx.restore();
+                  }
+                  return;
+                }
 
                 let labelColor = '#059669';
                 let labelText = `${Math.round(pct)}%`;
@@ -1239,7 +1286,8 @@ const charts = {
                 font: { family: 'Outfit', size: 16, weight: 800 },
                 usePointStyle: true,
                 pointStyleWidth: 16,
-                padding: 18
+                padding: 18,
+                filter: (item) => item.datasetIndex !== 3 // Removes light blue "Actual Operating Load"
               }
             },
             tooltip: { enabled: false }

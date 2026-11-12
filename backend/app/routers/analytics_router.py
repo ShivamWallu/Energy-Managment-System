@@ -530,11 +530,11 @@ def get_expeller_detail(
         slot_word_idle = "interval" if i_count == 1 else "intervals"
 
         if not vals_list:
-            alert = f"No SCADA readings are available for {missing_count} interval(s)."
+            alert = f"Standby: Motor OFF for {missing_count} interval(s) (0 kWh recorded)."
         elif m_total == 0 and missing_count > 0:
-            alert = f"Data incomplete: {missing_count} interval(s) have no SCADA reading; recorded intervals show 0 kWh."
+            alert = f"Standby: Motor OFF across {missing_count} interval(s) (0 kWh recorded)."
         elif m_total == 0 and missing_count == 0:
-            alert = "Offline: Unit inactive with 0 kWh recorded."
+            alert = "Standby: Unit inactive with 0 kWh recorded."
         elif gen_status == "OVERLOAD":
             alert = f"High Load: Sustained >80% load in {o_count} {slot_word_high} (Peak: {round(max_reading, 2)} kWh). Check seed feed gate."
         elif gen_status == "HEALTHY":
@@ -550,7 +550,7 @@ def get_expeller_detail(
             alert = f"Low Load: Operating below 40% in {i_count} {slot_word_idle} (Avg: {avg_load}%). Check seed feed hopper."
 
         if missing_count and vals_list and m_total > 0:
-            alert = f"Data gap: {missing_count} interval(s) have no reading. {alert}"
+            alert = f"Standby: Motor OFF in {missing_count} interval(s) (0 kWh). {alert}"
 
         motors_out.append({
             "code": code,
