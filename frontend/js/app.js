@@ -471,8 +471,13 @@ function bindGlobalEvents() {
 
   // Modal toggles
   document.getElementById('btn-open-upload')?.addEventListener('click', () => {
-    if (typeof validation !== 'undefined' && validation.setUploadMode) {
-      validation.setUploadMode('SINGLE');
+    if (typeof validation !== 'undefined') {
+      if (validation.resetUploadModal) {
+        validation.resetUploadModal();
+      }
+      if (validation.setUploadMode) {
+        validation.setUploadMode('SINGLE');
+      }
     }
     document.getElementById('upload-modal')?.classList.add('active');
   });

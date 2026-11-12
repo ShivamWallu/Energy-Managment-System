@@ -362,11 +362,42 @@ const validation = {
     }
   },
 
+  resetUploadModal() {
+    this.dualFile1 = null;
+    this.dualFile2 = null;
+    this.renderDualFileSlot(1);
+    this.renderDualFileSlot(2);
+    this.checkDualSubmitReady();
+
+    const inpSingle = document.getElementById('file-upload-input');
+    const inp1 = document.getElementById('file-dual-input-1');
+    const inp2 = document.getElementById('file-dual-input-2');
+    if (inpSingle) inpSingle.value = '';
+    if (inp1) inp1.value = '';
+    if (inp2) inp2.value = '';
+
+    const progressWrap = document.getElementById('upload-progress-wrap');
+    if (progressWrap) progressWrap.style.display = 'none';
+
+    const errCallout = document.getElementById('upload-error-callout');
+    if (errCallout) errCallout.style.display = 'none';
+  },
+
   initUploadHandler() {
     const dropzone = document.getElementById('upload-dropzone');
     const fileInput = document.getElementById('file-upload-input');
 
     if (dropzone && fileInput) {
+      // Clear value on click so re-selecting same file fires change event
+      fileInput.addEventListener('click', (e) => { e.target.value = null; });
+
+      // Clicking anywhere in the single dropzone box opens file dialog
+      dropzone.addEventListener('click', (e) => {
+        if (e.target.tagName !== 'BUTTON') {
+          fileInput.click();
+        }
+      });
+
       ['dragenter', 'dragover'].forEach(eventName => {
         dropzone.addEventListener(eventName, (e) => {
           e.preventDefault();
@@ -382,14 +413,14 @@ const validation = {
       });
 
       dropzone.addEventListener('drop', (e) => {
-        if (e.dataTransfer.files.length) {
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
           fileInput.files = e.dataTransfer.files;
           this.handleUpload(fileInput.files[0]);
         }
       });
 
       fileInput.addEventListener('change', () => {
-        if (fileInput.files.length) {
+        if (fileInput.files && fileInput.files.length) {
           this.handleUpload(fileInput.files[0]);
         }
       });
@@ -398,10 +429,68 @@ const validation = {
     // Dual Upload Setup
     const input1 = document.getElementById('file-dual-input-1');
     const input2 = document.getElementById('file-dual-input-2');
+    const dropzone1 = document.getElementById('dual-dropzone-1');
+    const dropzone2 = document.getElementById('dual-dropzone-2');
     const btnSubmitDual = document.getElementById('btn-submit-dual-upload');
 
+    // Clear value on click so choosing same file again fires change event
+    input1?.addEventListener('click', (e) => { e.target.value = null; });
+    input2?.addEventListener('click', (e) => { e.target.value = null; });
+
+    // Clicking anywhere in Day Shift box opens its file dialog
+    dropzone1?.addEventListener('click', (e) => {
+      if (!e.target.closest('.btn-remove-chip') && e.target.tagName !== 'BUTTON') {
+        input1?.click();
+      }
+    });
+
+    // Clicking anywhere in Night Shift box opens its file dialog
+    dropzone2?.addEventListener('click', (e) => {
+      if (!e.target.closest('.btn-remove-chip') && e.target.tagName !== 'BUTTON') {
+        input2?.click();
+      }
+    });
+
+    // Drag & Drop for Day Shift box
+    if (dropzone1 && input1) {
+      ['dragenter', 'dragover'].forEach(name => {
+        dropzone1.addEventListener(name, (e) => { e.preventDefault(); dropzone1.classList.add('dragover'); });
+      });
+      ['dragleave', 'drop'].forEach(name => {
+        dropzone1.addEventListener(name, (e) => { e.preventDefault(); dropzone1.classList.remove('dragover'); });
+      });
+      dropzone1.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone1.classList.remove('dragover');
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+          this.dualFile1 = e.dataTransfer.files[0];
+          this.renderDualFileSlot(1);
+          this.checkDualSubmitReady();
+        }
+      });
+    }
+
+    // Drag & Drop for Night Shift box
+    if (dropzone2 && input2) {
+      ['dragenter', 'dragover'].forEach(name => {
+        dropzone2.addEventListener(name, (e) => { e.preventDefault(); dropzone2.classList.add('dragover'); });
+      });
+      ['dragleave', 'drop'].forEach(name => {
+        dropzone2.addEventListener(name, (e) => { e.preventDefault(); dropzone2.classList.remove('dragover'); });
+      });
+      dropzone2.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropzone2.classList.remove('dragover');
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files.length) {
+          this.dualFile2 = e.dataTransfer.files[0];
+          this.renderDualFileSlot(2);
+          this.checkDualSubmitReady();
+        }
+      });
+    }
+
     input1?.addEventListener('change', (e) => {
-      if (e.target.files.length) {
+      if (e.target.files && e.target.files.length) {
         this.dualFile1 = e.target.files[0];
         this.renderDualFileSlot(1);
         this.checkDualSubmitReady();
@@ -409,7 +498,7 @@ const validation = {
     });
 
     input2?.addEventListener('change', (e) => {
-      if (e.target.files.length) {
+      if (e.target.files && e.target.files.length) {
         this.dualFile2 = e.target.files[0];
         this.renderDualFileSlot(2);
         this.checkDualSubmitReady();
@@ -417,13 +506,19 @@ const validation = {
     });
 
     btnSubmitDual?.addEventListener('click', async () => {
-      if (!this.dualFile1 || !this.dualFile2) {
-        showToast('Please select both Day Shift and Night Shift files.', 'warning');
+      if (!this.dualFile1 && !this.dualFile2) {
+        showToast('Please select at least one shift file to upload.', 'warning');
         return;
       }
       btnSubmitDual.disabled = true;
-      btnSubmitDual.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing Telemetry...`;
-      await this.handleDualUpload();
+      btnSubmitDual.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing &amp; Validating Telemetry...`;
+      try {
+        await this.handleDualUpload();
+      } catch (err) {
+        console.error('Dual upload invocation error:', err);
+      } finally {
+        this.checkDualSubmitReady();
+      }
     });
   },
 
@@ -437,15 +532,15 @@ const validation = {
     if (file) {
       if (nameEl) {
         nameEl.innerHTML = `
-          <div class="selected-file-chip" title="${file.name}">
+          <div class="selected-file-chip" title="${escapeHtml(file.name)}">
             <i class="fa-solid fa-file-excel text-emerald" style="font-size:1.05rem;"></i>
-            <span class="selected-file-name">${file.name}</span>
+            <span class="selected-file-name">${escapeHtml(file.name)}</span>
           </div>
         `;
       }
       if (actionWrap) {
         actionWrap.innerHTML = `
-          <button type="button" class="btn-remove-chip" onclick="validation.removeDualFile(${slotNum})" title="Remove this file and choose another">
+          <button type="button" class="btn-remove-chip" onclick="event.stopPropagation(); validation.removeDualFile(${slotNum})" title="Remove this file and choose another">
             <i class="fa-solid fa-trash-can" style="font-size:0.75rem;"></i> Remove File
           </button>
         `;
@@ -489,17 +584,32 @@ const validation = {
   checkDualSubmitReady() {
     const btn = document.getElementById('btn-submit-dual-upload');
     if (btn) {
-      const ready = !!(this.dualFile1 && this.dualFile2);
-      btn.disabled = !ready;
-      if (ready) {
+      const has1 = !!this.dualFile1;
+      const has2 = !!this.dualFile2;
+      const hasAny = has1 || has2;
+
+      btn.disabled = !hasAny;
+
+      if (has1 && has2) {
         btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Upload Both Shifts (Day &amp; Night)`;
         btn.classList.add('btn-ready-glow');
+        btn.style.cursor = 'pointer';
+        btn.style.opacity = '1';
+      } else if (has1) {
+        btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Upload Day Shift Report (${escapeHtml(this.dualFile1.name)})`;
+        btn.classList.add('btn-ready-glow');
+        btn.style.cursor = 'pointer';
+        btn.style.opacity = '1';
+      } else if (has2) {
+        btn.innerHTML = `<i class="fa-solid fa-cloud-arrow-up"></i> Upload Night Shift Report (${escapeHtml(this.dualFile2.name)})`;
+        btn.classList.add('btn-ready-glow');
+        btn.style.cursor = 'pointer';
+        btn.style.opacity = '1';
       } else {
-        const missing = !this.dualFile1 && !this.dualFile2 
-          ? 'Select Both Day &amp; Night Files' 
-          : (!this.dualFile1 ? 'Select Day Shift File' : 'Select Night Shift File');
-        btn.innerHTML = `<i class="fa-solid fa-lock" style="font-size:0.8rem; margin-right:4px;"></i> ${missing} to Proceed`;
+        btn.innerHTML = `<i class="fa-solid fa-lock" style="font-size:0.8rem; margin-right:4px;"></i> Select Shift File to Proceed`;
         btn.classList.remove('btn-ready-glow');
+        btn.style.cursor = 'not-allowed';
+        btn.style.opacity = '0.6';
       }
     }
   },
@@ -568,14 +678,19 @@ const validation = {
         errCallout.style.display = 'block';
       }
       showToast(err.message, 'error');
+      const singleInput = document.getElementById('file-upload-input');
+      if (singleInput) singleInput.value = '';
     }
   },
 
   async handleDualUpload() {
-    if (!this.dualFile1 || !this.dualFile2) {
-      showToast('Please select both Shift 1 and Shift 2 files.', 'warning');
+    if (!this.dualFile1 && !this.dualFile2) {
+      showToast('Please select at least one shift file to upload.', 'warning');
       return;
     }
+
+    const isBoth = !!(this.dualFile1 && this.dualFile2);
+    const targetFile = this.dualFile1 || this.dualFile2;
 
     const statusText = document.getElementById('upload-status-text');
     const pctText = document.getElementById('upload-pct-text');
@@ -598,10 +713,15 @@ const validation = {
       if (stageDesc) stageDesc.textContent = desc;
     };
 
-    setProgress(20, `<i class="fa-solid fa-spinner fa-spin text-cyan"></i> Ingesting Shift 1 &amp; Shift 2 files...`, `Validating Day & Night shift report formats...`, 'linear-gradient(90deg, #00d2ff, #a855f7)');
+    if (isBoth) {
+      setProgress(20, `<i class="fa-solid fa-spinner fa-spin text-cyan"></i> Ingesting Shift 1 &amp; Shift 2 files...`, `Validating Day & Night shift report formats...`, 'linear-gradient(90deg, #00d2ff, #a855f7)');
+    } else {
+      const shiftName = this.dualFile1 ? 'Day Shift' : 'Night Shift';
+      setProgress(25, `<i class="fa-solid fa-spinner fa-spin text-cyan"></i> Ingesting ${shiftName} ("${targetFile.name}")...`, `Validating Excel headers and SCADA column layout...`, 'linear-gradient(90deg, #00d2ff, #38bdf8)');
+    }
 
     const timer1 = setTimeout(() => {
-      setProgress(50, `<i class="fa-solid fa-spinner fa-spin text-purple"></i> Cross-validating telemetry timestamps...`, `Processing 96 intervals (Day 48 + Night 48) across 59 SCADA columns...`);
+      setProgress(50, `<i class="fa-solid fa-spinner fa-spin text-purple"></i> Cross-validating telemetry timestamps...`, isBoth ? `Processing 96 intervals (Day 48 + Night 48) across 59 SCADA columns...` : `Extracting 15-minute slot kWh readings & timestamps...`);
     }, 450);
 
     const timer2 = setTimeout(() => {
@@ -609,11 +729,17 @@ const validation = {
     }, 900);
 
     try {
-      const res = await api.uploadMultiReports([this.dualFile1, this.dualFile2]);
+      let res;
+      if (isBoth) {
+        res = await api.uploadMultiReports([this.dualFile1, this.dualFile2]);
+      } else {
+        res = await api.uploadReport(targetFile);
+      }
       clearTimeout(timer1);
       clearTimeout(timer2);
 
-      setProgress(100, `<i class="fa-solid fa-circle-check text-emerald"></i> Both Shifts Successfully Ingested!`, res.message, 'linear-gradient(90deg, #10b981, #00e676)');
+      const successTitle = isBoth ? 'Both Shifts Successfully Ingested!' : 'Shift Report Successfully Ingested!';
+      setProgress(100, `<i class="fa-solid fa-circle-check text-emerald"></i> ${successTitle}`, res.message, 'linear-gradient(90deg, #10b981, #00e676)');
       showToast(res.message, 'success');
 
       setTimeout(async () => {
@@ -637,7 +763,7 @@ const validation = {
     } catch (err) {
       clearTimeout(timer1);
       clearTimeout(timer2);
-      setProgress(100, `<i class="fa-solid fa-circle-xmark text-red"></i> Dual Ingestion Failed`, err.message, '#ef4444');
+      setProgress(100, `<i class="fa-solid fa-circle-xmark text-red"></i> Ingestion Failed`, err.message, '#ef4444');
       if (errCallout && errText) {
         errText.innerHTML = `<strong>Validation Error:</strong> ${err.message}`;
         errCallout.style.display = 'block';

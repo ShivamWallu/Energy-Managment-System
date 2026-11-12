@@ -34,7 +34,7 @@ def get_cell_style_tag(cell) -> str:
         
     return "normal"
 
-def validate_scada_column_sequence(sheet) -> None:
+def validate_scada_column_sequence(sheet, source_row: int = 4) -> None:
     """
     Validates that the uploaded EMS Excel sheet follows the required factory SCADA layout:
     - Col B (#2): INC EXPELLER 1
@@ -89,7 +89,7 @@ def validate_scada_column_sequence(sheet) -> None:
     ]
 
     for col_idx, expected_label, keywords in checks:
-        val = sheet.cell(4, col_idx).value
+        val = sheet.cell(source_row, col_idx).value
         val_str = str(val or "").strip().lower()
         if not all(k in val_str for k in keywords):
             col_letter = get_column_letter(col_idx)
@@ -135,25 +135,47 @@ def parse_ems_excel_file(file_path_or_stream) -> Dict[str, Any]:
                 elif "time_range" in key_norm: metadata["time_range"] = str(v).strip()
 
     # 2. Parse 'Values' Sheet
-    if "Values" not in wb.sheetnames:
-        raise ValueError("Invalid EMS report: sheet 'Values' not found.")
+    values_sheet_name = None
+    for s in wb.sheetnames:
+        if s.strip().lower() == "values":
+            values_sheet_name = s
+            break
+    if not values_sheet_name:
+        values_sheet_name = next((s for s in wb.sheetnames if "value" in s.strip().lower()), None)
+    if not values_sheet_name:
+        raise ValueError(f"Invalid EMS report: sheet 'Values' not found. Available sheets in workbook: {list(wb.sheetnames)}")
         
-    sheet = wb["Values"]
+    sheet = wb[values_sheet_name]
+
+    # Detect header row: look for row where cell(r, 1) is 'Source' or cell(r, 2) matches 'INC'
+    source_row = 4
+    for r in range(1, 10):
+        val_col1 = str(sheet.cell(r, 1).value or "").strip().lower()
+        val_col2 = str(sheet.cell(r, 2).value or "").strip().lower()
+        if "source" in val_col1 or ("inc" in val_col2 and "expeller" in val_col2):
+            source_row = r
+            break
 
     # Validate SCADA Column Layout Sequence
-    validate_scada_column_sequence(sheet)
+    validate_scada_column_sequence(sheet, source_row=source_row)
 
     max_col = sheet.max_column
     
-    # Header rows: Row 4 = Source, Row 5 = Location, Row 6 = Measurement Point, Row 7 = Unit
+    loc_row = source_row + 1
+    mp_row = source_row + 2
+    unit_row = source_row + 3
+    data_start_row = source_row + 4
+    data_end_row = data_start_row + 48 # 48 intervals
+    
+    # Header rows: Source, Location, Measurement Point, Unit
     columns: List[Dict[str, Any]] = []
     seen_sources: Dict[str, List[int]] = {}
     
     for c in range(2, max_col + 1):
-        source = sheet.cell(4, c).value
-        loc = sheet.cell(5, c).value
-        mp = sheet.cell(6, c).value
-        unit = sheet.cell(7, c).value
+        source = sheet.cell(source_row, c).value
+        loc = sheet.cell(loc_row, c).value
+        mp = sheet.cell(mp_row, c).value
+        unit = sheet.cell(unit_row, c).value
         
         source_str = str(source).strip() if source is not None else f"Column_{c}"
         loc_str = str(loc).strip() if loc is not None else ""
@@ -181,18 +203,18 @@ def parse_ems_excel_file(file_path_or_stream) -> Dict[str, Any]:
             "is_duplicate": is_dup
         })
 
-    # 3. Parse Original Summary Rows: Row 56=Min, 57=Max, 58=Avg, 59=Sum
+    # 3. Parse Original Summary Rows: Min, Max, Avg, Sum
     excel_summaries: Dict[int, Dict[str, Any]] = {}
     for col_info in columns:
         c = col_info["col_index"]
         excel_summaries[c] = {
-            "excel_min": str(sheet.cell(56, c).value).strip() if sheet.cell(56, c).value is not None else "",
-            "excel_max": str(sheet.cell(57, c).value).strip() if sheet.cell(57, c).value is not None else "",
-            "excel_avg": str(sheet.cell(58, c).value).strip() if sheet.cell(58, c).value is not None else "",
-            "excel_sum": str(sheet.cell(59, c).value).strip() if sheet.cell(59, c).value is not None else "",
+            "excel_min": str(sheet.cell(data_end_row, c).value).strip() if sheet.cell(data_end_row, c).value is not None else "",
+            "excel_max": str(sheet.cell(data_end_row + 1, c).value).strip() if sheet.cell(data_end_row + 1, c).value is not None else "",
+            "excel_avg": str(sheet.cell(data_end_row + 2, c).value).strip() if sheet.cell(data_end_row + 2, c).value is not None else "",
+            "excel_sum": str(sheet.cell(data_end_row + 3, c).value).strip() if sheet.cell(data_end_row + 3, c).value is not None else "",
         }
 
-    # 4. Parse 15-Minute Data Rows: Rows 8 to 55 (48 intervals)
+    # 4. Parse 15-Minute Data Rows: 48 intervals
     intervals: List[Dict[str, Any]] = []
     validation_findings: List[Dict[str, Any]] = []
     
@@ -205,14 +227,14 @@ def parse_ems_excel_file(file_path_or_stream) -> Dict[str, Any]:
                 "source_name": src,
                 "location": columns[col_indices[0] - 2]["location"],
                 "timestamp_str": "Entire Report",
-                "row_num": 4,
+                "row_num": source_row,
                 "col_num": col_indices[1],
                 "observed_value": f"Cols {col_indices}",
                 "expected_range": "Unique feeder source per column",
                 "explanation": f"Source '{src}' is duplicated in columns {col_indices}. Calculations must isolate duplicates to prevent double-counting."
             })
 
-    for r_idx, r in enumerate(range(8, 56)):
+    for r_idx, r in enumerate(range(data_start_row, data_end_row)):
         ts_cell_val = sheet.cell(r, 1).value
         ts_str = str(ts_cell_val).strip() if ts_cell_val is not None else f"Interval_{r_idx}"
         
