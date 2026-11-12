@@ -394,13 +394,18 @@ def generate_welcome_email_text(recipient_name: str, username: str, role: str, s
 Congratulations! Your official user account for Mashal EMS Intelligence has been successfully verified and activated.
 
 Account Details:
-- Name: {recipient_name}
-- Username: {username}
-- Role Assigned: {role.upper()} (Plant SCADA Telemetry Auditor)
-- Status: Active & Operational
+- Account Name: {recipient_name}
+- Username: @{username}
+- Registered Email: {to_email}
+- Assigned Role: {role.upper()} (Plant SCADA Telemetry Auditor)
+- Account Status: Active & Operational
+
+Sign-In Credentials:
+You can sign in using either your Username (@{username}) or your Registered Email ({to_email}) along with the password you created during registration.
+(For account security, passwords are encrypted and never sent via email.)
 
 Next Steps to Get Started:
-1. Log in to your Mashal EMS Dashboard: http://127.0.0.1:8000
+1. Open the Mashal EMS Dashboard: https://ems.khandelia.online/
 2. Click the 'Upload EMS Report' button in the top navigation bar.
 3. Ingest your plant 15-minute 12-hour SCADA shift report (.xlsx/.csv).
 4. Monitor Expeller (P1 to P5) and Kohlu cold-press motor health and overload alarms.
@@ -564,12 +569,29 @@ def generate_welcome_email_html(recipient_name: str, username: str, role: str, s
           <span class="info-val" style="color:#b91c1c; font-weight:700; font-family:monospace;">@{username}</span>
         </div>
         <div class="info-row" style="padding:7px 0; border-bottom:1px solid #f1f5f9; display:flex;">
+          <span class="info-label" style="color:#64748b; font-weight:600; width:140px; display:inline-block;">Registered Email:</span>
+          <span class="info-val" style="color:#0f172a; font-weight:700; font-family:monospace;">{to_email}</span>
+        </div>
+        <div class="info-row" style="padding:7px 0; border-bottom:1px solid #f1f5f9; display:flex;">
           <span class="info-label" style="color:#64748b; font-weight:600; width:140px; display:inline-block;">Assigned Role:</span>
           <span class="info-val" style="color:#059669; font-weight:800;">{role.upper()}</span>
         </div>
         <div class="info-row" style="padding:7px 0; display:flex;">
           <span class="info-label" style="color:#64748b; font-weight:600; width:140px; display:inline-block;">Account Status:</span>
           <span class="info-val" style="color:#059669; font-weight:800;">Active &amp; Ready</span>
+        </div>
+      </div>
+
+      <!-- High-Visibility Sign-In Guidance Box -->
+      <div style="background:#eff6ff; border:1.5px solid #93c5fd; border-left:4px solid #2563eb; border-radius:8px; padding:14px 18px; margin:20px 0; font-size:13px; line-height:1.6; color:#1e3a8a;">
+        <div style="font-weight:800; font-size:14px; margin-bottom:6px; color:#1d4ed8;">
+          &#128273; Sign-In Instructions
+        </div>
+        <div style="color:#1e3a8a;">
+          You can sign in using either your <strong>Username</strong> (<code style="background:#dbeafe; color:#1e40af; padding:2px 6px; border-radius:4px; font-weight:700;">@{username}</code>) or your <strong>Registered Email</strong> (<code style="background:#dbeafe; color:#1e40af; padding:2px 6px; border-radius:4px; font-weight:700;">{to_email}</code>) along with the password you set during registration.
+        </div>
+        <div style="margin-top:8px; font-size:12px; color:#64748b;">
+          &#128737; <em><strong>Security Notice:</strong> For account security, your password is encrypted and never sent via email. If you ever forget your password, you can reset it anytime via OTP from the login screen.</em>
         </div>
       </div>
 

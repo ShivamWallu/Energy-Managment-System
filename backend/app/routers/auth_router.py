@@ -4,7 +4,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Request, status
 from pydantic import BaseModel, EmailStr
 from sqlalchemy.orm import Session
-from sqlalchemy import or_
+from sqlalchemy import or_, func
 
 from backend.app.database import get_db
 from backend.app.models import User, OtpVerification
@@ -47,11 +47,12 @@ def login(credentials: LoginRequest, request: Request, db: Session = Depends(get
     ip = request.client.host if request.client else "127.0.0.1"
     clean_login = credentials.username.strip()
 
-    # Search by either username OR email
+    # Search by username, email, OR registered full name (case-insensitive)
     user = db.query(User).filter(
         or_(
             User.username == clean_login,
-            User.email == clean_login.lower()
+            User.email == clean_login.lower(),
+            func.lower(User.full_name) == clean_login.lower()
         )
     ).first()
     
