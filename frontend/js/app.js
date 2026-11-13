@@ -407,8 +407,7 @@ window.appRefreshReports = async function() {
               ${shiftBadgesHtml}
             </div>
             <div class="custom-report-group-meta">
-              <span title="Batch Uploaded on ${group.upload_date}${timeTag}"><i class="fa-regular fa-clock"></i> ${group.upload_date}${timeTag}</span>
-              ${groupUploader ? `<span class="group-user-tag" title="Uploaded by ${escapeHtml(groupUploader)}"><i class="fa-solid fa-user-circle"></i> ${escapeHtml(groupUploader)}</span>` : ''}
+              <span class="group-time-badge" title="Batch Uploaded on ${group.upload_date}${timeTag}"><i class="fa-regular fa-clock"></i> ${group.upload_date}${timeTag}</span>
               ${isAdmin && group.batch_id ? `
                 <button type="button" class="btn-report-batch-delete" title="Admin: Delete entire upload batch" onclick="event.stopPropagation(); window.promptDeleteBatch('${group.batch_id}', '${escapeHtml(group.shift_date_display)}', ${group.reports.length})">
                   <i class="fa-solid fa-trash-can"></i> Batch
@@ -416,6 +415,7 @@ window.appRefreshReports = async function() {
               ` : ''}
             </div>
           </div>
+          <div class="custom-report-group-items">
         `;
 
         for (const r of group.reports) {
@@ -430,15 +430,20 @@ window.appRefreshReports = async function() {
 
           menuHtml += `
             <div class="custom-report-item ${isCur ? 'active' : ''}" data-report-id="${r.id}" onclick="window.onSelectCustomReport(${r.id})" title="${fname} • Uploaded by ${escapeHtml(uploaderName)}${unameTag} on ${r.upload_date}${r.upload_time ? ' at ' + r.upload_time : ''} • ${kwhVal}">
-              <div class="custom-report-item-icon-box ${isNight ? 'icon-night' : 'icon-day'}">
-                <span class="custom-report-item-icon">${icon}</span>
-              </div>
-              <div class="custom-report-item-body">
-                <span class="custom-report-shift-badge ${isNight ? 'badge-night' : 'badge-day'}">
-                  ${icon} ${shiftTitle}
-                </span>
-                ${fname ? `<span class="custom-report-item-file" title="${fname}"><i class="fa-solid fa-file-excel text-emerald"></i> ${fname}</span>` : ''}
-                <span class="custom-report-item-kwh" title="Total Incomer Telemetry Energy"><i class="fa-solid fa-bolt text-amber"></i> ${kwhVal}</span>
+              <div class="custom-report-item-content">
+                <div class="custom-report-item-row1">
+                  <span class="custom-report-shift-badge ${isNight ? 'badge-night' : 'badge-day'}">
+                    ${icon} ${shiftTitle}
+                  </span>
+                  ${fname ? `<span class="custom-report-item-file" title="${fname}"><i class="fa-solid fa-file-excel text-emerald"></i> ${fname}</span>` : ''}
+                  <span class="custom-report-item-kwh" title="Total Incomer Telemetry Energy"><i class="fa-solid fa-bolt text-amber"></i> ${kwhVal}</span>
+                </div>
+                <div class="custom-report-item-sub">
+                  <i class="fa-regular fa-circle-user text-cyan"></i>
+                  <span>Uploaded by: <strong>${escapeHtml(uploaderName)}</strong>${unameTag ? `<span class="meta-uname">${unameTag}</span>` : ''}</span>
+                  <span class="meta-dot">•</span>
+                  <span><i class="fa-regular fa-clock"></i> ${r.upload_date}${r.upload_time ? ` at ${r.upload_time}` : ''}</span>
+                </div>
               </div>
               <div class="custom-report-item-end">
                 ${isCur ? '<span class="custom-report-status-pill active-pill"><i class="fa-solid fa-check"></i> Active</span>' : ''}
@@ -451,6 +456,7 @@ window.appRefreshReports = async function() {
             </div>
           `;
         }
+        menuHtml += `</div>`;
       });
 
       menu.innerHTML = menuHtml;

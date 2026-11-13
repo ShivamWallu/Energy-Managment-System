@@ -3752,10 +3752,10 @@ html.is-authenticated #login-modal {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  width: 580px;
+  width: 630px;
   min-width: 440px;
-  max-width: min(580px, calc(100vw - 28px));
-  max-height: 420px; /* Generous height with smooth scrolling for enterprise reports */
+  max-width: min(630px, calc(100vw - 24px));
+  max-height: 430px; /* Generous height with smooth scrolling for enterprise reports */
   overflow-y: auto;
   overflow-x: hidden;
   background: #0d1527 !important; /* 100% Solid Deep Navy - No transparency */
@@ -3763,7 +3763,7 @@ html.is-authenticated #login-modal {
   border-radius: 12px;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(0, 210, 255, 0.18) !important;
   z-index: 1050;
-  padding: 0.55rem;
+  padding: 0.55rem 0.65rem 0.65rem 0.55rem;
   box-sizing: border-box;
   animation: dropdownFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -3907,7 +3907,7 @@ html.is-authenticated #login-modal {
   color: var(--text-muted);
   display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
+  gap: 0.5rem;
   font-weight: 500;
   white-space: nowrap !important;
   flex-shrink: 0;
@@ -3918,19 +3918,11 @@ html.is-authenticated #login-modal {
   align-items: center;
   gap: 0.25rem;
 }
-.custom-report-group-meta .group-user-tag {
-  color: var(--accent-cyan);
-  font-weight: 600;
-  white-space: nowrap !important;
-}
-[data-theme="light"] .custom-report-group-meta .group-user-tag {
-  color: #0284c7;
-}
 
 /* Batch Delete Button */
 .btn-report-batch-delete {
-  background: rgba(239, 68, 68, 0.12);
-  border: 1px solid rgba(239, 68, 68, 0.35);
+  background: rgba(239, 68, 68, 0.15);
+  border: 1px solid rgba(239, 68, 68, 0.4);
   color: #fca5a5;
   font-size: 0.68rem;
   font-weight: 700;
@@ -3942,6 +3934,8 @@ html.is-authenticated #login-modal {
   gap: 0.3rem;
   transition: all 0.15s ease;
   white-space: nowrap !important;
+  flex-shrink: 0;
+  margin-right: 2px;
 }
 .btn-report-batch-delete:hover {
   background: #dc2626;
@@ -3959,22 +3953,50 @@ html.is-authenticated #login-modal {
   color: #ffffff;
 }
 
+/* Tree Branch Connector for Shift Groups (Image 2 Fix) */
+.custom-report-group-items {
+  position: relative;
+  margin-left: 0.75rem;
+  padding-left: 0.85rem;
+  border-left: 2px solid rgba(0, 210, 255, 0.3);
+  margin-top: 0.35rem;
+  margin-bottom: 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+[data-theme="light"] .custom-report-group-items {
+  border-left-color: rgba(2, 132, 199, 0.35);
+}
+
 /* Individual Report Items */
 .custom-report-item {
   display: flex;
   align-items: center;
-  gap: 0.65rem;
+  justify-content: space-between;
+  gap: 0.6rem;
   padding: 0.45rem 0.75rem;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
   font-size: 0.82rem;
   color: var(--text-primary);
-  margin-bottom: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.06);
   background: rgba(255, 255, 255, 0.02);
   position: relative;
-  min-height: 42px;
+  box-sizing: border-box;
+}
+.custom-report-item::before {
+  content: '';
+  position: absolute;
+  left: -0.85rem;
+  top: 50%;
+  width: 0.75rem;
+  height: 2px;
+  background: rgba(0, 210, 255, 0.3);
+}
+[data-theme="light"] .custom-report-item::before {
+  background: rgba(2, 132, 199, 0.35);
 }
 .custom-report-item:hover {
   background: rgba(0, 210, 255, 0.10);
@@ -3982,7 +4004,7 @@ html.is-authenticated #login-modal {
   transform: translateX(2px);
 }
 [data-theme="light"] .custom-report-item {
-  border-color: #f1f5f9;
+  border-color: #e2e8f0;
   background: #fafafa;
 }
 [data-theme="light"] .custom-report-item:hover {
@@ -4001,30 +4023,45 @@ html.is-authenticated #login-modal {
   color: #0369a1;
 }
 
-.custom-report-item-icon-box {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+.custom-report-item-content {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(255, 255, 255, 0.06);
-  flex-shrink: 0;
-  font-size: 1rem;
-}
-[data-theme="light"] .custom-report-item-icon-box {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-}
-
-.custom-report-item-body {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.22rem;
   flex: 1;
   min-width: 0;
+  overflow: hidden;
+}
+
+.custom-report-item-row1 {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   white-space: nowrap !important;
   overflow: hidden;
+}
+
+.custom-report-item-sub {
+  font-size: 0.70rem;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.custom-report-item-sub strong {
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+[data-theme="light"] .custom-report-item-sub strong {
+  color: #0284c7;
+}
+.custom-report-item-sub .meta-dot {
+  color: rgba(255, 255, 255, 0.25);
+}
+[data-theme="light"] .custom-report-item-sub .meta-dot {
+  color: #94a3b8;
 }
 
 .custom-report-item-kwh {
@@ -4047,19 +4084,6 @@ html.is-authenticated #login-modal {
   color: #0284c7;
 }
 
-.custom-report-item-top {
-  display: flex;
-  align-items: center;
-  gap: 0.45rem;
-  white-space: nowrap !important;
-  overflow: hidden;
-}
-.custom-report-item-date {
-  font-weight: 700;
-  color: var(--text-primary);
-  font-size: 0.84rem;
-  white-space: nowrap !important;
-}
 .custom-report-shift-badge {
   font-size: 0.68rem;
   font-weight: 700;
@@ -4069,6 +4093,7 @@ html.is-authenticated #login-modal {
   align-items: center;
   gap: 0.25rem;
   white-space: nowrap !important;
+  flex-shrink: 0;
 }
 .custom-report-shift-badge.badge-day {
   background: rgba(245, 158, 11, 0.2);
@@ -4091,23 +4116,34 @@ html.is-authenticated #login-modal {
   border-color: #ddd6fe;
 }
 .custom-report-item-file {
-  color: var(--text-muted);
-  font-size: 0.72rem;
-  max-width: 300px;
+  color: #f1f5f9;
+  font-size: 0.74rem;
+  font-weight: 600;
+  max-width: 330px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap !important;
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
-  background: rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.06);
   padding: 0.12rem 0.5rem;
   border-radius: 4px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.10);
 }
 [data-theme="light"] .custom-report-item-file {
   background: #f1f5f9;
   border-color: #cbd5e1;
+  color: #1e293b;
+}
+
+.custom-report-item-end {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  margin-left: auto;
+}
   color: #475569;
 }
 
@@ -4208,34 +4244,34 @@ html.is-authenticated #login-modal {
 /* Responsive adjustments for laptop & desktop screens */
 @media (max-width: 1440px) {
   .custom-report-menu {
-    width: 540px;
-    max-width: min(540px, calc(100vw - 24px));
+    width: 600px;
+    max-width: min(600px, calc(100vw - 20px));
     left: 0;
   }
   .custom-report-item-file {
-    max-width: 250px;
+    max-width: 270px;
   }
 }
 @media (max-width: 1260px) {
   .custom-report-menu {
-    width: 480px;
+    width: 540px;
     min-width: 380px;
-    max-width: min(480px, calc(100vw - 20px));
+    max-width: min(540px, calc(100vw - 16px));
     left: 0;
   }
   .custom-report-item-file {
-    max-width: 200px;
+    max-width: 220px;
   }
 }
 @media (max-width: 1024px) {
   .custom-report-menu {
-    width: 430px;
+    width: 480px;
     min-width: 320px;
-    max-width: min(430px, calc(100vw - 16px));
+    max-width: min(480px, calc(100vw - 14px));
     left: 0;
   }
   .custom-report-item-file {
-    max-width: 150px;
+    max-width: 170px;
   }
 }
 
