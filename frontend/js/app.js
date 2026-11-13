@@ -374,7 +374,6 @@ window.appRefreshReports = async function() {
         const hasNight = group.reports.some(r => r.shift_type === 'NIGHT' || (r.shift_label && r.shift_label.includes('Night')));
         const hasBoth = hasDay && hasNight;
         const timeTag = group.upload_time ? ` at ${group.upload_time}` : '';
-        const groupUploader = group.uploaded_by_name || (group.reports[0] && (group.reports[0].uploaded_by_name || group.reports[0].uploaded_by_username)) || '';
 
         // Clean visual shift indicators: replace bulky text labels like "Dual Shifts: Day & Night"
         let shiftBadgesHtml = '';
