@@ -4150,7 +4150,7 @@ html.is-authenticated #login-modal {
   color: #f1f5f9;
   font-size: 0.74rem;
   font-weight: 600;
-  max-width: 330px;
+  max-width: 440px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap !important;
@@ -4174,8 +4174,6 @@ html.is-authenticated #login-modal {
   gap: 0.45rem;
   flex-shrink: 0;
   margin-left: auto;
-}
-  color: #475569;
 }
 
 /* Secondary Metadata Row (Account, Uploader, Timestamp, Telemetry) */
@@ -4280,7 +4278,7 @@ html.is-authenticated #login-modal {
     left: 0;
   }
   .custom-report-item-file {
-    max-width: 270px;
+    max-width: 380px;
   }
 }
 @media (max-width: 1260px) {
@@ -4291,7 +4289,7 @@ html.is-authenticated #login-modal {
     left: 0;
   }
   .custom-report-item-file {
-    max-width: 220px;
+    max-width: 320px;
   }
 }
 @media (max-width: 1024px) {
@@ -4302,7 +4300,7 @@ html.is-authenticated #login-modal {
     left: 0;
   }
   .custom-report-item-file {
-    max-width: 170px;
+    max-width: 260px;
   }
 }
 

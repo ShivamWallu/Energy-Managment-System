@@ -400,8 +400,6 @@ window.appRefreshReports = async function() {
 
         const firstRep = group.reports[0] || {};
         const groupUploader = group.uploaded_by_name || firstRep.uploaded_by_name || firstRep.uploaded_by_username || 'System Administrator';
-        const groupUname = group.uploaded_by_username || firstRep.uploaded_by_username || '';
-        const groupUnameTag = (groupUname && groupUname !== groupUploader) ? ` (@${escapeHtml(groupUname)})` : '';
 
         menuHtml += `
           <div class="custom-report-group-header">
@@ -422,7 +420,7 @@ window.appRefreshReports = async function() {
             </div>
             <div class="custom-report-group-header-sub">
               <i class="fa-regular fa-circle-user text-cyan"></i>
-              <span>Uploaded by: <strong>${escapeHtml(groupUploader)}</strong>${groupUnameTag}</span>
+              <span>Uploaded by: <strong>${escapeHtml(groupUploader)}</strong></span>
             </div>
           </div>
           <div class="custom-report-group-items">
@@ -435,17 +433,15 @@ window.appRefreshReports = async function() {
           const fname = r.filename ? escapeHtml(r.filename) : '';
           const isCur = r.id === selectedRepId;
           const uploaderName = r.uploaded_by_name || r.uploaded_by_username || 'Plant User';
-          const unameTag = (r.uploaded_by_username && r.uploaded_by_username !== r.uploaded_by_name) ? ` (@${escapeHtml(r.uploaded_by_username)})` : '';
           const kwhVal = (r.total_kwh != null && r.total_kwh > 0) ? `${Number(r.total_kwh).toLocaleString(undefined, {maximumFractionDigits:1})} kWh` : '48 intervals';
 
           menuHtml += `
-            <div class="custom-report-item ${isCur ? 'active' : ''}" data-report-id="${r.id}" onclick="window.onSelectCustomReport(${r.id})" title="${fname} • Uploaded by ${escapeHtml(uploaderName)}${unameTag} • ${kwhVal}">
+            <div class="custom-report-item ${isCur ? 'active' : ''}" data-report-id="${r.id}" onclick="window.onSelectCustomReport(${r.id})" title="${fname} • Uploaded by ${escapeHtml(uploaderName)} • ${kwhVal}">
               <div class="custom-report-item-main">
                 <span class="custom-report-shift-badge ${isNight ? 'badge-night' : 'badge-day'}">
                   ${icon} ${shiftTitle}
                 </span>
                 ${fname ? `<span class="custom-report-item-file" title="${fname}"><i class="fa-solid fa-file-excel text-emerald"></i> ${fname}</span>` : ''}
-                <span class="custom-report-item-kwh" title="Total Incomer Telemetry Energy"><i class="fa-solid fa-bolt text-amber"></i> ${kwhVal}</span>
               </div>
               <div class="custom-report-item-end">
                 ${isCur ? '<span class="custom-report-status-pill active-pill"><i class="fa-solid fa-check"></i> Active</span>' : ''}
