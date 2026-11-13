@@ -373,16 +373,38 @@ window.appRefreshReports = async function() {
         const hasDay = group.reports.some(r => r.shift_type === 'DAY' || (r.shift_label && r.shift_label.includes('Day')));
         const hasNight = group.reports.some(r => r.shift_type === 'NIGHT' || (r.shift_label && r.shift_label.includes('Night')));
         const hasBoth = hasDay && hasNight;
-        const availabilityTag = hasBoth ? 'Dual Shifts: Day & Night' : (hasDay ? 'Day Shift Only' : 'Night Shift Only');
         const timeTag = group.upload_time ? ` at ${group.upload_time}` : '';
         const groupUploader = group.uploaded_by_name || (group.reports[0] && (group.reports[0].uploaded_by_name || group.reports[0].uploaded_by_username)) || '';
+
+        // Clean visual shift indicators: replace bulky text labels like "Dual Shifts: Day & Night"
+        let shiftBadgesHtml = '';
+        if (hasBoth) {
+          shiftBadgesHtml = `
+            <div class="custom-report-group-chips" title="Dual Shifts Available: Day (☀️) &amp; Night (🌙)">
+              <span class="group-shift-chip chip-day">☀️ Day</span>
+              <span class="group-shift-chip chip-night">🌙 Night</span>
+            </div>
+          `;
+        } else if (hasDay) {
+          shiftBadgesHtml = `
+            <div class="custom-report-group-chips" title="Day Shift (☀️) Available">
+              <span class="group-shift-chip chip-day">☀️ Day</span>
+            </div>
+          `;
+        } else {
+          shiftBadgesHtml = `
+            <div class="custom-report-group-chips" title="Night Shift (🌙) Available">
+              <span class="group-shift-chip chip-night">🌙 Night</span>
+            </div>
+          `;
+        }
 
         menuHtml += `
           <div class="custom-report-group-header">
             <div class="custom-report-group-title">
               <i class="fa-regular fa-calendar-days text-cyan"></i>
               <span class="custom-report-group-date">${escapeHtml(group.shift_date_display)}</span>
-              <span class="custom-report-group-pill ${hasBoth ? 'pill-dual' : 'pill-single'}">${availabilityTag}</span>
+              ${shiftBadgesHtml}
             </div>
             <div class="custom-report-group-meta">
               <span title="Batch Uploaded on ${group.upload_date}${timeTag}"><i class="fa-regular fa-clock"></i> ${group.upload_date}${timeTag}</span>
@@ -408,12 +430,11 @@ window.appRefreshReports = async function() {
 
           menuHtml += `
             <div class="custom-report-item ${isCur ? 'active' : ''}" data-report-id="${r.id}" onclick="window.onSelectCustomReport(${r.id})">
-              <div class="custom-report-item-icon-box">
+              <div class="custom-report-item-icon-box ${isNight ? 'icon-night' : 'icon-day'}">
                 <span class="custom-report-item-icon">${icon}</span>
               </div>
               <div class="custom-report-item-body">
                 <div class="custom-report-item-top">
-                  <span class="custom-report-item-date">${escapeHtml(group.shift_date_display)}</span>
                   <span class="custom-report-shift-badge ${isNight ? 'badge-night' : 'badge-day'}">
                     ${icon} ${shiftTitle}
                   </span>
@@ -653,14 +674,32 @@ window.appRefreshReports = async function() {
       if (inputEl) inputEl.value = '';
     };
 
-    // Toggle dropdown open/close
+    // Toggle dropdown open/close with dynamic viewport bounding (Laptop overflow fix)
     const dropdownWrap = document.getElementById('custom-report-dropdown');
     const triggerBtn = document.getElementById('custom-report-trigger');
+
+    function positionReportMenu() {
+      const menu = document.getElementById('custom-report-menu');
+      if (!menu) return;
+      menu.style.left = '0px';
+      menu.style.right = 'auto';
+
+      const rect = menu.getBoundingClientRect();
+      const viewportWidth = window.innerWidth;
+      if (rect.right > viewportWidth - 14) {
+        const overflow = rect.right - (viewportWidth - 14);
+        menu.style.left = `-${Math.max(0, Math.round(overflow))}px`;
+      }
+    }
+
     if (triggerBtn && !triggerBtn.dataset.bound) {
       triggerBtn.dataset.bound = 'true';
       triggerBtn.onclick = (e) => {
         e.stopPropagation();
-        dropdownWrap?.classList.toggle('open');
+        const isOpen = dropdownWrap?.classList.toggle('open');
+        if (isOpen) {
+          positionReportMenu();
+        }
       };
     }
 
@@ -677,6 +716,12 @@ window.appRefreshReports = async function() {
           const dd = document.getElementById('custom-report-dropdown');
           if (dd) dd.classList.remove('open');
           window.closeDeleteReportModal?.();
+        }
+      });
+      window.addEventListener('resize', () => {
+        const dd = document.getElementById('custom-report-dropdown');
+        if (dd && dd.classList.contains('open')) {
+          positionReportMenu();
         }
       });
     }
