@@ -4176,6 +4176,32 @@ html.is-authenticated #login-modal {
   }
 }
 
+/* GitHub-Style Delete Modal Verification */
+.btn-copy-del:hover {
+  background: rgba(255, 255, 255, 0.12) !important;
+  color: var(--text-primary) !important;
+  border-color: rgba(255, 255, 255, 0.25) !important;
+}
+#btn-confirm-delete-report:disabled {
+  opacity: 0.45 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+  filter: grayscale(0.5);
+}
+#btn-confirm-delete-report:not(:disabled) {
+  opacity: 1 !important;
+  cursor: pointer !important;
+  pointer-events: auto !important;
+  box-shadow: 0 0 15px rgba(220, 38, 38, 0.4) !important;
+}
+#btn-confirm-delete-report:not(:disabled):hover {
+  background: #b91c1c !important;
+  border-color: #991b1b !important;
+  box-shadow: 0 0 22px rgba(220, 38, 38, 0.6) !important;
+  transform: translateY(-1px);
+}
+
 /* ==========================================================================
    ENTERPRISE INGESTION CARDS (IMAGE 1 & IMAGE 2 FIX)
    ========================================================================== */

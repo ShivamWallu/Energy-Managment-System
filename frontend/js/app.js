@@ -463,81 +463,194 @@ window.appRefreshReports = async function() {
       }
     };
 
-    // Admin Report & Batch Deletion Handlers
-    window.promptDeleteReport = (reportId, filename, shiftDate, shiftTitle, uploaderName) => {
-      const modal = document.getElementById('delete-report-modal');
-      const fnEl = document.getElementById('del-modal-filename');
-      const dsEl = document.getElementById('del-modal-date-shift');
-      const upEl = document.getElementById('del-modal-uploader');
-      const btnConfirm = document.getElementById('btn-confirm-delete-report');
+    // Admin Report & Batch Deletion Handlers (GitHub-Style Safety Verification)
+    let currentDeleteTarget = '';
+    let currentDeleteAction = null;
 
-      if (!modal) return;
-      if (fnEl) fnEl.textContent = filename || 'Shift Report';
-      if (dsEl) dsEl.textContent = `${shiftDate} • ${shiftTitle}`;
-      if (upEl) upEl.textContent = uploaderName || 'System User';
+    const setupDeleteVerification = (expectedName, actionFn, buttonLabel = 'Permanently Delete Report') => {
+      currentDeleteTarget = (expectedName || '').trim();
+      currentDeleteAction = actionFn;
+
+      const expectedEl = document.getElementById('del-modal-expected-match');
+      const inputEl = document.getElementById('del-modal-confirm-input');
+      const statusIcon = document.getElementById('del-modal-match-status');
+      const hintEl = document.getElementById('del-modal-hint');
+      const btnConfirm = document.getElementById('btn-confirm-delete-report');
+      const copyBtn = document.getElementById('btn-copy-del-match');
+      const copyText = document.getElementById('btn-copy-del-text');
+
+      if (expectedEl) expectedEl.textContent = currentDeleteTarget;
+      if (inputEl) {
+        inputEl.value = '';
+        inputEl.style.borderColor = 'var(--border-subtle)';
+        inputEl.style.boxShadow = 'none';
+      }
+      if (statusIcon) statusIcon.style.display = 'none';
+      if (hintEl) {
+        hintEl.innerHTML = `<i class="fa-solid fa-lock" style="font-size:0.7rem;"></i> <span>Button locked until typed name matches exactly.</span>`;
+        hintEl.style.color = 'var(--text-muted)';
+      }
 
       if (btnConfirm) {
-        btnConfirm.disabled = false;
-        btnConfirm.innerHTML = `<i class="fa-solid fa-trash-can"></i> Permanently Delete Report`;
+        btnConfirm.disabled = true;
+        btnConfirm.style.opacity = '0.45';
+        btnConfirm.style.cursor = 'not-allowed';
+        btnConfirm.style.boxShadow = 'none';
+        btnConfirm.innerHTML = `<i class="fa-solid fa-trash-can"></i> ${buttonLabel}`;
         btnConfirm.onclick = async () => {
+          if (btnConfirm.disabled) return;
           btnConfirm.disabled = true;
-          btnConfirm.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Deleting Report...`;
+          btnConfirm.style.opacity = '0.7';
+          btnConfirm.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Processing Deletion...`;
           try {
-            const res = await api.deleteReport(reportId);
-            showToast(res.message || 'Report deleted successfully', 'success');
-            window.closeDeleteReportModal();
-            await window.appRefreshReports();
+            await currentDeleteAction();
           } catch (err) {
-            showToast(err.message || 'Failed to delete report', 'error');
             btnConfirm.disabled = false;
-            btnConfirm.innerHTML = `<i class="fa-solid fa-trash-can"></i> Permanently Delete Report`;
+            btnConfirm.style.opacity = '1';
+            btnConfirm.innerHTML = `<i class="fa-solid fa-trash-can"></i> ${buttonLabel}`;
           }
         };
       }
+
+      if (copyBtn) {
+        copyBtn.onclick = () => {
+          if (!currentDeleteTarget) return;
+          navigator.clipboard.writeText(currentDeleteTarget).then(() => {
+            if (copyText) copyText.textContent = 'Copied!';
+            if (copyBtn) copyBtn.style.borderColor = '#10b981';
+            setTimeout(() => {
+              if (copyText) copyText.textContent = 'Copy';
+              if (copyBtn) copyBtn.style.borderColor = 'var(--border-subtle)';
+            }, 1800);
+          }).catch(() => {
+            if (inputEl) {
+              inputEl.value = currentDeleteTarget;
+              inputEl.dispatchEvent(new Event('input'));
+            }
+          });
+        };
+      }
+
+      if (inputEl) {
+        inputEl.oninput = () => {
+          const val = inputEl.value.trim();
+          const target = currentDeleteTarget.trim();
+          const isMatch = (val.toLowerCase() === target.toLowerCase()) && (val.length > 0);
+
+          if (isMatch) {
+            btnConfirm.disabled = false;
+            btnConfirm.style.opacity = '1';
+            btnConfirm.style.cursor = 'pointer';
+            btnConfirm.style.boxShadow = '0 0 15px rgba(220, 38, 38, 0.45)';
+            inputEl.style.borderColor = '#10b981';
+            inputEl.style.boxShadow = '0 0 8px rgba(16, 185, 129, 0.25)';
+            if (statusIcon) statusIcon.style.display = 'block';
+            if (hintEl) {
+              hintEl.innerHTML = `<i class="fa-solid fa-check" style="font-size:0.7rem; color:#10b981;"></i> <strong style="color:#10b981;">Name matched!</strong> Press Enter or click button to delete.`;
+              hintEl.style.color = '#10b981';
+            }
+          } else {
+            btnConfirm.disabled = true;
+            btnConfirm.style.opacity = '0.45';
+            btnConfirm.style.cursor = 'not-allowed';
+            btnConfirm.style.boxShadow = 'none';
+            if (val.length > 0) {
+              inputEl.style.borderColor = '#ef4444';
+              inputEl.style.boxShadow = '0 0 6px rgba(239, 68, 68, 0.2)';
+              if (hintEl) {
+                hintEl.innerHTML = `<i class="fa-solid fa-xmark" style="font-size:0.7rem; color:#ef4444;"></i> <span style="color:#f87171;">Name does not match yet.</span>`;
+                hintEl.style.color = '#f87171';
+              }
+            } else {
+              inputEl.style.borderColor = 'var(--border-subtle)';
+              inputEl.style.boxShadow = 'none';
+              if (hintEl) {
+                hintEl.innerHTML = `<i class="fa-solid fa-lock" style="font-size:0.7rem;"></i> <span>Button locked until typed name matches exactly.</span>`;
+                hintEl.style.color = 'var(--text-muted)';
+              }
+            }
+            if (statusIcon) statusIcon.style.display = 'none';
+          }
+        };
+
+        inputEl.onkeydown = (e) => {
+          if (e.key === 'Enter') {
+            e.preventDefault();
+            if (!btnConfirm.disabled) {
+              btnConfirm.click();
+            }
+          }
+        };
+      }
+    };
+
+    window.promptDeleteReport = (reportId, filename, shiftDate, shiftTitle, uploaderName) => {
+      const modal = document.getElementById('delete-report-modal');
+      const titleEl = document.getElementById('del-modal-title');
+      const fnEl = document.getElementById('del-modal-filename');
+      const dsEl = document.getElementById('del-modal-date-shift');
+      const upEl = document.getElementById('del-modal-uploader');
+      const inputEl = document.getElementById('del-modal-confirm-input');
+
+      if (!modal) return;
+      if (titleEl) titleEl.textContent = 'Delete SCADA Report';
+      const displayName = filename || `${shiftDate} ${shiftTitle}`;
+      if (fnEl) fnEl.textContent = displayName;
+      if (dsEl) dsEl.textContent = `${shiftDate} • ${shiftTitle}`;
+      if (upEl) upEl.textContent = uploaderName || 'System User';
+
+      setupDeleteVerification(displayName, async () => {
+        try {
+          const res = await api.deleteReport(reportId);
+          showToast(res.message || 'Report deleted successfully', 'success');
+          window.closeDeleteReportModal();
+          await window.appRefreshReports();
+        } catch (err) {
+          showToast(err.message || 'Failed to delete report', 'error');
+          throw err;
+        }
+      }, 'Permanently Delete Report');
+
       modal.classList.add('active');
+      setTimeout(() => { if (inputEl) inputEl.focus(); }, 150);
     };
 
     window.promptDeleteBatch = (batchId, shiftDate, reportCount) => {
       const modal = document.getElementById('delete-report-modal');
+      const titleEl = document.getElementById('del-modal-title');
       const fnEl = document.getElementById('del-modal-filename');
       const dsEl = document.getElementById('del-modal-date-shift');
       const upEl = document.getElementById('del-modal-uploader');
-      const btnConfirm = document.getElementById('btn-confirm-delete-report');
+      const inputEl = document.getElementById('del-modal-confirm-input');
 
       if (!modal) return;
+      if (titleEl) titleEl.textContent = 'Delete Shift Reports Batch';
+      const batchTarget = `${shiftDate} Batch`;
       if (fnEl) fnEl.textContent = `Entire Upload Batch (${reportCount} shift reports)`;
       if (dsEl) dsEl.textContent = `${shiftDate} • All Batch Reports`;
       if (upEl) upEl.textContent = 'Batch Upload';
 
-      if (btnConfirm) {
-        btnConfirm.disabled = false;
-        btnConfirm.innerHTML = `<i class="fa-solid fa-trash-can"></i> Permanently Delete Entire Batch`;
-        btnConfirm.onclick = async () => {
-          btnConfirm.disabled = true;
-          btnConfirm.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Deleting Batch...`;
-          try {
-            const res = await api.deleteReportBatch(batchId);
-            showToast(res.message || 'Batch deleted successfully', 'success');
-            window.closeDeleteReportModal();
-            await window.appRefreshReports();
-          } catch (err) {
-            showToast(err.message || 'Failed to delete batch', 'error');
-            btnConfirm.disabled = false;
-            btnConfirm.innerHTML = `<i class="fa-solid fa-trash-can"></i> Permanently Delete Entire Batch`;
-          }
-        };
-      }
+      setupDeleteVerification(batchTarget, async () => {
+        try {
+          const res = await api.deleteReportBatch(batchId);
+          showToast(res.message || 'Batch deleted successfully', 'success');
+          window.closeDeleteReportModal();
+          await window.appRefreshReports();
+        } catch (err) {
+          showToast(err.message || 'Failed to delete batch', 'error');
+          throw err;
+        }
+      }, 'Permanently Delete Entire Batch');
+
       modal.classList.add('active');
+      setTimeout(() => { if (inputEl) inputEl.focus(); }, 150);
     };
 
     window.closeDeleteReportModal = () => {
       const modal = document.getElementById('delete-report-modal');
       if (modal) modal.classList.remove('active');
-      const btnConfirm = document.getElementById('btn-confirm-delete-report');
-      if (btnConfirm) {
-        btnConfirm.disabled = false;
-        btnConfirm.innerHTML = `<i class="fa-solid fa-trash-can"></i> Permanently Delete Report`;
-      }
+      const inputEl = document.getElementById('del-modal-confirm-input');
+      if (inputEl) inputEl.value = '';
     };
 
     // Toggle dropdown open/close
