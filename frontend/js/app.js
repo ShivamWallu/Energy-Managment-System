@@ -301,13 +301,15 @@ window.appRefreshReports = async function() {
           upload_date: r.upload_date || '',
           upload_time: r.upload_time || '',
           upload_timestamp: r.upload_timestamp || '',
+          uploaded_by_name: r.uploaded_by_name || r.uploaded_by_username || '',
+          uploaded_by_username: r.uploaded_by_username || '',
           reports: []
         });
       }
       groupMap.get(gKey).reports.push(r);
     }
 
-    // Build <optgroup> for each upload batch group
+    // Build <optgroup> for native hidden select
     groupMap.forEach((group) => {
       const hasDay = group.reports.some(r => r.shift_type === 'DAY' || (r.shift_label && r.shift_label.includes('Day')));
       const hasNight = group.reports.some(r => r.shift_type === 'NIGHT' || (r.shift_label && r.shift_label.includes('Night')));
@@ -331,20 +333,22 @@ window.appRefreshReports = async function() {
 
         const opt = document.createElement('option');
         opt.value = r.id;
-        // Clean option label without repeating hours or duplicate upload timestamp
         opt.textContent = `${icon} ${group.shift_date_display} • ${shiftTitle}${fname}`;
         optGroup.appendChild(opt);
       }
       select.appendChild(optGroup);
     });
 
-    // Helper: Synchronize Custom Dropdown UI (with professional scrolling, Image 3 fix)
+    // Helper: Synchronize Custom Dropdown UI (Metadata tagging, account attribution & admin deletion)
     const syncCustomReportUI = (selectedRepId) => {
       const trigger = document.getElementById('custom-report-trigger');
       const triggerIcon = document.getElementById('custom-report-trigger-icon');
       const triggerLabel = document.getElementById('custom-report-trigger-label');
       const menu = document.getElementById('custom-report-menu');
       if (!trigger || !menu) return;
+
+      const currentUser = (typeof api !== 'undefined' && api.getUser) ? api.getUser() : null;
+      const isAdmin = !!(currentUser && currentUser.role === 'admin');
 
       const activeRep = reports.find(r => r.id === selectedRepId);
       if (activeRep) {
@@ -353,9 +357,11 @@ window.appRefreshReports = async function() {
         const shiftTitle = isNight ? 'Night Shift' : 'Day Shift';
         const fname = activeRep.filename ? ` • ${activeRep.filename}` : '';
         const dateDisp = activeRep.shift_date_display || activeRep.shift_date || 'Plant Shift';
+        const uploader = activeRep.uploaded_by_name || activeRep.uploaded_by_username || '';
+        const upMeta = uploader ? ` | Uploaded by: ${uploader}` : '';
         if (triggerLabel) {
           triggerLabel.textContent = `${dateDisp} • ${shiftTitle}${fname}`;
-          triggerLabel.title = `${dateDisp} • ${shiftTitle}${fname}`;
+          triggerLabel.title = `${dateDisp} • ${shiftTitle}${fname}${upMeta} (${activeRep.upload_timestamp || ''})`;
         }
       } else {
         if (triggerLabel) triggerLabel.textContent = 'No Report Selected';
@@ -369,12 +375,24 @@ window.appRefreshReports = async function() {
         const hasBoth = hasDay && hasNight;
         const availabilityTag = hasBoth ? 'Dual Shifts: Day & Night' : (hasDay ? 'Day Shift Only' : 'Night Shift Only');
         const timeTag = group.upload_time ? ` at ${group.upload_time}` : '';
-        const dateTag = group.upload_date ? ` • Uploaded: ${group.upload_date}${timeTag}` : '';
+        const groupUploader = group.uploaded_by_name || (group.reports[0] && (group.reports[0].uploaded_by_name || group.reports[0].uploaded_by_username)) || '';
 
         menuHtml += `
           <div class="custom-report-group-header">
-            <i class="fa-regular fa-calendar-days text-cyan"></i>
-            <span>${escapeHtml(group.shift_date_display)} (${availabilityTag}${dateTag})</span>
+            <div class="custom-report-group-title">
+              <i class="fa-regular fa-calendar-days text-cyan"></i>
+              <span class="custom-report-group-date">${escapeHtml(group.shift_date_display)}</span>
+              <span class="custom-report-group-pill ${hasBoth ? 'pill-dual' : 'pill-single'}">${availabilityTag}</span>
+            </div>
+            <div class="custom-report-group-meta">
+              <span title="Batch Uploaded on ${group.upload_date}${timeTag}"><i class="fa-regular fa-clock"></i> ${group.upload_date}${timeTag}</span>
+              ${groupUploader ? `<span class="group-user-tag" title="Uploaded by ${escapeHtml(groupUploader)}"><i class="fa-solid fa-user-circle"></i> ${escapeHtml(groupUploader)}</span>` : ''}
+              ${isAdmin && group.batch_id ? `
+                <button type="button" class="btn-report-batch-delete" title="Admin: Delete entire upload batch" onclick="event.stopPropagation(); window.promptDeleteBatch('${group.batch_id}', '${escapeHtml(group.shift_date_display)}', ${group.reports.length})">
+                  <i class="fa-solid fa-trash-can"></i> Batch
+                </button>
+              ` : ''}
+            </div>
           </div>
         `;
 
@@ -384,17 +402,46 @@ window.appRefreshReports = async function() {
           const shiftTitle = isNight ? 'Night Shift' : 'Day Shift';
           const fname = r.filename ? escapeHtml(r.filename) : '';
           const isCur = r.id === selectedRepId;
+          const uploaderName = r.uploaded_by_name || r.uploaded_by_username || 'Plant User';
+          const unameTag = (r.uploaded_by_username && r.uploaded_by_username !== r.uploaded_by_name) ? ` (@${escapeHtml(r.uploaded_by_username)})` : '';
+          const kwhVal = (r.total_kwh != null && r.total_kwh > 0) ? `${Number(r.total_kwh).toLocaleString(undefined, {maximumFractionDigits:1})} kWh` : '48 intervals';
 
           menuHtml += `
             <div class="custom-report-item ${isCur ? 'active' : ''}" data-report-id="${r.id}" onclick="window.onSelectCustomReport(${r.id})">
-              <span class="custom-report-item-icon">${icon}</span>
-              <div class="custom-report-item-text">
-                <span style="font-weight:700;">${escapeHtml(group.shift_date_display)}</span>
-                <span style="opacity:0.5;">•</span>
-                <span style="color:${isNight ? '#c084fc' : '#fbbf24'}; font-weight:600;">${shiftTitle}</span>
-                ${fname ? `<span style="opacity:0.5;">•</span><span class="custom-report-item-file" title="${fname}">${fname}</span>` : ''}
+              <div class="custom-report-item-icon-box">
+                <span class="custom-report-item-icon">${icon}</span>
               </div>
-              ${isCur ? '<i class="fa-solid fa-check text-cyan custom-report-check"></i>' : ''}
+              <div class="custom-report-item-body">
+                <div class="custom-report-item-top">
+                  <span class="custom-report-item-date">${escapeHtml(group.shift_date_display)}</span>
+                  <span class="custom-report-shift-badge ${isNight ? 'badge-night' : 'badge-day'}">
+                    ${icon} ${shiftTitle}
+                  </span>
+                  ${fname ? `<span class="custom-report-item-file" title="${fname}"><i class="fa-regular fa-file-excel"></i> ${fname}</span>` : ''}
+                </div>
+                <div class="custom-report-item-bottom">
+                  <span class="custom-report-meta-item uploader" title="Uploaded by ${escapeHtml(uploaderName)}${unameTag}">
+                    <i class="fa-solid fa-user-circle"></i>
+                    <strong>${escapeHtml(uploaderName)}</strong>${unameTag ? `<span class="meta-uname">${unameTag}</span>` : ''}
+                  </span>
+                  <span class="custom-report-meta-bullet">•</span>
+                  <span class="custom-report-meta-item time" title="Upload Date &amp; Time: ${r.upload_date} ${r.upload_time}">
+                    <i class="fa-regular fa-clock"></i> ${r.upload_date}${r.upload_time ? ` at ${r.upload_time}` : ''}
+                  </span>
+                  <span class="custom-report-meta-bullet">•</span>
+                  <span class="custom-report-meta-item kwh" title="Total Incomer Energy">
+                    <i class="fa-solid fa-bolt text-amber"></i> ${kwhVal}
+                  </span>
+                </div>
+              </div>
+              <div class="custom-report-item-end">
+                ${isCur ? '<span class="custom-report-status-pill active-pill"><i class="fa-solid fa-check"></i> Active</span>' : ''}
+                ${isAdmin ? `
+                  <button type="button" class="btn-report-delete" title="Admin: Delete this report &amp; SCADA data" onclick="event.stopPropagation(); window.promptDeleteReport(${r.id}, '${escapeHtml(r.filename || shiftTitle)}', '${escapeHtml(group.shift_date_display)}', '${shiftTitle}', '${escapeHtml(uploaderName)}')">
+                    <i class="fa-regular fa-trash-can"></i>
+                  </button>
+                ` : ''}
+              </div>
             </div>
           `;
         }
@@ -413,6 +460,83 @@ window.appRefreshReports = async function() {
         if (rep) {
           showToast(`Loaded ${rep.shift_label || 'Report'} (${rep.shift_date_display || rep.shift_date})`, 'info');
         }
+      }
+    };
+
+    // Admin Report & Batch Deletion Handlers
+    window.promptDeleteReport = (reportId, filename, shiftDate, shiftTitle, uploaderName) => {
+      const modal = document.getElementById('delete-report-modal');
+      const fnEl = document.getElementById('del-modal-filename');
+      const dsEl = document.getElementById('del-modal-date-shift');
+      const upEl = document.getElementById('del-modal-uploader');
+      const btnConfirm = document.getElementById('btn-confirm-delete-report');
+
+      if (!modal) return;
+      if (fnEl) fnEl.textContent = filename || 'Shift Report';
+      if (dsEl) dsEl.textContent = `${shiftDate} • ${shiftTitle}`;
+      if (upEl) upEl.textContent = uploaderName || 'System User';
+
+      if (btnConfirm) {
+        btnConfirm.disabled = false;
+        btnConfirm.innerHTML = `<i class="fa-solid fa-trash-can"></i> Permanently Delete Report`;
+        btnConfirm.onclick = async () => {
+          btnConfirm.disabled = true;
+          btnConfirm.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Deleting Report...`;
+          try {
+            const res = await api.deleteReport(reportId);
+            showToast(res.message || 'Report deleted successfully', 'success');
+            window.closeDeleteReportModal();
+            await window.appRefreshReports();
+          } catch (err) {
+            showToast(err.message || 'Failed to delete report', 'error');
+            btnConfirm.disabled = false;
+            btnConfirm.innerHTML = `<i class="fa-solid fa-trash-can"></i> Permanently Delete Report`;
+          }
+        };
+      }
+      modal.classList.add('active');
+    };
+
+    window.promptDeleteBatch = (batchId, shiftDate, reportCount) => {
+      const modal = document.getElementById('delete-report-modal');
+      const fnEl = document.getElementById('del-modal-filename');
+      const dsEl = document.getElementById('del-modal-date-shift');
+      const upEl = document.getElementById('del-modal-uploader');
+      const btnConfirm = document.getElementById('btn-confirm-delete-report');
+
+      if (!modal) return;
+      if (fnEl) fnEl.textContent = `Entire Upload Batch (${reportCount} shift reports)`;
+      if (dsEl) dsEl.textContent = `${shiftDate} • All Batch Reports`;
+      if (upEl) upEl.textContent = 'Batch Upload';
+
+      if (btnConfirm) {
+        btnConfirm.disabled = false;
+        btnConfirm.innerHTML = `<i class="fa-solid fa-trash-can"></i> Permanently Delete Entire Batch`;
+        btnConfirm.onclick = async () => {
+          btnConfirm.disabled = true;
+          btnConfirm.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Deleting Batch...`;
+          try {
+            const res = await api.deleteReportBatch(batchId);
+            showToast(res.message || 'Batch deleted successfully', 'success');
+            window.closeDeleteReportModal();
+            await window.appRefreshReports();
+          } catch (err) {
+            showToast(err.message || 'Failed to delete batch', 'error');
+            btnConfirm.disabled = false;
+            btnConfirm.innerHTML = `<i class="fa-solid fa-trash-can"></i> Permanently Delete Entire Batch`;
+          }
+        };
+      }
+      modal.classList.add('active');
+    };
+
+    window.closeDeleteReportModal = () => {
+      const modal = document.getElementById('delete-report-modal');
+      if (modal) modal.classList.remove('active');
+      const btnConfirm = document.getElementById('btn-confirm-delete-report');
+      if (btnConfirm) {
+        btnConfirm.disabled = false;
+        btnConfirm.innerHTML = `<i class="fa-solid fa-trash-can"></i> Permanently Delete Report`;
       }
     };
 
@@ -439,6 +563,7 @@ window.appRefreshReports = async function() {
         if (e.key === 'Escape') {
           const dd = document.getElementById('custom-report-dropdown');
           if (dd) dd.classList.remove('open');
+          window.closeDeleteReportModal?.();
         }
       });
     }

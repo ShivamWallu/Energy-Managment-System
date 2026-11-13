@@ -3751,23 +3751,23 @@ html.is-authenticated #login-modal {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  min-width: 480px;
-  max-width: 580px;
-  max-height: 280px; /* Constrained height with professional smooth scrolling */
+  min-width: 560px;
+  max-width: 680px;
+  max-height: 400px; /* Generous height with smooth scrolling for enterprise reports */
   overflow-y: auto;
   overflow-x: hidden;
   background: #0d1527 !important; /* 100% Solid Deep Navy - No transparency */
-  border: 1px solid rgba(0, 210, 255, 0.4) !important;
+  border: 1px solid rgba(0, 210, 255, 0.45) !important;
   border-radius: var(--radius-md);
-  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.85), 0 0 20px rgba(0, 210, 255, 0.15) !important;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(0, 210, 255, 0.18) !important;
   z-index: 1050;
-  padding: 0.45rem;
+  padding: 0.55rem;
   animation: dropdownFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 [data-theme="light"] .custom-report-menu {
   background: #ffffff !important; /* 100% Solid White - No transparency */
   border-color: #cbd5e1 !important;
-  box-shadow: 0 16px 36px rgba(15, 23, 42, 0.2), 0 4px 10px rgba(15, 23, 42, 0.05) !important;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.22), 0 4px 12px rgba(15, 23, 42, 0.08) !important;
 }
 .custom-report-dropdown.open .custom-report-menu {
   display: block;
@@ -3795,21 +3795,21 @@ html.is-authenticated #login-modal {
   background: #94a3b8;
 }
 
+/* Group Header: Date, Session Tags, Uploader & Batch Controls */
 .custom-report-group-header {
-  font-size: 0.72rem;
+  font-size: 0.73rem;
   font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   color: var(--accent-cyan);
-  padding: 0.45rem 0.65rem 0.3rem 0.65rem;
+  padding: 0.45rem 0.75rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  margin-top: 0.35rem;
-  margin-bottom: 0.25rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.35rem;
   background: rgba(0, 210, 255, 0.08);
-  border-radius: 4px;
+  border-radius: 6px;
   display: flex;
   align-items: center;
-  gap: 0.45rem;
+  justify-content: space-between;
+  gap: 0.5rem;
 }
 .custom-report-group-header:first-child {
   margin-top: 0;
@@ -3819,33 +3819,126 @@ html.is-authenticated #login-modal {
   background: #f1f5f9;
   border-bottom-color: #e2e8f0;
 }
-
-.custom-report-item {
+.custom-report-group-title {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.custom-report-group-date {
+  font-weight: 800;
+  color: var(--text-primary);
+}
+.custom-report-group-pill {
+  font-size: 0.65rem;
+  padding: 0.12rem 0.45rem;
+  border-radius: 20px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.custom-report-group-pill.pill-dual {
+  background: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.4);
+}
+[data-theme="light"] .custom-report-group-pill.pill-dual {
+  background: #f3e8ff;
+  color: #7e22ce;
+  border-color: #d8b4fe;
+}
+.custom-report-group-pill.pill-single {
+  background: rgba(14, 165, 233, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(14, 165, 233, 0.35);
+}
+[data-theme="light"] .custom-report-group-pill.pill-single {
+  background: #e0f2fe;
+  color: #0369a1;
+  border-color: #bae6fd;
+}
+.custom-report-group-meta {
+  font-size: 0.70rem;
+  color: var(--text-muted);
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 0.45rem 0.65rem;
-  border-radius: 6px;
+  font-weight: 500;
+}
+.custom-report-group-meta .group-user-tag {
+  color: var(--accent-cyan);
+  font-weight: 600;
+}
+[data-theme="light"] .custom-report-group-meta .group-user-tag {
+  color: #0284c7;
+}
+
+/* Batch Delete Button */
+.btn-report-batch-delete {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
   transition: all 0.15s ease;
-  font-size: 0.81rem;
+}
+.btn-report-batch-delete:hover {
+  background: #dc2626;
+  color: #ffffff;
+  border-color: #b91c1c;
+  transform: scale(1.05);
+}
+[data-theme="light"] .btn-report-batch-delete {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+[data-theme="light"] .btn-report-batch-delete:hover {
+  background: #dc2626;
+  color: #ffffff;
+}
+
+/* Individual Report Items */
+.custom-report-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.55rem 0.75rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+  font-size: 0.82rem;
   color: var(--text-primary);
-  margin-bottom: 2px;
-  border: 1px solid transparent;
-  background: transparent;
+  margin-bottom: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(255, 255, 255, 0.02);
+  position: relative;
 }
 .custom-report-item:hover {
-  background: rgba(0, 210, 255, 0.12);
-  border-color: rgba(0, 210, 255, 0.25);
+  background: rgba(0, 210, 255, 0.10);
+  border-color: rgba(0, 210, 255, 0.35);
+  transform: translateX(2px);
+}
+[data-theme="light"] .custom-report-item {
+  border-color: #f1f5f9;
+  background: #fafafa;
 }
 [data-theme="light"] .custom-report-item:hover {
   background: #f0f9ff;
   border-color: #bae6fd;
+  transform: translateX(2px);
 }
 .custom-report-item.active {
-  background: #142342 !important; /* Solid dark active state */
-  border-color: rgba(0, 210, 255, 0.5) !important;
-  font-weight: 700;
+  background: #142342 !important;
+  border-color: rgba(0, 210, 255, 0.6) !important;
+  box-shadow: 0 0 12px rgba(0, 210, 255, 0.2);
 }
 [data-theme="light"] .custom-report-item.active {
   background: #e0f2fe !important;
@@ -3853,19 +3946,70 @@ html.is-authenticated #login-modal {
   color: #0369a1;
 }
 
-.custom-report-item-icon {
-  font-size: 0.95rem;
-  flex-shrink: 0;
-  line-height: 1;
-}
-.custom-report-item-text {
+.custom-report-item-icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
   display: flex;
   align-items: center;
-  gap: 0.35rem;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  flex-shrink: 0;
+  font-size: 1.05rem;
+}
+[data-theme="light"] .custom-report-item-icon-box {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+}
+
+.custom-report-item-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
   flex: 1;
   min-width: 0;
-  overflow: hidden;
+}
+
+.custom-report-item-top {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
   white-space: nowrap;
+  overflow: hidden;
+}
+.custom-report-item-date {
+  font-weight: 700;
+  color: var(--text-primary);
+  font-size: 0.84rem;
+}
+.custom-report-shift-badge {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.12rem 0.5rem;
+  border-radius: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+.custom-report-shift-badge.badge-day {
+  background: rgba(245, 158, 11, 0.2);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+[data-theme="light"] .custom-report-shift-badge.badge-day {
+  background: #fef3c7;
+  color: #b45309;
+  border-color: #fde68a;
+}
+.custom-report-shift-badge.badge-night {
+  background: rgba(168, 85, 247, 0.2);
+  color: #c084fc;
+  border: 1px solid rgba(168, 85, 247, 0.35);
+}
+[data-theme="light"] .custom-report-shift-badge.badge-night {
+  background: #ede9fe;
+  color: #6d28d9;
+  border-color: #ddd6fe;
 }
 .custom-report-item-file {
   color: var(--text-muted);
@@ -3874,10 +4018,90 @@ html.is-authenticated #login-modal {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.custom-report-check {
+
+/* Secondary Metadata Row (Account, Uploader, Timestamp, Telemetry) */
+.custom-report-item-bottom {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.custom-report-meta-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.28rem;
+}
+.custom-report-meta-item.uploader strong {
+  color: var(--accent-cyan);
+}
+[data-theme="light"] .custom-report-meta-item.uploader strong {
+  color: #0284c7;
+}
+.custom-report-meta-item .meta-uname {
+  opacity: 0.75;
+  font-size: 0.68rem;
+}
+.custom-report-meta-bullet {
+  opacity: 0.4;
+  font-size: 0.65rem;
+}
+
+.custom-report-item-end {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
   margin-left: auto;
-  font-size: 0.8rem;
   flex-shrink: 0;
+}
+.custom-report-status-pill.active-pill {
+  font-size: 0.68rem;
+  font-weight: 700;
+  padding: 0.15rem 0.5rem;
+  border-radius: 12px;
+  background: rgba(0, 210, 255, 0.2);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(0, 210, 255, 0.45);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+[data-theme="light"] .custom-report-status-pill.active-pill {
+  background: #e0f2fe;
+  color: #0369a1;
+  border-color: #7dd3fc;
+}
+
+/* Admin Delete Icon Button */
+.btn-report-delete {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--text-muted);
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  padding: 0;
+}
+.btn-report-delete:hover {
+  background: rgba(239, 68, 68, 0.18);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #f87171;
+  transform: scale(1.1);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+}
+[data-theme="light"] .btn-report-delete:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #b91c1c;
 }
 
 /* ==========================================================================

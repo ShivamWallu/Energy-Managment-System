@@ -47,9 +47,6 @@ def get_dashboard_data(
     current_user: User = Depends(get_current_user)
 ):
     query = db.query(ReportFile)
-    if current_user:
-        query = query.filter(ReportFile.uploaded_by_user_id == current_user.id)
-
     if report_id:
         reports = query.filter(ReportFile.id == report_id).all()
         if not reports:
@@ -371,8 +368,6 @@ def get_expeller_detail(
         reports = db.query(ReportFile).filter(ReportFile.id == report_id).all()
     else:
         q = db.query(ReportFile)
-        if current_user:
-            q = q.filter(ReportFile.uploaded_by_user_id == current_user.id)
         reports = q.order_by(ReportFile.id.desc()).all()
 
     if not reports:
@@ -665,8 +660,6 @@ def get_kohlu_detail(
         reports = db.query(ReportFile).filter(ReportFile.id == report_id).all()
     else:
         q = db.query(ReportFile)
-        if current_user:
-            q = q.filter(ReportFile.uploaded_by_user_id == current_user.id)
         reports = q.order_by(ReportFile.id.desc()).all()
 
     if not reports:

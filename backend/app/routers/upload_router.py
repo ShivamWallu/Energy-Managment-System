@@ -308,13 +308,14 @@ def download_standard_template_csv():
 @router.get("/list")
 def list_reports(
     only_my_uploads: bool = False,
-    all_users: bool = False,
+    all_users: bool = True,
     db: Session = Depends(get_db), 
     current_user: User = Depends(get_current_user)
 ):
     query = db.query(ReportFile)
-    # Strictly scope to logged-in user's own uploads by default per user requirement
-    if current_user and not all_users:
+    # Dynamic Dropdown Population: All uploaded plant reports are visible across the system for all users.
+    # If a user explicitly toggles 'only_my_uploads=true', filter by the logged-in user's account.
+    if only_my_uploads and current_user:
         query = query.filter(ReportFile.uploaded_by_user_id == current_user.id)
     reports = query.order_by(ReportFile.id.desc()).all()
     out = []
@@ -448,9 +449,66 @@ def delete_report(report_id: int, db: Session = Depends(get_db), current_user: U
     rep = db.query(ReportFile).filter(ReportFile.id == report_id).first()
     if not rep:
         raise HTTPException(status_code=404, detail="Report file not found.")
+    filename = rep.filename
+
+    # Delete physical backup file if present in BACKUP_DIR
+    if BACKUP_DIR and os.path.exists(BACKUP_DIR):
+        for f_path in glob.glob(os.path.join(BACKUP_DIR, f"*_{os.path.basename(filename).replace(' ', '_')}")):
+            try:
+                os.remove(f_path)
+            except Exception:
+                pass
+
     db.delete(rep)
     db.commit()
-    return {"message": f"Report ID {report_id} deleted."}
+
+    log_activity(
+        db=db,
+        activity_type="REPORT_DELETE",
+        description=f"Admin '{current_user.username}' deleted Report #{report_id} ('{filename}') and all associated telemetry records.",
+        user_id=current_user.id,
+        username=current_user.username,
+        email=current_user.email,
+        status="SUCCESS"
+    )
+
+    return {"message": f"Report #{report_id} ('{filename}') deleted successfully.", "id": report_id}
+
+@router.delete("/batch/{batch_id}", dependencies=[Depends(require_role(["admin"]))])
+def delete_report_batch(batch_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    all_reps = db.query(ReportFile).all()
+    batch_reps = [
+        r for r in all_reps 
+        if (r.metadata_json or {}).get("batch_id") == batch_id or 
+           (r.upload_timestamp and r.upload_timestamp.strftime("%Y%m%d_%H%M") == batch_id) or
+           batch_id == f"batch_{r.id}"
+    ]
+    if not batch_reps:
+        raise HTTPException(status_code=404, detail="Report batch not found.")
+
+    deleted_names = []
+    for rep in batch_reps:
+        deleted_names.append(rep.filename)
+        if BACKUP_DIR and os.path.exists(BACKUP_DIR):
+            for f_path in glob.glob(os.path.join(BACKUP_DIR, f"*_{os.path.basename(rep.filename).replace(' ', '_')}")):
+                try:
+                    os.remove(f_path)
+                except Exception:
+                    pass
+        db.delete(rep)
+    db.commit()
+
+    log_activity(
+        db=db,
+        activity_type="REPORT_DELETE",
+        description=f"Admin '{current_user.username}' deleted batch '{batch_id}' ({len(deleted_names)} reports: {', '.join(deleted_names)}).",
+        user_id=current_user.id,
+        username=current_user.username,
+        email=current_user.email,
+        status="SUCCESS"
+    )
+
+    return {"message": f"Batch '{batch_id}' ({len(deleted_names)} reports) deleted successfully.", "count": len(deleted_names)}
 
 @router.get("/backups/list")
 def get_backups_list(current_user: User = Depends(get_current_user)):

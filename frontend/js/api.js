@@ -271,6 +271,14 @@ const api = {
     return await this.request(`/reports/list${q}`);
   },
 
+  async deleteReport(reportId) {
+    return await this.request(`/reports/${reportId}`, { method: 'DELETE' });
+  },
+
+  async deleteReportBatch(batchId) {
+    return await this.request(`/reports/batch/${encodeURIComponent(batchId)}`, { method: 'DELETE' });
+  },
+
   async getBackupsList() {
     return await this.request('/reports/backups/list');
   },
