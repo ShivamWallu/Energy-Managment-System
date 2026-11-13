@@ -429,31 +429,16 @@ window.appRefreshReports = async function() {
           const kwhVal = (r.total_kwh != null && r.total_kwh > 0) ? `${Number(r.total_kwh).toLocaleString(undefined, {maximumFractionDigits:1})} kWh` : '48 intervals';
 
           menuHtml += `
-            <div class="custom-report-item ${isCur ? 'active' : ''}" data-report-id="${r.id}" onclick="window.onSelectCustomReport(${r.id})">
+            <div class="custom-report-item ${isCur ? 'active' : ''}" data-report-id="${r.id}" onclick="window.onSelectCustomReport(${r.id})" title="${fname} • Uploaded by ${escapeHtml(uploaderName)}${unameTag} on ${r.upload_date}${r.upload_time ? ' at ' + r.upload_time : ''} • ${kwhVal}">
               <div class="custom-report-item-icon-box ${isNight ? 'icon-night' : 'icon-day'}">
                 <span class="custom-report-item-icon">${icon}</span>
               </div>
               <div class="custom-report-item-body">
-                <div class="custom-report-item-top">
-                  <span class="custom-report-shift-badge ${isNight ? 'badge-night' : 'badge-day'}">
-                    ${icon} ${shiftTitle}
-                  </span>
-                  ${fname ? `<span class="custom-report-item-file" title="${fname}"><i class="fa-solid fa-file-excel text-emerald"></i> ${fname}</span>` : ''}
-                </div>
-                <div class="custom-report-item-bottom">
-                  <span class="custom-report-meta-item uploader" title="Uploaded by ${escapeHtml(uploaderName)}${unameTag}">
-                    <i class="fa-solid fa-user-circle"></i>
-                    <strong>${escapeHtml(uploaderName)}</strong>${unameTag ? `<span class="meta-uname">${unameTag}</span>` : ''}
-                  </span>
-                  <span class="custom-report-meta-bullet">•</span>
-                  <span class="custom-report-meta-item time" title="Upload Date &amp; Time: ${r.upload_date} ${r.upload_time}">
-                    <i class="fa-regular fa-clock"></i> ${r.upload_date}${r.upload_time ? ` at ${r.upload_time}` : ''}
-                  </span>
-                  <span class="custom-report-meta-bullet">•</span>
-                  <span class="custom-report-meta-item kwh" title="Total Incomer Energy">
-                    <i class="fa-solid fa-bolt text-amber"></i> ${kwhVal}
-                  </span>
-                </div>
+                <span class="custom-report-shift-badge ${isNight ? 'badge-night' : 'badge-day'}">
+                  ${icon} ${shiftTitle}
+                </span>
+                ${fname ? `<span class="custom-report-item-file" title="${fname}"><i class="fa-solid fa-file-excel text-emerald"></i> ${fname}</span>` : ''}
+                <span class="custom-report-item-kwh" title="Total Incomer Telemetry Energy"><i class="fa-solid fa-bolt text-amber"></i> ${kwhVal}</span>
               </div>
               <div class="custom-report-item-end">
                 ${isCur ? '<span class="custom-report-status-pill active-pill"><i class="fa-solid fa-check"></i> Active</span>' : ''}
