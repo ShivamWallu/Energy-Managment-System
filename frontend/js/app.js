@@ -325,51 +325,6 @@ window.appRefreshReports = async function(silent = false) {
       }
     };
 
-    // Helper: Synchronize quick switcher Day / Night radio buttons and dynamic visibility
-    const syncRadioButtons = () => {
-      const curReport = reports.find(r => r.id === activeReportId);
-      if (!curReport) return;
-
-      // Group sibling reports in the same upload batch session (or same shift date & upload timestamp)
-      const curBatch = curReport.batch_id;
-      const siblingReports = reports.filter(r => 
-        (curBatch && r.batch_id === curBatch) || 
-        (r.shift_date === curReport.shift_date && r.upload_date === curReport.upload_date && r.upload_time === curReport.upload_time)
-      );
-
-      const dayExists = siblingReports.some(r => r.shift_type === 'DAY' || (r.shift_label && r.shift_label.includes('Day')));
-      const nightExists = siblingReports.some(r => r.shift_type === 'NIGHT' || (r.shift_label && r.shift_label.includes('Night')));
-
-      // Strictly show only the button(s) uploaded for THIS BATCH / SESSION
-      // If only Day shift was uploaded in this batch, show only Day button.
-      // If only Night shift was uploaded, show only Night button.
-      // If both shifts were uploaded, show both buttons.
-      if (lblDay) {
-        lblDay.style.display = dayExists ? 'inline-flex' : 'none';
-      }
-      if (lblNight) {
-        lblNight.style.display = nightExists ? 'inline-flex' : 'none';
-      }
-      if (radioContainer) {
-        radioContainer.style.display = (dayExists || nightExists) ? 'inline-flex' : 'none';
-      }
-
-      const isCurNight = (curReport.shift_type === 'NIGHT') || (curReport.shift_label && curReport.shift_label.includes('Night'));
-
-      if (lblDay && lblNight) {
-        if (isCurNight) {
-          lblNight.classList.add('active-night');
-          lblDay.classList.remove('active-day');
-          if (rdoNight) rdoNight.checked = true;
-        } else {
-          lblDay.classList.add('active-day');
-          lblNight.classList.remove('active-night');
-          if (rdoDay) rdoDay.checked = true;
-        }
-      }
-    };
-    window.syncShiftRadioButtons = syncRadioButtons;
-
     // Group reports by upload session / batch and shift date
     const groupMap = new Map();
     for (const r of reports) {
@@ -416,6 +371,54 @@ window.appRefreshReports = async function(silent = false) {
       }
       groupMap.get(gKey).reports.push(r);
     }
+
+    // Helper: Synchronize quick switcher Day / Night radio buttons and dynamic visibility
+    const syncRadioButtons = () => {
+      const curReport = reports.find(r => r.id === activeReportId);
+      if (!curReport) {
+        if (radioContainer) radioContainer.style.display = 'none';
+        return;
+      }
+
+      // Find the exact group containing the active report
+      let currentGroup = null;
+      groupMap.forEach((grp) => {
+        if (grp.reports.some(r => r.id === activeReportId)) {
+          currentGroup = grp;
+        }
+      });
+
+      const dayExists = currentGroup ? currentGroup.reports.some(r => r.shift_type === 'DAY' || (r.shift_label && r.shift_label.includes('Day'))) : false;
+      const nightExists = currentGroup ? currentGroup.reports.some(r => r.shift_type === 'NIGHT' || (r.shift_label && r.shift_label.includes('Night'))) : false;
+      const hasBothShifts = dayExists && nightExists;
+
+      // Strict user requirement:
+      // "ager sirph ekk file ka data hai means sirph night ka ya phir day ka to dono button nhi aane chahiye ager dono hai aane chahiye"
+      if (hasBothShifts) {
+        if (radioContainer) radioContainer.style.display = 'inline-flex';
+        if (lblDay) lblDay.style.display = 'inline-flex';
+        if (lblNight) lblNight.style.display = 'inline-flex';
+
+        const isCurNight = (curReport.shift_type === 'NIGHT') || (curReport.shift_label && curReport.shift_label.includes('Night'));
+        if (lblDay && lblNight) {
+          if (isCurNight) {
+            lblNight.classList.add('active-night');
+            lblDay.classList.remove('active-day');
+            if (rdoNight) rdoNight.checked = true;
+          } else {
+            lblDay.classList.add('active-day');
+            lblNight.classList.remove('active-night');
+            if (rdoDay) rdoDay.checked = true;
+          }
+        }
+      } else {
+        // Only a single shift file exists (Day only or Night only) -> hide switcher buttons
+        if (radioContainer) radioContainer.style.display = 'none';
+        if (lblDay) lblDay.style.display = 'none';
+        if (lblNight) lblNight.style.display = 'none';
+      }
+    };
+    window.syncShiftRadioButtons = syncRadioButtons;
 
     // Build <optgroup> for native hidden select
     groupMap.forEach((group) => {
@@ -863,37 +866,20 @@ window.appRefreshReports = async function(silent = false) {
     // 1-Click Day Shift Radio Button handler
     if (lblDay) {
       lblDay.onclick = async (e) => {
-        const curReport = reports.find(r => r.id === activeReportId);
-        const curBatch = curReport ? curReport.batch_id : null;
-        const curDate = curReport ? curReport.shift_date : null;
+        let currentGroup = null;
+        groupMap.forEach((grp) => {
+          if (grp.reports.some(r => r.id === activeReportId)) currentGroup = grp;
+        });
 
-        // 1. Try finding Day Shift within the same upload batch first
-        let targetDayReport = reports.find(r => 
-          curBatch && r.batch_id === curBatch && 
-          (r.shift_type === 'DAY' || (r.shift_label && r.shift_label.includes('Day')))
-        );
-
-        // 2. If not found in batch, search by same shift date
-        if (!targetDayReport) {
-          targetDayReport = reports.find(r => 
-            r.shift_date === curDate && 
-            (r.shift_type === 'DAY' || (r.shift_label && r.shift_label.includes('Day')))
-          );
-        }
-
-        // 3. Fall back to any latest Day report
-        if (!targetDayReport) {
-          targetDayReport = reports.find(r => r.shift_type === 'DAY' || (r.shift_label && r.shift_label.includes('Day')));
-        }
+        const targetDayReport = currentGroup
+          ? currentGroup.reports.find(r => r.shift_type === 'DAY' || (r.shift_label && r.shift_label.includes('Day')))
+          : null;
 
         if (targetDayReport) {
           if (activeReportId !== targetDayReport.id) {
             await reloadAllPagesForReport(targetDayReport.id);
             showToast(`Switched to ☀️ Day Shift (${targetDayReport.shift_date_display || targetDayReport.shift_date})`, 'info');
           }
-        } else {
-          showToast(`No Day Shift report uploaded${curReport ? ' for ' + curReport.shift_date_display : ''}`, 'warning');
-          syncRadioButtons();
         }
       };
     }
@@ -901,37 +887,20 @@ window.appRefreshReports = async function(silent = false) {
     // 1-Click Night Shift Radio Button handler
     if (lblNight) {
       lblNight.onclick = async (e) => {
-        const curReport = reports.find(r => r.id === activeReportId);
-        const curBatch = curReport ? curReport.batch_id : null;
-        const curDate = curReport ? curReport.shift_date : null;
+        let currentGroup = null;
+        groupMap.forEach((grp) => {
+          if (grp.reports.some(r => r.id === activeReportId)) currentGroup = grp;
+        });
 
-        // 1. Try finding Night Shift within the same upload batch first
-        let targetNightReport = reports.find(r => 
-          curBatch && r.batch_id === curBatch && 
-          (r.shift_type === 'NIGHT' || (r.shift_label && r.shift_label.includes('Night')))
-        );
-
-        // 2. If not found in batch, search by same shift date
-        if (!targetNightReport) {
-          targetNightReport = reports.find(r => 
-            r.shift_date === curDate && 
-            (r.shift_type === 'NIGHT' || (r.shift_label && r.shift_label.includes('Night')))
-          );
-        }
-
-        // 3. Fall back to any latest Night report
-        if (!targetNightReport) {
-          targetNightReport = reports.find(r => r.shift_type === 'NIGHT' || (r.shift_label && r.shift_label.includes('Night')));
-        }
+        const targetNightReport = currentGroup
+          ? currentGroup.reports.find(r => r.shift_type === 'NIGHT' || (r.shift_label && r.shift_label.includes('Night')))
+          : null;
 
         if (targetNightReport) {
           if (activeReportId !== targetNightReport.id) {
             await reloadAllPagesForReport(targetNightReport.id);
             showToast(`Switched to 🌙 Night Shift (${targetNightReport.shift_date_display || targetNightReport.shift_date})`, 'info');
           }
-        } else {
-          showToast(`No Night Shift report uploaded${curReport ? ' for ' + curReport.shift_date_display : ''}`, 'warning');
-          syncRadioButtons();
         }
       };
     }
