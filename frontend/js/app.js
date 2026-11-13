@@ -417,7 +417,7 @@ window.appRefreshReports = async function() {
                   <span class="custom-report-shift-badge ${isNight ? 'badge-night' : 'badge-day'}">
                     ${icon} ${shiftTitle}
                   </span>
-                  ${fname ? `<span class="custom-report-item-file" title="${fname}"><i class="fa-regular fa-file-excel"></i> ${fname}</span>` : ''}
+                  ${fname ? `<span class="custom-report-item-file" title="${fname}"><i class="fa-solid fa-file-excel text-emerald"></i> ${fname}</span>` : ''}
                 </div>
                 <div class="custom-report-item-bottom">
                   <span class="custom-report-meta-item uploader" title="Uploaded by ${escapeHtml(uploaderName)}${unameTag}">

@@ -320,6 +320,7 @@ body {
 }
 
 .shift-selector {
+  position: relative !important; /* Offset parent anchor: enables .custom-report-menu to align flush left under 'REPORT:' */
   display: flex;
   align-items: center;
   background: var(--bg-secondary);
@@ -3686,7 +3687,7 @@ html.is-authenticated #login-modal {
    CUSTOM REPORT DROPDOWN (SCROLLABLE & ENTERPRISE GRADE - IMAGE 3 FIX)
    ========================================================================== */
 .custom-report-dropdown {
-  position: relative;
+  position: static !important; /* Non-relative so menu positions relative to .shift-selector and aligns left flush under 'REPORT:' */
   display: inline-flex;
   align-items: center;
 }
@@ -3750,18 +3751,18 @@ html.is-authenticated #login-modal {
   display: none;
   position: absolute;
   top: calc(100% + 6px);
-  left: 0;
-  min-width: 560px;
-  max-width: 680px;
-  max-height: 400px; /* Generous height with smooth scrolling for enterprise reports */
+  left: 0 !important; /* Starts at the very left edge of .shift-selector directly under 'REPORT:' */
+  min-width: 620px;
+  max-width: 740px;
+  max-height: 420px; /* Generous height with smooth scrolling for enterprise reports */
   overflow-y: auto;
   overflow-x: hidden;
   background: #0d1527 !important; /* 100% Solid Deep Navy - No transparency */
   border: 1px solid rgba(0, 210, 255, 0.45) !important;
-  border-radius: var(--radius-md);
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(0, 210, 255, 0.18) !important;
+  border-radius: 12px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.9), 0 0 25px rgba(0, 210, 255, 0.18) !important;
   z-index: 1050;
-  padding: 0.55rem;
+  padding: 0.6rem;
   animation: dropdownFadeIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
 }
 [data-theme="light"] .custom-report-menu {
@@ -3797,7 +3798,7 @@ html.is-authenticated #login-modal {
 
 /* Group Header: Date, Session Tags, Uploader & Batch Controls */
 .custom-report-group-header {
-  font-size: 0.73rem;
+  font-size: 0.74rem;
   font-weight: 700;
   color: var(--accent-cyan);
   padding: 0.45rem 0.75rem;
@@ -3805,11 +3806,12 @@ html.is-authenticated #login-modal {
   margin-top: 0.5rem;
   margin-bottom: 0.35rem;
   background: rgba(0, 210, 255, 0.08);
-  border-radius: 6px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 0.5rem;
+  white-space: nowrap !important;
 }
 .custom-report-group-header:first-child {
   margin-top: 0;
@@ -3820,23 +3822,27 @@ html.is-authenticated #login-modal {
   border-bottom-color: #e2e8f0;
 }
 .custom-report-group-title {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.45rem;
+  gap: 0.5rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
+  white-space: nowrap !important;
+  flex-shrink: 0;
 }
 .custom-report-group-date {
   font-weight: 800;
   color: var(--text-primary);
+  white-space: nowrap !important;
 }
 .custom-report-group-pill {
-  font-size: 0.65rem;
-  padding: 0.12rem 0.45rem;
+  font-size: 0.66rem;
+  padding: 0.12rem 0.5rem;
   border-radius: 20px;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
+  white-space: nowrap !important;
 }
 .custom-report-group-pill.pill-dual {
   background: rgba(168, 85, 247, 0.2);
@@ -3861,14 +3867,23 @@ html.is-authenticated #login-modal {
 .custom-report-group-meta {
   font-size: 0.70rem;
   color: var(--text-muted);
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.55rem;
   font-weight: 500;
+  white-space: nowrap !important;
+  flex-shrink: 0;
+}
+.custom-report-group-meta span {
+  white-space: nowrap !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
 }
 .custom-report-group-meta .group-user-tag {
   color: var(--accent-cyan);
   font-weight: 600;
+  white-space: nowrap !important;
 }
 [data-theme="light"] .custom-report-group-meta .group-user-tag {
   color: #0284c7;
@@ -3881,13 +3896,14 @@ html.is-authenticated #login-modal {
   color: #fca5a5;
   font-size: 0.68rem;
   font-weight: 700;
-  padding: 0.15rem 0.45rem;
+  padding: 0.15rem 0.5rem;
   border-radius: 4px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
   transition: all 0.15s ease;
+  white-space: nowrap !important;
 }
 .btn-report-batch-delete:hover {
   background: #dc2626;
@@ -3947,8 +3963,8 @@ html.is-authenticated #login-modal {
 }
 
 .custom-report-item-icon-box {
-  width: 32px;
-  height: 32px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -3974,13 +3990,14 @@ html.is-authenticated #login-modal {
   display: flex;
   align-items: center;
   gap: 0.45rem;
-  white-space: nowrap;
+  white-space: nowrap !important;
   overflow: hidden;
 }
 .custom-report-item-date {
   font-weight: 700;
   color: var(--text-primary);
   font-size: 0.84rem;
+  white-space: nowrap !important;
 }
 .custom-report-shift-badge {
   font-size: 0.68rem;
@@ -3990,6 +4007,7 @@ html.is-authenticated #login-modal {
   display: inline-flex;
   align-items: center;
   gap: 0.25rem;
+  white-space: nowrap !important;
 }
 .custom-report-shift-badge.badge-day {
   background: rgba(245, 158, 11, 0.2);
@@ -4013,10 +4031,23 @@ html.is-authenticated #login-modal {
 }
 .custom-report-item-file {
   color: var(--text-muted);
-  font-size: 0.74rem;
+  font-size: 0.72rem;
+  max-width: 230px;
   overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap;
+  white-space: nowrap !important;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 0.1rem 0.45rem;
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+[data-theme="light"] .custom-report-item-file {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #475569;
 }
 
 /* Secondary Metadata Row (Account, Uploader, Timestamp, Telemetry) */
@@ -4026,7 +4057,7 @@ html.is-authenticated #login-modal {
   gap: 0.45rem;
   font-size: 0.72rem;
   color: var(--text-muted);
-  white-space: nowrap;
+  white-space: nowrap !important;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -4034,6 +4065,7 @@ html.is-authenticated #login-modal {
   display: inline-flex;
   align-items: center;
   gap: 0.28rem;
+  white-space: nowrap !important;
 }
 .custom-report-meta-item.uploader strong {
   color: var(--accent-cyan);
@@ -4053,35 +4085,38 @@ html.is-authenticated #login-modal {
 .custom-report-item-end {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.55rem;
   margin-left: auto;
   flex-shrink: 0;
 }
 .custom-report-status-pill.active-pill {
   font-size: 0.68rem;
   font-weight: 700;
-  padding: 0.15rem 0.5rem;
+  padding: 0.18rem 0.55rem;
   border-radius: 12px;
-  background: rgba(0, 210, 255, 0.2);
+  background: rgba(0, 210, 255, 0.16);
   color: var(--accent-cyan);
-  border: 1px solid rgba(0, 210, 255, 0.45);
+  border: 1px solid rgba(0, 210, 255, 0.5);
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.28rem;
+  box-shadow: 0 0 8px rgba(0, 210, 255, 0.25);
+  white-space: nowrap !important;
 }
 [data-theme="light"] .custom-report-status-pill.active-pill {
   background: #e0f2fe;
   color: #0369a1;
   border-color: #7dd3fc;
+  box-shadow: 0 1px 4px rgba(3, 105, 161, 0.15);
 }
 
 /* Admin Delete Icon Button */
 .btn-report-delete {
-  background: transparent;
-  border: 1px solid transparent;
-  color: var(--text-muted);
-  width: 28px;
-  height: 28px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  color: #f87171;
+  width: 30px;
+  height: 30px;
   border-radius: 6px;
   display: inline-flex;
   align-items: center;
@@ -4092,16 +4127,53 @@ html.is-authenticated #login-modal {
   padding: 0;
 }
 .btn-report-delete:hover {
-  background: rgba(239, 68, 68, 0.18);
-  border-color: rgba(239, 68, 68, 0.5);
-  color: #f87171;
-  transform: scale(1.1);
-  box-shadow: 0 0 10px rgba(239, 68, 68, 0.3);
+  background: #dc2626;
+  border-color: #b91c1c;
+  color: #ffffff;
+  transform: scale(1.12);
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.4);
+}
+[data-theme="light"] .btn-report-delete {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #dc2626;
 }
 [data-theme="light"] .btn-report-delete:hover {
-  background: #fee2e2;
-  border-color: #fca5a5;
-  color: #b91c1c;
+  background: #dc2626;
+  border-color: #b91c1c;
+  color: #ffffff;
+}
+
+/* Responsive adjustments for laptop & desktop screens */
+@media (max-width: 1440px) {
+  .custom-report-menu {
+    min-width: 560px;
+    max-width: min(680px, 94vw);
+    left: 0 !important;
+  }
+  .custom-report-item-file {
+    max-width: 180px;
+  }
+}
+@media (max-width: 1260px) {
+  .custom-report-menu {
+    min-width: 500px;
+    max-width: min(600px, 92vw);
+    left: 0 !important;
+  }
+  .custom-report-item-file {
+    max-width: 140px;
+  }
+}
+@media (max-width: 1024px) {
+  .custom-report-menu {
+    min-width: 440px;
+    max-width: min(540px, 92vw);
+    left: 0 !important;
+  }
+  .custom-report-item-file {
+    max-width: 110px;
+  }
 }
 
 /* ==========================================================================
