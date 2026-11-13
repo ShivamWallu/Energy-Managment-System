@@ -744,6 +744,9 @@ const validation = {
         if (inp) inp.value = '';
 
         await window.appRefreshReports();
+        if (typeof window.broadcastReportsChanged === 'function') {
+          window.broadcastReportsChanged('UPLOAD');
+        }
         if (typeof dashboard !== 'undefined' && dashboard.loadTelemetryMatrixAndLogs) {
           dashboard.loadTelemetryMatrixAndLogs();
         }
@@ -838,6 +841,9 @@ const validation = {
         this.checkDualSubmitReady();
         
         await window.appRefreshReports();
+        if (typeof window.broadcastReportsChanged === 'function') {
+          window.broadcastReportsChanged('UPLOAD');
+        }
         if (typeof dashboard !== 'undefined' && dashboard.loadTelemetryMatrixAndLogs) {
           dashboard.loadTelemetryMatrixAndLogs();
         }

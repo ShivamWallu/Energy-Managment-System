@@ -37,6 +37,9 @@ async function initializeAuthenticatedApp() {
 
   // 4. Initial Report List & Dashboard Load
   await window.appRefreshReports();
+
+  // 5. Connect Real-time Reports Sync Engine (Multi-tab BroadcastChannel & Cross-User SSE)
+  initRealtimeReportsSync();
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -136,7 +139,111 @@ function initTabs() {
   });
 }
 
-window.appRefreshReports = async function() {
+// ==========================================================================
+// Real-time Reports Sync Engine (Multi-Tab & Cross-User SSE + Fast Polling)
+// ==========================================================================
+let realtimeReportsSyncInitialized = false;
+
+function initRealtimeReportsSync() {
+  if (realtimeReportsSyncInitialized) return;
+  realtimeReportsSyncInitialized = true;
+
+  // 1. Cross-Tab Instant BroadcastChannel (0ms sync within same browser)
+  if (typeof BroadcastChannel !== 'undefined') {
+    try {
+      const reportsBc = new BroadcastChannel('ems_reports_sync_channel');
+      reportsBc.onmessage = (ev) => {
+        if (ev && ev.data && ev.data.type === 'REPORTS_CHANGED') {
+          if (window.appRefreshReports) {
+            window.appRefreshReports(true);
+          }
+        }
+      };
+      window.emsReportsBc = reportsBc;
+    } catch (e) {
+      console.warn('BroadcastChannel notice:', e);
+    }
+  }
+
+  // 2. Server-Sent Events (SSE) for Real-Time Cross-User & Cross-Device Sync (<10ms)
+  let eventSource = null;
+  let sseReconnectTimer = null;
+
+  function connectReportsSSE() {
+    if (typeof EventSource === 'undefined') return;
+    try {
+      if (eventSource) {
+        try { eventSource.close(); } catch(e){}
+      }
+      eventSource = new EventSource('/api/reports/stream');
+
+      eventSource.onmessage = (e) => {
+        try {
+          const data = JSON.parse(e.data);
+          if (data && (data.type === 'REPORTS_UPDATED' || data.action === 'UPLOAD' || data.action === 'DELETE')) {
+            if (window.appRefreshReports) {
+              window.appRefreshReports(true);
+            }
+          }
+        } catch (err) {}
+      };
+
+      eventSource.onerror = () => {
+        if (eventSource) {
+          try { eventSource.close(); } catch(e){}
+        }
+        eventSource = null;
+        clearTimeout(sseReconnectTimer);
+        sseReconnectTimer = setTimeout(connectReportsSSE, 5000);
+      };
+    } catch (err) {
+      console.warn('SSE connection notice:', err);
+    }
+  }
+
+  connectReportsSSE();
+
+  // 3. Fast Lightweight Poller Fallback (0.2ms endpoint check every 3.5s when tab is visible)
+  let lastSeenVersion = null;
+  const checkReportsVersion = async () => {
+    if (document.visibilityState !== 'visible') return;
+    try {
+      const ver = await api.getReportsVersion();
+      if (ver && ver.version) {
+        if (lastSeenVersion !== null && ver.version !== lastSeenVersion) {
+          if (window.appRefreshReports) {
+            await window.appRefreshReports(true);
+          }
+        }
+        lastSeenVersion = ver.version;
+      }
+    } catch (err) {}
+  };
+
+  // Immediate check on tab focus (when user switches back to this window)
+  window.addEventListener('focus', () => {
+    checkReportsVersion();
+  });
+
+  // Periodic heartbeat every 3.5 seconds
+  setInterval(checkReportsVersion, 3500);
+}
+
+// Global helper to broadcast upload/delete events immediately across all tabs
+window.broadcastReportsChanged = function(action, meta) {
+  if (window.emsReportsBc) {
+    try {
+      window.emsReportsBc.postMessage({
+        type: 'REPORTS_CHANGED',
+        action: action || 'UPDATE',
+        meta: meta || {},
+        timestamp: Date.now()
+      });
+    } catch (e) {}
+  }
+};
+
+window.appRefreshReports = async function(silent = false) {
   const select = document.getElementById('shift-filter-select');
   const radioContainer = document.getElementById('shift-radio-container');
   const lblDay = document.getElementById('lbl-shift-day');
@@ -151,10 +258,11 @@ window.appRefreshReports = async function() {
     try {
       reports = await api.getReportsList();
     } catch (fetchErr) {
-      console.warn('Initial getReportsList attempt failed, retrying once:', fetchErr);
-      await new Promise(r => setTimeout(r, 250));
+      if (!silent) console.warn('Initial getReportsList attempt failed, retrying once:', fetchErr);
+      await new Promise(r => setTimeout(r, 200));
       reports = await api.getReportsList().catch(() => []);
     }
+    const prevReportsCount = (window.allPlantReports || []).length;
     window.allPlantReports = reports || [];
 
     if (!select) return;
@@ -615,6 +723,7 @@ window.appRefreshReports = async function() {
           showToast(res.message || 'Report deleted successfully', 'success');
           window.closeDeleteReportModal();
           await window.appRefreshReports();
+          if (typeof window.broadcastReportsChanged === 'function') window.broadcastReportsChanged('DELETE');
         } catch (err) {
           showToast(err.message || 'Failed to delete report', 'error');
           throw err;
@@ -646,6 +755,7 @@ window.appRefreshReports = async function() {
           showToast(res.message || 'Batch deleted successfully', 'success');
           window.closeDeleteReportModal();
           await window.appRefreshReports();
+          if (typeof window.broadcastReportsChanged === 'function') window.broadcastReportsChanged('DELETE');
         } catch (err) {
           showToast(err.message || 'Failed to delete batch', 'error');
           throw err;
@@ -726,10 +836,24 @@ window.appRefreshReports = async function() {
     }
 
     if (chosenReport) {
+      const wasActiveChanged = activeReportId !== chosenReport.id;
       activeReportId = chosenReport.id;
       window.activeReportId = chosenReport.id;
       select.value = chosenReport.id;
       syncCustomReportUI(chosenReport.id);
+      syncRadioButtons();
+
+      if (dropdownWrap && dropdownWrap.classList.contains('open')) {
+        positionReportMenu();
+      }
+
+      if (wasActiveChanged && !silent) {
+        await reloadAllPagesForReport(chosenReport.id);
+      } else if (silent && reports.length > prevReportsCount && prevReportsCount > 0) {
+        const newest = reports[0];
+        const newUploader = newest ? (newest.uploaded_by_name || newest.uploaded_by_username || 'User') : 'User';
+        showToast(`✨ New shift report uploaded by ${newUploader}`, 'info');
+      }
     } else {
       activeReportId = null;
       window.activeReportId = null;

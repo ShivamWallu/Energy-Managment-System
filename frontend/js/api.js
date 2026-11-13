@@ -266,6 +266,10 @@ const api = {
   },
 
   // Reports & Backups
+  async getReportsVersion() {
+    return await this.request('/reports/version');
+  },
+
   async getReportsList(onlyMyUploads = false) {
     const q = onlyMyUploads ? '?only_my_uploads=true' : '';
     return await this.request(`/reports/list${q}`);
