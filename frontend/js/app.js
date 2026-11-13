@@ -399,20 +399,31 @@ window.appRefreshReports = async function() {
           `;
         }
 
+        const firstRep = group.reports[0] || {};
+        const groupUploader = group.uploaded_by_name || firstRep.uploaded_by_name || firstRep.uploaded_by_username || 'System Administrator';
+        const groupUname = group.uploaded_by_username || firstRep.uploaded_by_username || '';
+        const groupUnameTag = (groupUname && groupUname !== groupUploader) ? ` (@${escapeHtml(groupUname)})` : '';
+
         menuHtml += `
           <div class="custom-report-group-header">
-            <div class="custom-report-group-title">
-              <i class="fa-regular fa-calendar-days text-cyan"></i>
-              <span class="custom-report-group-date">${escapeHtml(group.shift_date_display)}</span>
-              ${shiftBadgesHtml}
+            <div class="custom-report-group-header-top">
+              <div class="custom-report-group-title">
+                <i class="fa-regular fa-calendar-days text-cyan"></i>
+                <span class="custom-report-group-date">${escapeHtml(group.shift_date_display)}</span>
+                ${shiftBadgesHtml}
+              </div>
+              <div class="custom-report-group-meta">
+                <span class="group-time-badge" title="Batch Uploaded on ${group.upload_date}${timeTag}"><i class="fa-regular fa-clock"></i> ${group.upload_date}${timeTag}</span>
+                ${isAdmin && group.batch_id ? `
+                  <button type="button" class="btn-report-batch-delete" title="Admin: Delete entire upload batch" onclick="event.stopPropagation(); window.promptDeleteBatch('${group.batch_id}', '${escapeHtml(group.shift_date_display)}', ${group.reports.length})">
+                    <i class="fa-solid fa-trash-can"></i> Batch
+                  </button>
+                ` : ''}
+              </div>
             </div>
-            <div class="custom-report-group-meta">
-              <span class="group-time-badge" title="Batch Uploaded on ${group.upload_date}${timeTag}"><i class="fa-regular fa-clock"></i> ${group.upload_date}${timeTag}</span>
-              ${isAdmin && group.batch_id ? `
-                <button type="button" class="btn-report-batch-delete" title="Admin: Delete entire upload batch" onclick="event.stopPropagation(); window.promptDeleteBatch('${group.batch_id}', '${escapeHtml(group.shift_date_display)}', ${group.reports.length})">
-                  <i class="fa-solid fa-trash-can"></i> Batch
-                </button>
-              ` : ''}
+            <div class="custom-report-group-header-sub">
+              <i class="fa-regular fa-circle-user text-cyan"></i>
+              <span>Uploaded by: <strong>${escapeHtml(groupUploader)}</strong>${groupUnameTag}</span>
             </div>
           </div>
           <div class="custom-report-group-items">
@@ -429,21 +440,13 @@ window.appRefreshReports = async function() {
           const kwhVal = (r.total_kwh != null && r.total_kwh > 0) ? `${Number(r.total_kwh).toLocaleString(undefined, {maximumFractionDigits:1})} kWh` : '48 intervals';
 
           menuHtml += `
-            <div class="custom-report-item ${isCur ? 'active' : ''}" data-report-id="${r.id}" onclick="window.onSelectCustomReport(${r.id})" title="${fname} • Uploaded by ${escapeHtml(uploaderName)}${unameTag} on ${r.upload_date}${r.upload_time ? ' at ' + r.upload_time : ''} • ${kwhVal}">
-              <div class="custom-report-item-content">
-                <div class="custom-report-item-row1">
-                  <span class="custom-report-shift-badge ${isNight ? 'badge-night' : 'badge-day'}">
-                    ${icon} ${shiftTitle}
-                  </span>
-                  ${fname ? `<span class="custom-report-item-file" title="${fname}"><i class="fa-solid fa-file-excel text-emerald"></i> ${fname}</span>` : ''}
-                  <span class="custom-report-item-kwh" title="Total Incomer Telemetry Energy"><i class="fa-solid fa-bolt text-amber"></i> ${kwhVal}</span>
-                </div>
-                <div class="custom-report-item-sub">
-                  <i class="fa-regular fa-circle-user text-cyan"></i>
-                  <span>Uploaded by: <strong>${escapeHtml(uploaderName)}</strong>${unameTag ? `<span class="meta-uname">${unameTag}</span>` : ''}</span>
-                  <span class="meta-dot">•</span>
-                  <span><i class="fa-regular fa-clock"></i> ${r.upload_date}${r.upload_time ? ` at ${r.upload_time}` : ''}</span>
-                </div>
+            <div class="custom-report-item ${isCur ? 'active' : ''}" data-report-id="${r.id}" onclick="window.onSelectCustomReport(${r.id})" title="${fname} • Uploaded by ${escapeHtml(uploaderName)}${unameTag} • ${kwhVal}">
+              <div class="custom-report-item-main">
+                <span class="custom-report-shift-badge ${isNight ? 'badge-night' : 'badge-day'}">
+                  ${icon} ${shiftTitle}
+                </span>
+                ${fname ? `<span class="custom-report-item-file" title="${fname}"><i class="fa-solid fa-file-excel text-emerald"></i> ${fname}</span>` : ''}
+                <span class="custom-report-item-kwh" title="Total Incomer Telemetry Energy"><i class="fa-solid fa-bolt text-amber"></i> ${kwhVal}</span>
               </div>
               <div class="custom-report-item-end">
                 ${isCur ? '<span class="custom-report-status-pill active-pill"><i class="fa-solid fa-check"></i> Active</span>' : ''}
